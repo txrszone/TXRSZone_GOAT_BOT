@@ -12,7 +12,7 @@ module.exports = {
     shortDescription: "Random Anime Girl Pics",
     longDescription: "Send random anime girl images",
     guide: "{pn} animegirl",
-    category: "image"
+    category: "nsfw"
   },
 
   onStart: async function ({ message, args }) {
