@@ -22,36 +22,25 @@ module.exports = {
 
     const emoji1 = args[0];
     const emoji2 = args[1];
-    const threadID = event.threadID;
     const messageID = event.messageID;
     
-    const cacheDir = path.join(__dirname, "cache");
-    const filePath = path.join(cacheDir, `emojimix_${Date.now()}.png`);
-    
-    if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true });
-    }
-
-    // ⏳ প্রথম রিঅ্যাক্ট (ইমেজ আসার আগে)
+    // ⏳ প্রথম রিঅ্যাক্ট
     try {
-      await api.setMessageReaction("⏳", messageID, (err) => {}, true);
+      await api.setMessageReaction("⏳", messageID);
     } catch(e) {}
 
-    // 🎨 কনফার্মেশন মেসেজ
-    const loadingEmojis = ["🔄", "⏳", "🎨", "✨", "🔮", "⚡"];
-    const randomLoadEmoji = loadingEmojis[Math.floor(Math.random() * loadingEmojis.length)];
-    
+    // কনফার্মেশন মেসেজ
     const confirmationMsg = await message.reply(
-      `${randomLoadEmoji} **Mixing Emojis** ${randomLoadEmoji}\n━━━━━━━━━━━━━━━━━━━━\n📌 ${emoji1} + ${emoji2}\n⏳ Status: **Generating...**\n━━━━━━━━━━━━━━━━━━━━\n✨ Please wait, your mixed emoji is being created!`
+      `⏳ **Mixing Emojis** ⏳\n━━━━━━━━━━━━━━━━━━━━\n📌 ${emoji1} + ${emoji2}\n⏳ Status: Generating...\n━━━━━━━━━━━━━━━━━━━━\n✨ Please wait...`
     );
 
     try {
-      const url = `https://web-api-delta.vercel.app/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}`;
-      
-      // ⌛ ইমেজ লোড হচ্ছে (সেকেন্ড রিঅ্যাক্ট)
+      // ⌛ সেকেন্ড রিঅ্যাক্ট (লোড হচ্ছে)
       try {
-        await api.setMessageReaction("⌛", messageID, (err) => {}, true);
+        await api.setMessageReaction("⌛", messageID);
       } catch(e) {}
+
+      const url = `https://web-api-delta.vercel.app/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}`;
       
       const response = await axios({
         method: 'get',
@@ -59,60 +48,48 @@ module.exports = {
         responseType: 'stream'
       });
 
-      response.data.pipe(fs.createWriteStream(filePath));
+      const cacheDir = path.join(__dirname, "cache");
+      const filePath = path.join(cacheDir, `emojimix_${Date.now()}.png`);
       
-      response.data.on('end', async () => {
-        // ✅ ইমেজ রেডি (তৃতীয় রিঅ্যাক্ট)
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
+
+      const writer = fs.createWriteStream(filePath);
+      response.data.pipe(writer);
+
+      writer.on('finish', async () => {
+        // ✅ সফল রিঅ্যাক্ট
         try {
-          await api.setMessageReaction("✅", messageID, (err) => {}, true);
+          await api.setMessageReaction("✅", messageID);
         } catch(e) {}
         
-        // 🗑️ কনফার্মেশন মেসেজ ডিলিট
+        // কনফার্মেশন মেসেজ ডিলিট
         try {
           await api.unsendMessage(confirmationMsg.messageID);
         } catch(e) {}
         
-        // ✅ মিক্সড ইমোজি পাঠানো
-        const successEmojis = ["🎉", "✨", "🌟", "💫", "⭐", "🎨"];
-        const randomSuccessEmoji = successEmojis[Math.floor(Math.random() * successEmojis.length)];
-        
+        // মিক্সড ইমোজি পাঠানো
         await message.reply({
-          body: `${randomSuccessEmoji} **Mixed Emoji Created!** ${randomSuccessEmoji}\n━━━━━━━━━━━━━━━━━━━━\n📌 ${emoji1} + ${emoji2}\n━━━━━━━━━━━━━━━━━━━━`,
+          body: `✅ **Mixed Emoji Created!** ✅\n━━━━━━━━━━━━━━━━━━━━\n📌 ${emoji1} + ${emoji2}\n━━━━━━━━━━━━━━━━━━━━`,
           attachment: fs.createReadStream(filePath)
         });
         
         // ক্যাশ ফাইল ডিলিট
-        try {
-          fs.unlinkSync(filePath);
-        } catch(e) {}
+        try { fs.unlinkSync(filePath); } catch(e) {}
       });
-      
-      response.data.on('error', async () => {
+
+      writer.on('error', async () => {
         // ⚠️ error রিঅ্যাক্ট
-        try {
-          await api.setMessageReaction("⚠️", messageID, (err) => {}, true);
-        } catch(e) {}
-        
-        // error হলে কনফার্মেশন মেসেজ ডিলিট
-        try {
-          await api.unsendMessage(confirmationMsg.messageID);
-        } catch(e) {}
-        
+        try { await api.setMessageReaction("⚠️", messageID); } catch(e) {}
+        try { await api.unsendMessage(confirmationMsg.messageID); } catch(e) {}
         message.reply(`❌ **Mix Failed!**\n━━━━━━━━━━━━━━━━━━━━\n📌 Can't mix ${emoji1} and ${emoji2}\n💡 Try different emojis!`);
       });
       
     } catch (err) {
       console.error("Mixemoji error:", err);
-      
-      // ⚠️ error রিঅ্যাক্ট
-      try {
-        await api.setMessageReaction("⚠️", messageID, (err) => {}, true);
-      } catch(e) {}
-      
-      try {
-        await api.unsendMessage(confirmationMsg.messageID);
-      } catch(e) {}
-      
+      try { await api.setMessageReaction("⚠️", messageID); } catch(e) {}
+      try { await api.unsendMessage(confirmationMsg.messageID); } catch(e) {}
       message.reply(`❌ **Mix Failed!**\n━━━━━━━━━━━━━━━━━━━━\n📌 Can't mix ${emoji1} and ${emoji2}\n💡 Try different emojis!`);
     }
   }
