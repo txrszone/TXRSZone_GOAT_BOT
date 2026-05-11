@@ -93,6 +93,7 @@ module.exports = {
   ╭───⊙
   │ 🔶 ${configCommand.name}
   ├── INFO
+  │ 📦 Category: ${category}
   │ 📝 𝗗𝗲𝘀𝗰𝗿𝗶𝗽𝘁𝗶𝗼𝗻: ${longDescription}
   │ 👑 𝗔𝘂𝘁𝗵𝗼𝗿: ${author}
   │ ⚙ 𝗚𝘂𝗶𝗱𝗲: ${guide}
