@@ -1,4 +1,4 @@
-fs = require("fs-extra");
+const fs = require("fs-extra");
 const axios = require("axios");
 const path = require("path");
 const { getPrefix } = global.utils;
@@ -8,7 +8,7 @@ const doNotDelete = "[ U L L A S H]";
 module.exports = {
   config: {
     name: "help",
-    version: "1.17",
+    version: "2.00",
     author: "Omor TE",
     countDown: 5,
     role: 0,
@@ -39,17 +39,16 @@ module.exports = {
       for (const [name, value] of commands) {
         if (value.config.role > 1 && role < value.config.role) continue;
 
-        const category = value.config.category || "Uncategorized";
-        categories[category] = categories[category] || { commands: [] };
-        categories[category].commands.push(name);
+        const cmdCategory = value.config.category || "Uncategorized";
+        categories[cmdCategory] = categories[cmdCategory] || { commands: [] };
+        categories[cmdCategory].commands.push(name);
       }
 
-      Object.keys(categories).forEach((category) => {
-        if (category !== "info") {
-          msg += `\n╭─────✰『  ${category.toUpperCase()}  』`;
+      Object.keys(categories).forEach((catName) => {
+        if (catName !== "info") {
+          msg += `\n╭─────✰『  ${catName.toUpperCase()}  』`;
 
-
-          const names = categories[category].commands.sort();
+          const names = categories[catName].commands.sort();
           for (let i = 0; i < names.length; i += 3) {
             const cmds = names.slice(i, i + 2).map((item) => `⭔${item}`);
             msg += `\n│${cmds.join(" ".repeat(Math.max(1, 5 - cmds.join("").length)))}`;
@@ -64,9 +63,7 @@ module.exports = {
       msg += ``;
       msg += `\n╭─────✰\n│ ♥︎╣[❉𝘂 𝗹 𝗹 𝗮 𝘀 𝗵 ッ❉]╠♥︎\n╰────────────✰`; 
 
- 				const helpListImages = [ "https://files.catbox.moe/utby7g.jpeg" ];
-
-
+      const helpListImages = [ "https://files.catbox.moe/utby7g.jpeg" ];
       const helpListImage = helpListImages[Math.floor(Math.random() * helpListImages.length)];
 
       await message.reply({
@@ -83,25 +80,33 @@ module.exports = {
         const configCommand = command.config;
         const roleText = roleTextToString(configCommand.role);
         const author = configCommand.author || "Unknown";
-
-        const longDescription = configCommand.longDescription ? configCommand.longDescription.en || "No description" : "No description";
-
-        const guideBody = configCommand.guide?.en || "No guide available.";
-        const usage = guideBody.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
+        const cmdCategory = configCommand.category || "Uncategorized";
+        const longDescription = configCommand.longDescription?.en || configCommand.longDescription || "No description available";
+        
+        // Guide/Usage build
+        let guideText = "No guide available.";
+        if (configCommand.guide) {
+          if (typeof configCommand.guide === 'object') {
+            guideText = configCommand.guide.en || Object.values(configCommand.guide)[0] || "No guide available";
+          } else {
+            guideText = configCommand.guide;
+          }
+        }
+        
+        const usage = guideText.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
 
         const response = `
-  ╭───⊙
-  │ 🔶 ${configCommand.name}
-  ├── INFO
-  │ 📦 Category: ${category}
-  │ 📝 𝗗𝗲𝘀𝗰𝗿𝗶𝗽𝘁𝗶𝗼𝗻: ${longDescription}
-  │ 👑 𝗔𝘂𝘁𝗵𝗼𝗿: ${author}
-  │ ⚙ 𝗚𝘂𝗶𝗱𝗲: ${guide}
-  ├── USAGE
-  │  ${usage}
-  │ 🔯 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: ${configCommand.version || "1.0"}
-  │ ♻𝗥𝗼𝗹𝗲: ${roleText}
-  ╰────────────⊙`;
+╭───⊙
+│ 🔶 ${configCommand.name}
+├── INFO
+│ 📦 Category: ${cmdCategory}
+│ 📝 Description: ${longDescription}
+│ 👑 Author: ${author}
+├── USAGE
+│ ${usage}
+│ 🔯 Version: ${configCommand.version || "1.0"}
+│ ♻ Role: ${roleText}
+╰────────────⊙`;
 
         await message.reply(response);
       }
@@ -109,8 +114,8 @@ module.exports = {
   },
 };
 
-function roleTextToString(roleText) {
-  switch (roleText) {
+function roleTextToString(roleValue) {
+  switch (roleValue) {
     case 0:
       return "0 (All users)";
     case 1:
