@@ -20,7 +20,7 @@ module.exports = {
     },
     category: "info",
     guide: {
-      en: "{pn} / help cmdName ",
+      en: "{p}help <cmdName> ",
     },
     priority: 1,
   },
@@ -34,7 +34,7 @@ module.exports = {
       const categories = {};
       let msg = "╭───────❁";
 
-      msg += `\n│𝘂 𝗹 𝗹 𝗮 𝘀 𝗵 ッ 𝗛𝗘𝗟𝗣 𝗟𝗜𝗦𝗧\n╰────────────❁`; 
+      msg += `\n│ 𝗛𝗘𝗟𝗣 𝗟𝗜𝗦𝗧\n╰────────────❁`; 
 
       for (const [name, value] of commands) {
         if (value.config.role > 1 && role < value.config.role) continue;
@@ -61,9 +61,9 @@ module.exports = {
       const totalCommands = commands.size;
       msg += `\n\n╭─────✰[𝗘𝗡𝗝𝗢𝗬]\n│>𝗧𝗢𝗧𝗔𝗟 𝗖𝗠𝗗𝗦: [${totalCommands}].\n│𝗧𝗬𝗣𝗘𝖳:[ ${prefix}𝗛𝗘𝗟𝗣 𝗧𝗢\n│<𝗖𝗠𝗗> 𝗧𝗢 𝗟𝗘𝗔𝗥𝗡 𝗧𝗛𝗘 𝗨𝗦𝗔𝗚𝗘.]\n╰────────────✰`;
       msg += ``;
-      msg += `\n╭─────✰\n│ ♥︎╣[❉𝘂 𝗹 𝗹 𝗮 𝘀 𝗵 ッ❉]╠♥︎\n╰────────────✰`; 
+      msg += `\n╭─────✰\n│ ♥︎╣[❉Omor TE❉]╠♥︎\n╰────────────✰`; 
 
-      const helpListImages = [ "https://files.catbox.moe/utby7g.jpeg" ];
+      const helpListImages = [ "https://i.postimg.cc/0jRGknT9/FB-IMG-1744474199349.jpg", "https://i.postimg.cc/Y9KK7KC0/Polish-20250526-101350151.jpg", "https://i.postimg.cc/VNvjbDPq/Image-Download-26-05-2025-09-56-48.jpg", "https://i.postimg.cc/brgK1ZHS/Hitube-c-Rb-Pat-Cm-XZ-2025-05-26-10-05-46.jpg", "https://i.postimg.cc/MT84479j/Hitube-Bt4-Wyjgo-WZ-2025-05-26-10-05-58.jpg", "https://i.postimg.cc/YS8YKk3f/received-395252956651820.jpg", "https://i.postimg.cc/0N5ZJVXn/a844a740b33eba79b486744759914953-1.jpg", "https://i.postimg.cc/L6kG8BS4/received-1875128426597909.png", "https://i.postimg.cc/7ZxdGGP3/received-1258556092530363.png" ];
       const helpListImage = helpListImages[Math.floor(Math.random() * helpListImages.length)];
 
       await message.reply({
