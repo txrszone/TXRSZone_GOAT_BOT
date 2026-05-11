@@ -38,7 +38,6 @@ module.exports = {
       const osRelease = os.release();
       const osText = `${osType} ${osRelease}`;
 
-      // আপনার দেওয়া ব্যাকগ্রাউন্ড ইমেজ লিংক
       const backgroundUrl = "https://i.postimg.cc/3wbvnfHP/Polish-20260511-164744529.jpg";
       const __B = (await axios.get(backgroundUrl, { responseType: "arraybuffer" })).data;
       const __C = await loadImage(__B);
@@ -48,30 +47,31 @@ module.exports = {
 
       ctx.drawImage(__C, 0, 0, __C.width, __C.height);
 
-      // ✅ লেখার সাইজ: আগের 64px থেকে 3px কম = 61px
+      // ✅ ফন্ট সাইজ 61px (আগের মতো)
       const fontSize = 61;
-      ctx.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
+      // ✅ ফন্ট পরিবর্তন - আরও আধুনিক ও মসৃণ
+      ctx.font = `bold ${fontSize}px "Poppins", "Segoe UI", "Roboto", "Sans-serif"`;
       ctx.lineWidth = 3;
 
-      // আধুনিক প্রফেশনাল কালার স্কিম
+      // ✅ নতুন কালার স্কিম (সবুজ/নীল/সাদা টোন - চোখে আরামদায়ক)
       const lineColors = [
-        "#FFD700", // সোনালী (Uptime)
-        "#FF6B6B", // লালচে গোলাপি (Ping)
-        "#4ECDC4", // টকটকে নীলাভ সবুজ (CPU)
-        "#FFE66D", // হালকা সোনালী (OS)
-        "#A8E6CF", // পেস্টেল সবুজ (Date)
-        "#FF8C94"  // পেস্টেল গোলাপি (Owner)
+        "#FFFFFF", // সাদা (Uptime)
+        "#00FFAA", // উজ্জ্বল মিন্ট গ্রিন (Ping)
+        "#00AAFF", // উজ্জ্বল নীল (CPU)
+        "#FFAA00", // কমলা (OS)
+        "#FF00AA", // গোলাপি (Date)
+        "#AAFF00"  // লেবু গ্রিন (Owner)
       ];
 
-      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetX = 3;
-      ctx.shadowOffsetY = 3;
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
 
-      // ✅ আগের posY থেকে 40px উপরে থেকে শুরু
-      let posY = __C.height / 2 - 120;  // আগে ছিল -80, এখন -120 (উপরে)
+      // ✅ আগের থেকে 2px উপরে (posY কমিয়েছি)
+      let posY = __C.height / 2 - 122;  // আগে ছিল -120, এখন -122 (2px উপরে)
       const posX = 70;
-      const lineHeight = 78; // font 61 এর জন্য適當 ফাঁকা
+      const lineHeight = 78;
 
       function drawLines(linesArray, context, yStart) {
         let tempY = yStart;
@@ -81,7 +81,7 @@ module.exports = {
 
           context.fillStyle = color;
           context.strokeStyle = "#000000";
-          context.lineWidth = 3;
+          context.lineWidth = 2.5;
 
           context.strokeText(line, posX, tempY);
           context.fillText(line, posX, tempY);
@@ -90,30 +90,27 @@ module.exports = {
         }
       }
 
-      // টেম্প লাইন
       const tempLines = [
         `⚡ Uptime : ${uptimeText}`,
         `📡 Ping   : ...ms`,
         `💻 CPU    : ${cpuUsage}%`,
         `🖥️ OS     : ${osText}`,
         `📅 Date   : ${currentDate}`,
-        `👑 Owner  : •-Omor TE-•`
+        `👑 Owner  : • OMOR TE •`
       ];
       drawLines(tempLines, ctx, posY);
 
-      // আসল পিং
       const endTime = performance.now();
       const ping = Math.round(endTime - startTime);
 
-      // ফাইনাল ক্যানভাস (সঠিক পিং সহ)
       const canvasFinal = createCanvas(__C.width, __C.height);
       const ctxFinal = canvasFinal.getContext("2d");
       ctxFinal.drawImage(__C, 0, 0, __C.width, __C.height);
-      ctxFinal.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
-      ctxFinal.shadowColor = "rgba(0, 0, 0, 0.6)";
-      ctxFinal.shadowBlur = 12;
-      ctxFinal.shadowOffsetX = 3;
-      ctxFinal.shadowOffsetY = 3;
+      ctxFinal.font = `bold ${fontSize}px "Poppins", "Segoe UI", "Roboto", "Sans-serif"`;
+      ctxFinal.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctxFinal.shadowBlur = 10;
+      ctxFinal.shadowOffsetX = 2;
+      ctxFinal.shadowOffsetY = 2;
 
       const finalLines = [
         `⚡ Uptime : ${uptimeText}`,
@@ -121,14 +118,14 @@ module.exports = {
         `💻 CPU    : ${cpuUsage}%`,
         `🖥️ OS     : ${osText}`,
         `📅 Date   : ${currentDate}`,
-        `👑 Owner  : •-Omor TE-•`
+        `👑 Owner  : • OMOR TE •`
       ];
 
       let finalY = posY;
       for (let i = 0; i < finalLines.length; i++) {
         ctxFinal.fillStyle = lineColors[i % lineColors.length];
         ctxFinal.strokeStyle = "#000000";
-        ctxFinal.lineWidth = 3;
+        ctxFinal.lineWidth = 2.5;
         ctxFinal.strokeText(finalLines[i], posX, finalY);
         ctxFinal.fillText(finalLines[i], posX, finalY);
         finalY += lineHeight;
