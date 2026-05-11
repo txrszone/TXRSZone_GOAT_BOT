@@ -12,7 +12,7 @@ module.exports = {
     role: 0,
     shortDescription: "Bot & Owner Info",
     longDescription: "Show bot system information",
-    guide: "{pn} info",
+    guide: "{p}info",
     category: "info"
   },
 
