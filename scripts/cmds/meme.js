@@ -18,7 +18,7 @@ module.exports = {
     shortDescription: "Random Meme Image",
     longDescription: "Get random memes from API or local collection",
     category: "fun",
-    guide: "{p} meme"
+    guide: "{p}meme"
   },
 
   onStart: async function({ message, event, api }) {
