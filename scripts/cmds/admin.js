@@ -12,7 +12,7 @@ module.exports = {
     role: 0,
     shortDescription: "Show Owner Info",
     longDescription: "Display bot owner information",
-    guide: "{pn} admin",
+    guide: "{p}admin",
     category: "info"
   },
 
