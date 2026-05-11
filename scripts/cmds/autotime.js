@@ -3,7 +3,6 @@ const moment = require('moment-timezone');
 
 // Global interval tracker
 let intervalStarted = false;
-let currentInterval = null;
 
 module.exports = {
   config: {
@@ -18,7 +17,7 @@ module.exports = {
     category: 'system'
   },
 
-  onStart: async function ({ message, event, args, api, threads }) {
+  onStart: async function ({ message, event, args, api }) {
     const threadID = event.threadID;
     const senderID = event.senderID;
 
@@ -32,10 +31,17 @@ module.exports = {
 
     const action = args[0]?.toLowerCase();
 
-    // Check permission
-    const isBotAdmin = global.config.ADMINBOT?.includes(senderID.toString()) || false;
-    let isGroupAdmin = false;
+    // Check permission - Goat Bot compatible
+    let isBotAdmin = false;
+    try {
+      if (global.config?.ADMINBOT) {
+        isBotAdmin = global.config.ADMINBOT.includes(senderID);
+      } else if (global.GoatBot?.config?.ADMINBOT) {
+        isBotAdmin = global.GoatBot.config.ADMINBOT.includes(senderID);
+      }
+    } catch(e) {}
     
+    let isGroupAdmin = false;
     try {
       const threadInfo = await api.getThreadInfo(threadID);
       isGroupAdmin = threadInfo.adminIDs?.some(admin => admin.id == senderID) || false;
@@ -68,6 +74,18 @@ if (!intervalStarted) {
   
   setTimeout(() => {
     const moment = require('moment-timezone');
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Try to get api instance
+    let botApi = null;
+    try {
+      const botPath = process.cwd() + '/bot.js';
+      if (fs.existsSync(botPath)) {
+        const bot = require(botPath);
+        if (bot.api) botApi = bot.api;
+      }
+    } catch(e) {}
     
     setInterval(() => {
       const bangladeshTime = moment().tz('Asia/Dhaka');
@@ -101,6 +119,7 @@ if (!intervalStarted) {
         { timer: '3:00:00 PM', message: [`${styles.header}\n  ⚔️ 𝗔𝗳𝘁𝗲𝗿𝗻𝗼𝗼𝗻 𝗕𝗮𝘁𝘁𝗹𝗲𝘀 ⚔️\n${styles.divider}\n🕒 𝗡𝗼𝘄: 3:00 PM\n\nSquad up in Modern Warships! ⚓🎯\nComplete daily missions! 📜✅\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
         { timer: '4:00:00 PM', message: [`${styles.header}\n  🔥 𝗔𝗳𝘁𝗲𝗿𝗻𝗼𝗼𝗻 𝗚𝗿𝗶𝗻𝗱 🔥\n${styles.divider}\n🕓 𝗡𝗼𝘄: 4:00 PM\n\nKeep dominating the seas! 🌊⚓\nUpgrade your warships! 🚀🔧\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
         { timer: '4:30:00 PM', message: [`${styles.header}\n  🌇 𝗔𝗳𝘁𝗲𝗿𝗻𝗼𝗼𝗻 𝗕𝗿𝗲𝗮𝗸 🌇\n${styles.divider}\n🕟 𝗡𝗼𝘄: 4:30 PM\n\n» Finish Asr Prayer 🕌\n» Outdoor activities time! ⚽🏸\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
+        { timer: '5:00:00 PM', message: [`${styles.header}\n  🌆 𝗘𝗩𝗘𝗡𝗜𝗡𝗚 𝗧𝗜𝗠𝗘 🌆\n${styles.divider}\n🕔 𝗡𝗼𝘄: 5:00 PM\n\n🚶 Take a walk and refresh yourself!\n🌿 Enjoy the evening breeze\n💭 Time to relax and recharge\n📞 Call your loved ones\n🌅 Beautiful evening awaits!\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
         { timer: '5:30:00 PM', message: [`${styles.header}\n  🌆 𝗘𝘃𝗲𝗻𝗶𝗻𝗴 𝗧𝗿𝗮𝗻𝘀𝗶𝘁𝗶𝗼𝗻 🌆\n${styles.divider}\n🕠 𝗡𝗼𝘄: 5:30 PM\n\nPrepare for Maghrib Prayer! 🌙🕌\nReflect & recharge spiritually! 📿🤲\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
         { timer: '6:00:00 PM', message: [`${styles.header}\n  📚 𝗦𝘁𝘂𝗱𝘆 𝗛𝗼𝘂𝗿𝘀 📚\n${styles.divider}\n🕕 𝗡𝗼𝘄: 6:00 PM\n\nStudents start studying! 📖✍️\nFocus & learn effectively! 🧠💡\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
         { timer: '7:30:00 PM', message: [`${styles.header}\n  🌙 𝗘𝘃𝗲𝗻𝗶𝗻𝗴 𝗥𝗲𝗹𝗮𝘅𝗮𝘁𝗶𝗼𝗻 🌙\n${styles.divider}\n🕢 𝗡𝗼𝘄: 7:30 PM\n\n» Take quality rest\n» Prepare for Isha Prayer 🕌\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`] },
@@ -115,12 +134,18 @@ if (!intervalStarted) {
       const eventItem = nam.find(item => item.timer === formattedTime);
       
       if (eventItem && global.autotimeStatus) {
-        const allThreads = global.data?.allThreadID || [];
-        allThreads.forEach(threadID => {
-          if (global.autotimeStatus[threadID] === true) {
-            api.sendMessage(r(eventItem.message), threadID).catch(() => {});
-          }
-        });
+        // Try to get API from global
+        let apiToUse = botApi;
+        if (!apiToUse && global.api) apiToUse = global.api;
+        if (!apiToUse && global.client?.api) apiToUse = global.client.api;
+        
+        if (apiToUse) {
+          Object.keys(global.autotimeStatus).forEach(threadID => {
+            if (global.autotimeStatus[threadID] === true) {
+              apiToUse.sendMessage(r(eventItem.message), threadID).catch(() => {});
+            }
+          });
+        }
       }
     }, 1000);
     
