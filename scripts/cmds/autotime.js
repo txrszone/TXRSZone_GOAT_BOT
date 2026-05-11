@@ -76,11 +76,11 @@ module.exports = {
       },
       {
         timer: '9:00:00 AM',
-        message: [`${styles.header}\n  💡 𝗕𝗼𝘁 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀 𝗚𝘂𝗶𝗱𝗲 💡\n${styles.divider}\n${clockEmojis[9]} 𝗡𝗼𝘄: 9:00 AM\n\n📌 𝗨𝘀𝗲𝗳𝘂𝗹 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀:\n» /help - All commands\n» /mw - Modern Warships photos\n» /meme - Funny memes\n» /admin - Owner info\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016`]
+        message: [`${styles.header}\n  💡 𝗕𝗼𝘁 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀 𝗚𝘂𝗶𝗱𝗲 💡\n${styles.divider}\n${clockEmojis[9]} 𝗡𝗼𝘄: 9:00 AM\n\n📌 𝗨𝘀𝗲𝗳𝘂𝗹 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀:\n» !help - All commands\n» !mw - Modern Warships photos\n» !meme - Funny memes\n» !admin - Owner info\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016`]
       },
       {
         timer: '10:00:00 AM',
-        message: [`${styles.header}\n  🎮 𝗚𝗮𝗺𝗶𝗻𝗴 𝗧𝗶𝗺𝗲 🎮\n${styles.divider}\n${clockEmojis[10]} 𝗡𝗼𝘄: 10:00 AM\n\n👇 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱 𝗡𝗼𝘄!\n» Modern Warships (Play Store)\n» Ultimate naval battles! ⚓💥\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016`]
+        message: [`${styles.header}\n  🎮 𝗚𝗮𝗺𝗶𝗻𝗴 𝗧𝗶𝗺𝗲 🎮\n${styles.divider}\n${clockEmojis[10]} 𝗡𝗼𝘄: 10:00 AM\n\n👇 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱 𝗡𝗼𝘄!\n» Modern Warships (Play Store + PC)\n» Ultimate naval battles! ⚓💥\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016`]
       },
       {
         timer: '11:00:00 AM',
@@ -116,7 +116,7 @@ module.exports = {
       },
       {
         timer: '5:30:00 PM',
-        message: [`${styles.header}\n  🌆 𝗘𝘃𝗲𝗻𝗶𝗻𝗴 𝗧𝗿𝗮𝗻𝘀𝗶𝘁𝗶𝗼𝗻 🌆\n${styles.divider}\n🕠 𝗡𝗼𝘄: 5:30 PM\n\nPrepare for Maghrib Prayer! 🌙🕌\nReflect & recharge spiritually! 📿🤲\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`]
+        message: [`${styles.header}\n  🌆 𝗘𝘃𝗲𝗻𝗶𝗻𝗴 𝗧𝗿𝗮𝗻𝘀𝗶𝘁𝗶𝗼𝗻 🌆\n${styles.divider}\n🕠 𝗡𝗼𝘄: 5:30 PM\n\nTake a short walk and enjoy the evening! 🌆\nReflect & refresh mentally 😌✨\n${styles.footer}\n👑 Owner: https://fb.com/Omor.TE.16016 \n✨ 𝗖𝗿𝗲𝗱𝗶𝘁𝘀: ★OMOR TE★`]
       },
       {
         timer: '6:00:00 PM',
