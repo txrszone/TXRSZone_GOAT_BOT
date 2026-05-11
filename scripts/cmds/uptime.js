@@ -39,7 +39,7 @@ module.exports = {
       const osText = `${osType} ${osRelease}`;
 
       // আপনার দেওয়া ছবির লিংক
-      const backgroundUrl = "https://i.postimg.cc/RFzSTwDQ/images-(4).jpg";
+      const backgroundUrl = "https://i.postimg.cc/3wbvnfHP/Polish-20260511-164744529.jpg";
       const __B = (await axios.get(backgroundUrl, { responseType: "arraybuffer" })).data;
       const __C = await loadImage(__B);
       
