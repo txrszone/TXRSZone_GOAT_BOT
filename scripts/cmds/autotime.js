@@ -7,7 +7,7 @@ let intervalStarted = false;
 module.exports = {
   config: {
     name: 'autotime',
-    version: '15.2.0',
+    version: '20.0.0',
     author: 'OMOR TE',
     countDown: 3,
     role: 0,
