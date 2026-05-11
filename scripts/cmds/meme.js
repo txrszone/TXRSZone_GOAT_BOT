@@ -14,7 +14,7 @@ module.exports = {
     countDown: 10,
     role: 0,
     category: "fun",
-    guide: "{pn}"
+    guide: "${prefix} meme"
   },
   
   onStart: async function({ message, event, api }) {
