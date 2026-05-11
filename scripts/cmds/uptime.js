@@ -38,7 +38,7 @@ module.exports = {
       const osRelease = os.release();
       const osText = `${osType} ${osRelease}`;
 
-      // আপনার দেওয়া ছবির লিংক
+      // ✅ আপনার নতুন ব্যাকগ্রাউন্ড ইমেজ লিংক
       const backgroundUrl = "https://i.postimg.cc/3wbvnfHP/Polish-20260511-164744529.jpg";
       const __B = (await axios.get(backgroundUrl, { responseType: "arraybuffer" })).data;
       const __C = await loadImage(__B);
@@ -48,12 +48,12 @@ module.exports = {
 
       ctx.drawImage(__C, 0, 0, __C.width, __C.height);
 
-      // ✅ পারফেক্ট সাইজ: 48px (মাঝারি - খুব বড়ও না, খুব ছোটও না)
-      const fontSize = 48;
+      // 🔥 বড় ছবি → বড় ফন্ট সাইজ (64px), স্পেসিং বাড়ানো হয়েছে
+      const fontSize = 64;
       ctx.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
 
-      // ✅ আধুনিক ও চোখধাঁধানো রং (Neon + Pastel মিক্স)
+      // আধুনিক প্রফেশনাল কালার স্কিম
       const lineColors = [
         "#FFD700", // সোনালী (Uptime)
         "#FF6B6B", // লালচে গোলাপি (Ping)
@@ -63,15 +63,15 @@ module.exports = {
         "#FF8C94"  // পেস্টেল গোলাপি (Owner)
       ];
 
-      // ব্যাকগ্রাউন্ডে হালকা ছায়া টেক্সটের জন্য
-      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
+      ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 3;
 
-      let posY = __C.height / 2 - 70;
-      const posX = 55;
-      const lineHeight = 58;
+      // বড় ছবিতে টেক্সট সেন্টার করতে posX, posY সামান্য অ্যাডজাস্ট করা যায়
+      let posY = __C.height / 2 - 80;
+      const posX = 70;
+      const lineHeight = 80; // বড় ফন্টের জন্য ফাঁকা বাড়ানো হয়েছে
 
       function drawLines(linesArray, context, yStart) {
         let tempY = yStart;
@@ -81,11 +81,9 @@ module.exports = {
 
           context.fillStyle = color;
           context.strokeStyle = "#000000";
-          context.lineWidth = 2;
+          context.lineWidth = 3;
 
-          // স্ট্রোক (কালো আউটলাইন)
           context.strokeText(line, posX, tempY);
-          // ফিল (কালারফুল)
           context.fillText(line, posX, tempY);
 
           tempY += lineHeight;
@@ -107,15 +105,15 @@ module.exports = {
       const endTime = performance.now();
       const ping = Math.round(endTime - startTime);
 
-      // ফাইনাল ক্যানভাস
+      // ফাইনাল ক্যানভাস (সঠিক পিং সহ)
       const canvasFinal = createCanvas(__C.width, __C.height);
       const ctxFinal = canvasFinal.getContext("2d");
       ctxFinal.drawImage(__C, 0, 0, __C.width, __C.height);
       ctxFinal.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
-      ctxFinal.shadowColor = "rgba(0, 0, 0, 0.5)";
-      ctxFinal.shadowBlur = 8;
-      ctxFinal.shadowOffsetX = 2;
-      ctxFinal.shadowOffsetY = 2;
+      ctxFinal.shadowColor = "rgba(0, 0, 0, 0.6)";
+      ctxFinal.shadowBlur = 12;
+      ctxFinal.shadowOffsetX = 3;
+      ctxFinal.shadowOffsetY = 3;
 
       const finalLines = [
         `⚡ Uptime : ${uptimeText}`,
@@ -130,7 +128,7 @@ module.exports = {
       for (let i = 0; i < finalLines.length; i++) {
         ctxFinal.fillStyle = lineColors[i % lineColors.length];
         ctxFinal.strokeStyle = "#000000";
-        ctxFinal.lineWidth = 2;
+        ctxFinal.lineWidth = 3;
         ctxFinal.strokeText(finalLines[i], posX, finalY);
         ctxFinal.fillText(finalLines[i], posX, finalY);
         finalY += lineHeight;
