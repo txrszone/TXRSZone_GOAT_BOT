@@ -11,7 +11,7 @@ module.exports = {
     role: 0,
     shortDescription: "Add media to database",
     longDescription: "Reply to an image/video with name to add to database",
-    guide: "{pn} <name> (reply to an image/video)",
+    guide: "{p}<name> (reply to an image/video)",
     category: "media"
   },
 
