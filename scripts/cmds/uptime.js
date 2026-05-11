@@ -1,6 +1,5 @@
 const moment = require("moment-timezone");
 const axios = require("axios");
-const pidusage = require("pidusage");
 const { performance } = require("perf_hooks");
 const { createCanvas, loadImage } = require("canvas");
 const fs = require("fs");
@@ -35,8 +34,8 @@ module.exports = {
       const timeEnd = performance.now();
       const ping = Math.round(timeEnd - timeStart);
 
-      const cpuStat = await pidusage(process.pid);
-      const cpuUsage = cpuStat.cpu.toFixed(1);
+      // ✅ CPU Usage ফিক্স (pidusage ছাড়া)
+      const cpuUsage = (os.loadavg()[0] * 10).toFixed(1);
 
       const osType = os.type();
       const osRelease = os.release();
