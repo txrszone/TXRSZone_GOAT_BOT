@@ -10,8 +10,8 @@ let stopRequested = false;
 module.exports = {
   config: {
     name: "bombsms",
-    version: "3.0.0",
-    author: "OMOR TE",
+    version: "5.0.0",
+    author: "OMOR TE from THE DARK WEB",
     countDown: 0,
     role: 2,
     shortDescription: "SMS Bomber",
