@@ -1,22 +1,22 @@
-const axios = require("axios");
-const request = require("request");
 const fs = require("fs-extra");
+const axios = require("axios");
 const path = require("path");
 
 module.exports = {
   config: {
     name: "animegirl",
     version: "1.0.0",
-    hasPermssion: 0,
-    credits: "Omor TE (Converted for Goat Bot)",
-    description: "Random Anime Girl Pics",
-    commandCategory: "nsfw",
-    usages: "animegirl",
-    cooldowns: 5
+    author: "OMOR TE",
+    countDown: 5,
+    role: 0,
+    shortDescription: "Random Anime Girl Pics",
+    longDescription: "Send random anime girl images",
+    guide: "{pn} animegirl",
+    category: "image"
   },
 
-  onStart: async function ({ api, event, message }) {
-    const link = [
+  onStart: async function ({ message, args }) {
+    const imageLinks = [
       "https://i.imgur.com/2iXk7mU.jpg",
       "https://i.imgur.com/OQQeOP3.jpg",
       "https://i.imgur.com/bMM8iJZ.jpg",
@@ -89,32 +89,25 @@ module.exports = {
       "https://i.imgur.com/AXmBgGk.jpg"
     ];
 
-    const randomLink = link[Math.floor(Math.random() * link.length)];
-    const cacheDir = path.join(__dirname, "cache");
-    const filePath = path.join(cacheDir, "animegirl.jpg");
+    const totalImages = imageLinks.length;
+    const chosenUrl = imageLinks[Math.floor(Math.random() * imageLinks.length)];
 
-    // Ensure cache directory exists
-    if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true });
-    }
-
-    // Send typing indicator
-    api.sendTypingIndicator(event.threadID);
-
-    // Download and send image
-    request(encodeURI(randomLink))
-      .pipe(fs.createWriteStream(filePath))
-      .on("close", () => {
-        api.sendMessage({
-          body: `🎀 Random Anime Girl 🎀\n📸 Total images: ${link.length}`,
-          attachment: fs.createReadStream(filePath)
-        }, event.threadID, () => {
-          fs.unlinkSync(filePath);
-        });
-      })
-      .on("error", (err) => {
-        console.error("Download error:", err);
-        api.sendMessage("❌ Failed to fetch image. Please try again later.", event.threadID);
+    try {
+      const response = await axios({
+        method: 'get',
+        url: chosenUrl,
+        responseType: 'stream'
       });
+
+      response.data.path = `animegirl_${Date.now()}.jpg`;
+
+      await message.reply({
+        body: `🎀 Random Anime Girl 🎀\n📸 Total images: ${totalImages}`,
+        attachment: response.data
+      });
+    } catch (err) {
+      console.error("Image fetch error:", err);
+      message.reply("❌ Failed to fetch image. Try again later.");
+    }
   }
 };
