@@ -38,7 +38,7 @@ module.exports = {
       const osRelease = os.release();
       const osText = `${osType} ${osRelease}`;
 
-      // ✅ আপনার নতুন ব্যাকগ্রাউন্ড ইমেজ লিংক
+      // আপনার দেওয়া ব্যাকগ্রাউন্ড ইমেজ লিংক
       const backgroundUrl = "https://i.postimg.cc/3wbvnfHP/Polish-20260511-164744529.jpg";
       const __B = (await axios.get(backgroundUrl, { responseType: "arraybuffer" })).data;
       const __C = await loadImage(__B);
@@ -48,8 +48,8 @@ module.exports = {
 
       ctx.drawImage(__C, 0, 0, __C.width, __C.height);
 
-      // 🔥 বড় ছবি → বড় ফন্ট সাইজ (64px), স্পেসিং বাড়ানো হয়েছে
-      const fontSize = 64;
+      // ✅ লেখার সাইজ: আগের 64px থেকে 3px কম = 61px
+      const fontSize = 61;
       ctx.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
       ctx.lineWidth = 3;
 
@@ -68,10 +68,10 @@ module.exports = {
       ctx.shadowOffsetX = 3;
       ctx.shadowOffsetY = 3;
 
-      // বড় ছবিতে টেক্সট সেন্টার করতে posX, posY সামান্য অ্যাডজাস্ট করা যায়
-      let posY = __C.height / 2 - 80;
+      // ✅ আগের posY থেকে 40px উপরে থেকে শুরু
+      let posY = __C.height / 2 - 120;  // আগে ছিল -80, এখন -120 (উপরে)
       const posX = 70;
-      const lineHeight = 80; // বড় ফন্টের জন্য ফাঁকা বাড়ানো হয়েছে
+      const lineHeight = 78; // font 61 এর জন্য適當 ফাঁকা
 
       function drawLines(linesArray, context, yStart) {
         let tempY = yStart;
