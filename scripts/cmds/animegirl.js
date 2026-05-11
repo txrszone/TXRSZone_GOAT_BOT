@@ -11,7 +11,7 @@ module.exports = {
     role: 0,
     shortDescription: "Random Anime Girl Pics",
     longDescription: "Send random anime girl images",
-    guide: "{pn} animegirl",
+    guide: "{p}animegirl",
     category: "nsfw"
   },
 
