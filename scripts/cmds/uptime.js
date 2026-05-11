@@ -15,10 +15,10 @@ module.exports = {
     aliases: ["upt"],
     version: "2.0.0",
     role: 0,
-    credits: "MAHBUB ULLASH",
+    credits: "•Omor TE•",
     description: "Shows bot uptime with text on custom secured image",
     category: "info",
-    guide: "{pn}"
+    guide: "{p}upt or {p}uptime"
   },
 
   onStart: async function ({ api, event }) {
@@ -61,7 +61,7 @@ module.exports = {
         `CPU    : ${cpuUsage}%`,
         `OS     : ${osText}`,
         `Date   : ${currentDate}`,
-        `Owner  : Mahbub Ullash`
+        `Owner  : •-Omor TE-•`
       ];
 
       const lineColors = [
