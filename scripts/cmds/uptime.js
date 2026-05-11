@@ -32,7 +32,6 @@ module.exports = {
       const s = Math.floor(uptimeSec % 60);
       const uptimeText = `${h}h ${m}m ${s}s`;
 
-      // CPU Usage
       const cpuUsage = (os.loadavg()[0] * 10).toFixed(1);
 
       const osType = os.type();
@@ -40,7 +39,7 @@ module.exports = {
       const osText = `${osType} ${osRelease}`;
 
       // আপনার দেওয়া ছবির লিংক
-      const backgroundUrl = "https://i.postimg.cc/3wbvnfHP/Polish-20260511-164744529.jpg";
+      const backgroundUrl = "https://i.postimg.cc/RFzSTwDQ/images-(4).jpg";
       const __B = (await axios.get(backgroundUrl, { responseType: "arraybuffer" })).data;
       const __C = await loadImage(__B);
       
@@ -49,18 +48,30 @@ module.exports = {
 
       ctx.drawImage(__C, 0, 0, __C.width, __C.height);
 
-      // ✅ লেখার সাইজ ঠিক করা হয়েছে (40px)
-      const fontSize = 40;
-      ctx.font = `${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
-      ctx.lineWidth = 3;
+      // ✅ পারফেক্ট সাইজ: 48px (মাঝারি - খুব বড়ও না, খুব ছোটও না)
+      const fontSize = 48;
+      ctx.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
+      ctx.lineWidth = 2;
 
+      // ✅ আধুনিক ও চোখধাঁধানো রং (Neon + Pastel মিক্স)
       const lineColors = [
-        "#ff4b4b", "#00ffcc", "#ffd93d",
-        "#4b7bff", "#ff6bff", "#00ff7f"
+        "#FFD700", // সোনালী (Uptime)
+        "#FF6B6B", // লালচে গোলাপি (Ping)
+        "#4ECDC4", // টকটকে নীলাভ সবুজ (CPU)
+        "#FFE66D", // হালকা সোনালী (OS)
+        "#A8E6CF", // পেস্টেল সবুজ (Date)
+        "#FF8C94"  // পেস্টেল গোলাপি (Owner)
       ];
 
-      let posY = __C.height / 2 - 60;
-      const posX = 50;
+      // ব্যাকগ্রাউন্ডে হালকা ছায়া টেক্সটের জন্য
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+
+      let posY = __C.height / 2 - 70;
+      const posX = 55;
+      const lineHeight = 58;
 
       function drawLines(linesArray, context, yStart) {
         let tempY = yStart;
@@ -69,59 +80,62 @@ module.exports = {
           const color = lineColors[i % lineColors.length];
 
           context.fillStyle = color;
-          context.strokeStyle = "black";
-          context.shadowColor = color;
-          context.shadowBlur = 20;
+          context.strokeStyle = "#000000";
+          context.lineWidth = 2;
 
+          // স্ট্রোক (কালো আউটলাইন)
           context.strokeText(line, posX, tempY);
+          // ফিল (কালারফুল)
           context.fillText(line, posX, tempY);
 
-          tempY += 50; // লাইনের ফাঁকা
+          tempY += lineHeight;
         }
       }
 
-      // টেম্প লাইন (পিং ছাড়া)
+      // টেম্প লাইন
       const tempLines = [
-        `Uptime : ${uptimeText}`,
-        `Ping   : ...ms`,
-        `CPU    : ${cpuUsage}%`,
-        `OS     : ${osText}`,
-        `Date   : ${currentDate}`,
-        `Owner  : •-Omor TE-•`
+        `⚡ Uptime : ${uptimeText}`,
+        `📡 Ping   : ...ms`,
+        `💻 CPU    : ${cpuUsage}%`,
+        `🖥️ OS     : ${osText}`,
+        `📅 Date   : ${currentDate}`,
+        `👑 Owner  : •-Omor TE-•`
       ];
       drawLines(tempLines, ctx, posY);
-      ctx.shadowBlur = 0;
 
       // আসল পিং
       const endTime = performance.now();
       const ping = Math.round(endTime - startTime);
 
-      // ফাইনাল ক্যানভাস (সঠিক পিং সহ)
+      // ফাইনাল ক্যানভাস
       const canvasFinal = createCanvas(__C.width, __C.height);
       const ctxFinal = canvasFinal.getContext("2d");
       ctxFinal.drawImage(__C, 0, 0, __C.width, __C.height);
-      ctxFinal.font = `${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
-      ctxFinal.lineWidth = 3;
+      ctxFinal.font = `bold ${fontSize}px "Segoe UI", "Poppins", "Sans-serif"`;
+      ctxFinal.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctxFinal.shadowBlur = 8;
+      ctxFinal.shadowOffsetX = 2;
+      ctxFinal.shadowOffsetY = 2;
 
       const finalLines = [
-        `Uptime : ${uptimeText}`,
-        `Ping   : ${ping}ms`,
-        `CPU    : ${cpuUsage}%`,
-        `OS     : ${osText}`,
-        `Date   : ${currentDate}`,
-        `Owner  : •-Omor TE-•`
+        `⚡ Uptime : ${uptimeText}`,
+        `📡 Ping   : ${ping}ms`,
+        `💻 CPU    : ${cpuUsage}%`,
+        `🖥️ OS     : ${osText}`,
+        `📅 Date   : ${currentDate}`,
+        `👑 Owner  : •-Omor TE-•`
       ];
 
       let finalY = posY;
       for (let i = 0; i < finalLines.length; i++) {
         ctxFinal.fillStyle = lineColors[i % lineColors.length];
-        ctxFinal.strokeStyle = "black";
-        ctxFinal.shadowColor = lineColors[i % lineColors.length];
-        ctxFinal.shadowBlur = 20;
+        ctxFinal.strokeStyle = "#000000";
+        ctxFinal.lineWidth = 2;
         ctxFinal.strokeText(finalLines[i], posX, finalY);
         ctxFinal.fillText(finalLines[i], posX, finalY);
-        finalY += 50;
+        finalY += lineHeight;
       }
+
       ctxFinal.shadowBlur = 0;
 
       const finalBuffer = canvasFinal.toBuffer("image/png");
