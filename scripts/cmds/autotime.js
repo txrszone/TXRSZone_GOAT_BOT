@@ -10,7 +10,7 @@ module.exports = {
     role: 0,
     shortDescription: 'Auto time messages',
     longDescription: 'Automatically sends messages at set times (on/off control)',
-    guide: '{pn} on/off',
+    guide: '{p}autotime on/off',
     category: 'system'
   },
 
