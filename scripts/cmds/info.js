@@ -1,200 +1,135 @@
-module.exports.config = {
- name: "info",
- version: "1.2.6",
- hasPermssion: 0,
- credits: "OMOR TE",
- description: "info bot owner",
- commandCategory: "For users",
- hide:true,
- usages: "",
- cooldowns: 5,
+const fs = require("fs-extra");
+const axios = require("axios");
+const path = require("path");
+const moment = require("moment-timezone");
+
+module.exports = {
+  config: {
+    name: "info",
+    version: "1.2.6",
+    author: "OMOR TE",
+    countDown: 5,
+    role: 0,
+    shortDescription: "Bot & Owner Info",
+    longDescription: "Show bot system info and owner details",
+    guide: "{pn} info",
+    category: "info",
+    hide: true
+  },
+
+  onStart: async function ({ message, event, users, threads, config }) {
+    const { threadID, senderID } = event;
+    const { PREFIX, BOTNAME } = config;
+    const { commands } = global.client;
+    
+    const dateNow = Date.now();
+    const time = process.uptime();
+    const hours = Math.floor(time / (60 * 60));
+    const minutes = Math.floor((time % (60 * 60)) / 60);
+    const seconds = Math.floor(time % 60);
+
+    // Admin list from config
+    const listAdmin = global.config.ADMINBOT || [];
+    
+    let adminList = [];
+    for (const id of listAdmin) {
+      if (id) {
+        try {
+          const name = await users.getNameUser(id);
+          adminList.push(`👤 ${name} - ${id}`);
+        } catch(e) {
+          adminList.push(`👤 ${id}`);
+        }
+      }
+    }
+
+    // Image links (your original links)
+    const imageLinks = [
+      "https://i.postimg.cc/0jRGknT9/FB-IMG-1744474199349.jpg",
+      "https://i.postimg.cc/Y9KK7KC0/Polish-20250526-101350151.jpg",
+      "https://i.postimg.cc/brgK1ZHS/Hitube-c-Rb-Pat-Cm-XZ-2025-05-26-10-05-46.jpg",
+      "https://i.postimg.cc/MT84479j/Hitube-Bt4-Wyjgo-WZ-2025-05-26-10-05-58.jpg",
+      "https://i.postimg.cc/YS8YKk3f/received-395252956651820.jpg",
+      "https://i.postimg.cc/0N5ZJVXn/a844a740b33eba79b486744759914953-1.jpg",
+      "https://i.postimg.cc/YCtFS03n/FB-IMG-1748855056576.jpg",
+      "https://i.postimg.cc/cCDp8r3R/FB-IMG-1748855063027.jpg",
+      "https://i.postimg.cc/sxDFXpMf/FB-IMG-1748855065465.jpg",
+      "https://i.postimg.cc/DZcknCyY/FB-IMG-1748855075592.jpg"
+    ];
+
+    const randomImg = imageLinks[Math.floor(Math.random() * imageLinks.length)];
+    const cacheDir = path.join(__dirname, "cache");
+    const filePath = path.join(cacheDir, "info_img.png");
+
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+
+    const textMessage = `
+🍀---- Hello/Assalamu Alaikum ----🍀
+
+┏━━•❅•••❈•••❈•••❅•━━┓
+
+| ${BOTNAME || "Bot"} |
+
+┗━━•❅•••❈•••❈•••❅•━━┛
+
+______________________________
+
+↓↓ 𝗕𝗢𝗧 𝗦𝗬𝗦𝗧𝗘𝗠 𝗜𝗡𝗙𝗢 ↓↓
+
+» 𝗣𝗿𝗲𝗳𝗶𝘅 𝘀𝘆𝘀𝘁𝗲𝗺: ${PREFIX}
+
+» 𝗧𝗼𝘁𝗮𝗹 𝗠𝗼𝗱𝘂𝗹𝗲𝘀: ${commands.size}
+
+» 𝗣𝗶𝗻𝗴: ${Date.now() - dateNow}ms
+
+______________________________
+
+↓↓ 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 𝗜𝗡𝗙𝗢 ↓↓
+
+👤 𝗡𝗔𝗠𝗘: Omor T.E
+
+🔗 𝗙𝗮𝗰𝗲𝗯𝗼𝗼𝗸: fb.com/Omor.TE.16016
+
+💬 𝗗𝗶𝘀𝗰𝗼𝗿𝗱: https://discord.gg/PQN4P6qSrM
+
+${adminList.length > 0 ? `\n👑 𝗔𝗗𝗠𝗜𝗡 𝗟𝗜𝗦𝗧:\n${adminList.join("\n")}` : ""}
+
+______________________________
+
+⏱️ 𝗕𝗢𝗧 𝗨𝗣𝗧𝗜𝗠𝗘: ${hours}h ${minutes}m ${seconds}s
+
+______________________________
+
+👥 𝗧𝗢𝗧𝗔𝗟 𝗨𝗦𝗘𝗥𝗦: ${global.data.allUserID?.length || "N/A"}
+
+💬 𝗧𝗢𝗧𝗔𝗟 𝗚𝗥𝗢𝗨𝗣𝗦: ${global.data.allThreadID?.length || "N/A"}
+
+______________________________
+
+✨ Thanks for using ~
+🏴‍☠️ MW Legends Official Bot
+    `;
+
+    try {
+      // Download and send image with text
+      const response = await axios({
+        method: 'get',
+        url: randomImg,
+        responseType: 'stream'
+      });
+
+      response.data.path = `info_${Date.now()}.png`;
+
+      await message.reply({
+        body: textMessage,
+        attachment: response.data
+      });
+    } catch (err) {
+      console.error("Image download error:", err);
+      // If image fails, send only text
+      message.reply(textMessage);
+    }
+  }
 };
-
-
-module.exports.run = async function ({ api, event, args, Users, permssion, getText ,Threads}) {
- const content = args.slice(1, args.length);
- const { threadID, messageID, mentions } = event;
- const { configPath } = global.client;
- const { ADMINBOT } = global.config;
- const { NDH } = global.config;
- const { userName } = global.data;
- const request = global.nodemodule["request"];
- const fs = global.nodemodule["fs-extra"];
- const { writeFileSync } = global.nodemodule["fs-extra"];
- const mention = Object.keys(mentions);
- delete require.cache[require.resolve(configPath)];
- var config = require(configPath);
- const listAdmin = ADMINBOT || config.ADMINBOT || [];
- const listNDH = NDH || config.NDH || [];
- {
- const PREFIX = config.PREFIX;
- const namebot = config.BOTNAME;
- const { commands } = global.client;
- const threadSetting = (await Threads.getData(String(event.threadID))).data || 
- {};
- const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX 
- : global.config.PREFIX;
- const dateNow = Date.now();
- const time = process.uptime(),
- hours = Math.floor(time / (60 * 60)),
- minutes = Math.floor((time % (60 * 60)) / 60),
- seconds = Math.floor(time % 60);
- const data = [
- "Bạn không thể tìm được lệnh admin tại 'help' của MintBot",
- "Đừng mong chờ gì từ MintBot.",
- "Cái đoạn này á? Của SpermBot.",
- "Nếu muốn không lỗi lệnh thì hãy xài những lệnh có trong help vì những lệnh lỗi đã bị ẩn rồi.",
- "Đây là một con bot được các coder của MiraiProject nhúng tay vào.",
- "Muốn biết sinh nhật của Mint thì hãy xài 'birthday'.",
- "Cặc.",
- "Cút.",
- "Lồn.",
- "Bạn chưa biết.",
- "Bạn đã biết.",
- "Bạn sẽ biết.",
- "Không có gì là hoàn hảo, MintBot là ví dụ.",
- "Mirai dropped.",
- "MintBot là MiraiProject nhưng module là idea của SpermBot.",
- "Bạn không biết cách sử dụng MintBot? Đừng dùng nữa.",
- "Muốn chơi game? Qua bot khác mà chơi đây không rảnh",
- "MintBot có thể hiểu phụ nữ nhưng không thể có được họ.",
- "MintBot cân spam nhưng không có gì đáng để bạn spam."
- ];
- var link = [
-"https://i.postimg.cc/0jRGknT9/FB-IMG-1744474199349.jpg", "https://i.postimg.cc/Y9KK7KC0/Polish-20250526-101350151.jpg", "https://i.postimg.cc/brgK1ZHS/Hitube-c-Rb-Pat-Cm-XZ-2025-05-26-10-05-46.jpg", "https://i.postimg.cc/MT84479j/Hitube-Bt4-Wyjgo-WZ-2025-05-26-10-05-58.jpg", "https://i.postimg.cc/YS8YKk3f/received-395252956651820.jpg", "https://i.postimg.cc/0N5ZJVXn/a844a740b33eba79b486744759914953-1.jpg", "https://i.postimg.cc/YCtFS03n/FB-IMG-1748855056576.jpg",
-"https://i.postimg.cc/cCDp8r3R/FB-IMG-1748855063027.jpg",
-"https://i.postimg.cc/sxDFXpMf/FB-IMG-1748855065465.jpg",
-"https://i.postimg.cc/DZcknCyY/FB-IMG-1748855075592.jpg",
- ];
-
- var i = 1;
- var msg = [];
- const moment = require("moment-timezone");
- const date = moment.tz("Asia/Dhaka").format("hh:mm:ss");
- for (const idAdmin of listAdmin) {
- if (parseInt(idAdmin)) {
- const name = await Users.getNameUser(idAdmin);
- msg.push(`${i++}/ ${name} - ${idAdmin}`);
- }
- }
- var msg1 = [];
- for (const idNDH of listNDH) {
- if (parseInt(idNDH)) {
- const name1 = (await Users.getData(idNDH)).name
- msg1.push(`${i++}/ ${name1} - ${idNDH}`);
- }
- }
- var callback = () => 
- api.sendMessage({ body: `====「 ${namebot} 」====\n» Prefix system: ${PREFIX}\n» Prefix box: ${prefix}\n» Modules: ${commands.size}\n» Ping: ${Date.now() - dateNow}ms\n──────────────\n======「 ADMIN 」 ======\n${msg.join("\n")}\n──────────────\nBot has been working for ${hours} hour(s) ${minutes} minute(s) ${seconds} second(s)\n\n» Total users: ${global.data.allUserID.length} \n» Total threads: ${global.data.allThreadID.length}\n──────────────\n[thanks for using bot!!]`, attachment: fs.createReadStream(__dirname + "/cache/kensu.jpg"), }, event.threadID, () => fs.unlinkSync(__dirname + "/cache/kensu.jpg"));
- return request(encodeURI(link[Math.floor(Math.random() * link.length)])).pipe(fs.createWriteStream(__dirname + "/cache/kensu.jpg")).on("close", () => callback()); 
- }
-}/**
- * @author Shaon Ahmed
- * @warn Do not edit code or edit credits
- */
-
-module.exports.config = {
- name: "info",
- version: "1.2.6",
- hasPermssion: 0,
- credits: "Shaon Ahmed",
- description: "🥰আসসালামু আলাইকুম 🥰",
- commandCategory: "For users",
- hide:true,
- usages: "",
- cooldowns: 5,
-};
-
-
-module.exports.run = async function ({ api, event, args, Users, permssion, getText ,Threads}) {
- const content = args.slice(1, args.length);
- const { threadID, messageID, mentions } = event;
- const { configPath } = global.client;
- const { ADMINBOT } = global.config;
- const { NDH } = global.config;
- const { userName } = global.data;
- const request = global.nodemodule["request"];
- const fs = global.nodemodule["fs-extra"];
- const { writeFileSync } = global.nodemodule["fs-extra"];
- const mention = Object.keys(mentions);
- delete require.cache[require.resolve(configPath)];
- var config = require(configPath);
- const listAdmin = ADMINBOT || config.ADMINBOT || [];
- const listNDH = NDH || config.NDH || [];
- {
- const PREFIX = config.PREFIX;
- const namebot = config.BOTNAME;
- const { commands } = global.client;
- const threadSetting = (await Threads.getData(String(event.threadID))).data || 
- {};
- const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX 
- : global.config.PREFIX;
- const dateNow = Date.now();
- const time = process.uptime(),
- hours = Math.floor(time / (60 * 60)),
- minutes = Math.floor((time % (60 * 60)) / 60),
- seconds = Math.floor(time % 60);
- const data = [
- "Bạn không thể tìm được lệnh admin tại 'help' của MintBot",
- "Đừng mong chờ gì từ MintBot.",
- "Cái đoạn này á? Của SpermBot.",
- "Nếu muốn không lỗi lệnh thì hãy xài những lệnh có trong help vì những lệnh lỗi đã bị ẩn rồi.",
- "Đây là một con bot được các coder của MiraiProject nhúng tay vào.",
- "Muốn biết sinh nhật của Mint thì hãy xài 'birthday'.",
- "Cặc.",
- "Cút.",
- "Lồn.",
- "Bạn chưa biết.",
- "Bạn đã biết.",
- "Bạn sẽ biết.",
- "Không có gì là hoàn hảo, MintBot là ví dụ.",
- "Mirai dropped.",
- "MintBot là MiraiProject nhưng module là idea của SpermBot.",
- "Bạn không biết cách sử dụng MintBot? Đừng dùng nữa.",
- "Muốn chơi game? Qua bot khác mà chơi đây không rảnh",
- "MintBot có thể hiểu phụ nữ nhưng không thể có được họ.",
- "MintBot cân spam nhưng không có gì đáng để bạn spam."
- ];
- var link = [
-"https://i.postimg.cc/0jRGknT9/FB-IMG-1744474199349.jpg", "https://i.postimg.cc/Y9KK7KC0/Polish-20250526-101350151.jpg", "https://i.postimg.cc/brgK1ZHS/Hitube-c-Rb-Pat-Cm-XZ-2025-05-26-10-05-46.jpg", "https://i.postimg.cc/MT84479j/Hitube-Bt4-Wyjgo-WZ-2025-05-26-10-05-58.jpg", "https://i.postimg.cc/YS8YKk3f/received-395252956651820.jpg", "https://i.postimg.cc/0N5ZJVXn/a844a740b33eba79b486744759914953-1.jpg", "https://i.postimg.cc/YCtFS03n/FB-IMG-1748855056576.jpg",
-"https://i.postimg.cc/cCDp8r3R/FB-IMG-1748855063027.jpg",
-"https://i.postimg.cc/sxDFXpMf/FB-IMG-1748855065465.jpg",
-"https://i.postimg.cc/DZcknCyY/FB-IMG-1748855075592.jpg",
- ]; 
- var i = 1;
- var msg = [];
- const moment = require("moment-timezone");
- const date = moment.tz("Asia/Dhaka").format("hh:mm:ss");
- for (const idAdmin of listAdmin) {
- if (parseInt(idAdmin)) {
- const name = await Users.getNameUser(idAdmin);
- msg.push(`${i++}/ ${name} - ${idAdmin}`);
- }
- }
- var msg1 = [];
- for (const idNDH of listNDH) {
- if (parseInt(idNDH)) {
- const name1 = (await Users.getData(idNDH)).name
- msg1.push(`${i++}/ ${name1} - ${idNDH}`);
- }
- }
- var callback = () => 
- api.sendMessage({ body: 
- `🍀----Hello/Assalamu Alaikum----🍀
-
-┏━━•❅•••❈•••❈•••❅•━━┓\n\n| ${namebot} | \n\n┗━━•❅•••❈•••❈•••❅•━━┛ \n\n______________________________\n\n↓↓_𝗕𝗢𝗧 𝗦𝗬𝗦𝗧𝗘𝗠 𝗜𝗡𝗙𝗢_↓↓\n\n» 𝗣𝗿𝗲𝗳𝗶𝘅 𝘀𝘆𝘀𝘁𝗲𝗺: ${PREFIX}\n\n» 𝗣𝗿𝗲𝗳𝗶𝘅 𝗯𝗼𝘅: ${prefix}\n\n» 𝗧𝗼𝘁𝗮𝗹 𝗠𝗼𝗱𝘂𝗹𝗲𝘀: ${commands.size}\n\n» 𝗣𝗶𝗻𝗴: ${Date.now() - dateNow}ms\n______________________________\n\n ↓↓_𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 𝗜𝗡𝗙𝗢_↓↓\n\n 
-𝗡𝗔𝗠𝗘 :>Omor T.E<
-
-𝗢𝘄𝗻𝗲𝗿 𝗜𝗱 𝗹𝗶𝗻𝗸:☞ https://www.facebook.com/Omor.TE.16016
-
-Discord Server Link: https://discord.gg/PQN4P6qSrM
-
-______________________________\n\n----↓↓BOT UPTIME↓↓----\n\n ${hours} : ${minutes} : ${seconds} second(s)\n\n______________________________\n» 𝗧𝗢𝗧𝗔𝗟 𝗨𝗦𝗘𝗥𝗦: ${global.data.allUserID.length} \n\n» 𝗧𝗢𝗧𝗔𝗟 𝗚𝗥𝗢𝗨𝗣: ${global.data.allThreadID.length}\n______________________________\n\n Thanks for using~ \n †★MW Legends★† Official Facebook Messenger Bot! 
-\n--------------------------------------------------\n\n🏴‍☠️⛵⚡`, attachment: fs.createReadStream(__dirname + "/cache/1.png")
-    }, event.threadID, () => fs.unlinkSync(__dirname + "/cache/1.png"));
-  
-    return request(encodeURI(`https://cdn.discordapp.com/avatars/1247872385466761289/a844a740b33eba79b486744759914953?size=1024`))
-        .pipe(fs.createWriteStream(__dirname + '/cache/1.png'))
-        .on('close', () => callback());
- }
-																			   }
