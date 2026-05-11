@@ -9,7 +9,7 @@ module.exports = {
     name: "admin",
     version: "2.0.0",
     hasPermssion: 0,
-    credits: "OMOR TE (Converted for Goat Bot)",
+    credits: "OMOR TE",
     description: "Show Owner Info",
     commandCategory: "info",
     usages: "admin",
