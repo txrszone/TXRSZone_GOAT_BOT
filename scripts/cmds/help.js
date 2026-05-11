@@ -9,7 +9,7 @@ module.exports = {
   config: {
     name: "help",
     version: "1.17",
-    author: "ULLASH",
+    author: "Omor TE",
     countDown: 5,
     role: 0,
     shortDescription: {
@@ -95,8 +95,9 @@ module.exports = {
   ├── INFO
   │ 📝 𝗗𝗲𝘀𝗰𝗿𝗶𝗽𝘁𝗶𝗼𝗻: ${longDescription}
   │ 👑 𝗔𝘂𝘁𝗵𝗼𝗿: ${author}
-  │ ⚙ 𝗚𝘂𝗶𝗱𝗲: ${usage}
+  │ ⚙ 𝗚𝘂𝗶𝗱𝗲: ${guide}
   ├── USAGE
+  │  ${usage}
   │ 🔯 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: ${configCommand.version || "1.0"}
   │ ♻𝗥𝗼𝗹𝗲: ${roleText}
   ╰────────────⊙`;
