@@ -11,7 +11,7 @@ module.exports = {
     role: 1,
     shortDescription: "Anti-join System",
     longDescription: "Turn on/off anti-join feature",
-    guide: "{pn} - Check status\n{pn} on - Turn on\n{pn} off - Turn off",
+    guide: "{p}antijoin - Check status\n{p}antijoin on - Turn on\n{p}antijoin off - Turn off",
     category: "system"
   },
 
