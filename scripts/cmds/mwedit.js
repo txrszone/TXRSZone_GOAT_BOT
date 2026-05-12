@@ -5,17 +5,17 @@ const path = require("path");
 module.exports = {
   config: {
     name: "mwedit",
-    version: "1.0.0",
+    version: "1.0.9",
     author: "OMOR TE",
-    countDown: 5,
+    countDown: 3,
     role: 0,
     shortDescription: "Random Modern Warships Editz",
     longDescription: "Send random Modern Warships edit videos",
-    guide: "{pn} mwedit",
+    guide: "{p}mwedit",
     category: "fun"
   },
 
-  onStart: async function ({ message, args }) {
+  onStart: async function ({ message, event, args, api }) {
     const videoLinks = [
       "https://github.com/user-attachments/assets/05e2b19e-cb56-4804-80bc-df9d35be5c30",
       "https://github.com/user-attachments/assets/9cef1e5b-520e-4ad2-9c99-fa4fc260d108",
@@ -59,6 +59,9 @@ module.exports = {
     const totalVideos = videoLinks.length;
     const chosenUrl = videoLinks[Math.floor(Math.random() * videoLinks.length)];
 
+    // 1️⃣ কনফার্মেশন মেসেজ
+    const confirmMsg = await message.reply(`🎬 **Fetching Modern Warships Editz...**\n━━━━━━━━━━━━━━━━━━━━\n⏳ Please wait, loading from ${totalVideos} videos!`);
+
     try {
       const response = await axios({
         method: 'get',
@@ -68,12 +71,29 @@ module.exports = {
 
       response.data.path = `mwedit_${Date.now()}.mp4`;
 
+      // 2️⃣ আসল ভিডিও পাঠানো
       await message.reply({
-        body: `🎬 Modern Warships Editz!\n📹 Total videos: ${totalVideos}`,
+        body: `🎬 Modern Warships Editz!\n📹 Total videos in stock: ${totalVideos}`,
         attachment: response.data
       });
+
+      // 3️⃣ র‌্যান্ডম ডিলে টাইম (1 সেকেন্ড থেকে 1.5 সেকেন্ডের মধ্যে)
+      const randomDelay = Math.floor(Math.random() * (1500 - 1000 + 1) + 1000); // 1000ms থেকে 1500ms
+      
+      setTimeout(async () => {
+        try {
+          await api.unsendMessage(confirmMsg.messageID);
+        } catch(e) {}
+      }, randomDelay);
+
     } catch (err) {
       console.error("Video fetch error:", err);
+      
+      // error হলে কনফার্মেশন মেসেজ ডিলিট
+      try {
+        await api.unsendMessage(confirmMsg.messageID);
+      } catch(e) {}
+      
       message.reply("⚠️ Failed to fetch video. Try again later.");
     }
   }
