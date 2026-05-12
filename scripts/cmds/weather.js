@@ -4,107 +4,142 @@ const moment = require("moment-timezone");
 module.exports = {
   config: {
     name: "weather",
-    version: "1.2",
+    version: "3.0.0",
     author: "OMOR TE",
-    countDown: 5,
+    countDown: 2,
     role: 0,
     shortDescription: "Weather Forecast",
-    longDescription: "Get current weather forecast for any city",
+    longDescription: "Get essential weather information",
     guide: "{p}weather <city>",
-    category: "other"
+    category: "weather"
   },
 
   onStart: async function ({ message, event, args, api }) {
     const area = args.join(" ");
     
     if (!area) {
-      return message.reply(`🌤️ **WEATHER FORECAST**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: weather Dhaka\n📌 উদাহরণ: weather London\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`🌤️ **WEATHER**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: weather Dhaka\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
 
-    // ✅ কনফার্মেশন মেসেজ
-    const confirmMsg = await message.reply(`🌤️ Fetching weather for ${area}...`);
+    const confirmMsg = await message.reply(`⏳ ${area} এর আবহাওয়া খোঁজা হচ্ছে...`);
 
     try {
       const apikey = "d7e795ae6a0d44aaa8abb1a0a7ac19e4";
       
-      // লোকেশন সার্চ
       const locationRes = await axios.get(`https://api.accuweather.com/locations/v1/cities/search.json?q=${encodeURIComponent(area)}&apikey=${apikey}&language=en`);
       
       if (locationRes.data.length === 0) {
         try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
-        return message.reply(`❌ Location not found: ${area}`);
+        return message.reply(`❌ "${area}" খুঁজে পাওয়া যায়নি!`);
       }
 
       const location = locationRes.data[0];
-      const areaKey = location.Key;
-      const areaName = location.LocalizedName;
-      const country = location.Country?.LocalizedName || "";
-
-      // আবহাওয়ার তথ্য
-      const weatherRes = await axios.get(`http://api.accuweather.com/forecasts/v1/daily/1day/${areaKey}?apikey=${apikey}&details=true&language=en`);
+      const weatherRes = await axios.get(`http://api.accuweather.com/forecasts/v1/daily/1day/${location.Key}?apikey=${apikey}&details=true&metric=true&language=en`);
       const today = weatherRes.data.DailyForecasts[0];
 
-      function convertFtoC(F) {
+      function toC(F) {
         return Math.floor((F - 32) / 1.8);
       }
 
-      function formatTime(timeStr) {
-        if (!timeStr) return "N/A";
-        const date = new Date(timeStr);
+      function formatTime(t) {
+        if (!t) return "N/A";
+        const date = new Date(t);
         return date.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: false });
       }
 
-      // ✅ সুন্দর ফরম্যাট (পাশাপাশি দেখাবে)
+      // 🔆 UV রেটিং ও গাইড
+      const uvIndex = today.Day?.UVIndex || "N/A";
+      let uvGuide = "";
+      let uvEmoji = "☀️";
+      
+      if (uvIndex !== "N/A") {
+        if (uvIndex <= 2) {
+          uvGuide = "নিরাপদ - বাইরে যেতে পারেন";
+          uvEmoji = "🟢";
+        } else if (uvIndex <= 5) {
+          uvGuide = "মাঝারি - সানস্ক্রিন ব্যবহার করুন";
+          uvEmoji = "🟡";
+        } else if (uvIndex <= 7) {
+          uvGuide = "উচ্চ - ছাতা~সানস্ক্রিন লাগবে";
+          uvEmoji = "🟠";
+        } else if (uvIndex <= 10) {
+          uvGuide = "খুব উচ্চ - দুপুরে বাইরে যাবেন না";
+          uvEmoji = "🔴";
+        } else {
+          uvGuide = "চরম উচ্চ - বাইরে যাওয়া বিপজ্জনক!";
+          uvEmoji = "⚫";
+        }
+      }
+
+      // তাপমাত্রা
+      const minTemp = Math.round(today.Temperature.Minimum.Value);
+      const maxTemp = Math.round(today.Temperature.Maximum.Value);
+      const feelMin = Math.round(today.RealFeelTemperature.Minimum.Value);
+      const feelMax = Math.round(today.RealFeelTemperature.Maximum.Value);
+      
+      // বাতাস
+      let wind = "N/A";
+      if (today.Day?.Wind?.Speed?.Value) {
+        wind = `${today.Day.Wind.Speed.Value} ${today.Day.Wind.Speed.Unit}`;
+      }
+      
+      // বৃষ্টির সম্ভাবনা
+      let rainChance = "N/A";
+      if (today.Day?.RainProbability) rainChance = `${today.Day.RainProbability}%`;
+      else if (today.Day?.PrecipitationProbability) rainChance = `${today.Day.PrecipitationProbability}%`;
+      
+      // মেঘ
+      let cloud = "N/A";
+      if (today.Day?.CloudCover) cloud = `${today.Day.CloudCover}%`;
+
+      // ☀️ দিনের আবহাওয়া অ্যালার্ট
+      const dayWeather = today.Day?.LongPhrase || "N/A";
+      
+      // 🌙 রাতের আবহাওয়া অ্যালার্ট
+      const nightWeather = today.Night?.LongPhrase || "N/A";
+
       const msg = `
 ╭───────────────────╮
-│ 🌤️ WEATHER FORECAST  │
+│    🌤️ WEATHER FORECAST     │
 ╰───────────────────╯
 
-📍 ${areaName}, ${country}
+📍 ${location.LocalizedName}, ${location.Country?.LocalizedName || ""}
 📅 ${moment().format("DD/MM/YYYY")}
 
 ─────────────────────
 
-📌 ${weatherRes.data.Headline?.Text || "Today's forecast"}
+🌡️ ${minTemp}°C ~ ${maxTemp}°C
+🌡️ ফিলস লাইক: ${feelMin}°C ~ ${feelMax}°C
+
+💨 বাতাস: ${wind}
+☔ বৃষ্টি: ${rainChance}
+☁️ মেঘ: ${cloud}
+☀️ ইউভি: ${uvIndex} ${uvEmoji} (${uvGuide})
 
 ─────────────────────
 
-🌡️ Min Temp : ${convertFtoC(today.Temperature.Minimum.Value)}°C
-🌡️ Max Temp : ${convertFtoC(today.Temperature.Maximum.Value)}°C
-🌡️ Feels Like: ${convertFtoC(today.RealFeelTemperature.Minimum.Value)}°C - ${convertFtoC(today.RealFeelTemperature.Maximum.Value)}°C
+🌅 সূর্যোদয়: ${formatTime(today.Sun.Rise)}
+🌄 সূর্যাস্ত: ${formatTime(today.Sun.Set)}
 
 ─────────────────────
 
-🌅 Sunrise   : ${formatTime(today.Sun.Rise)}
-🌄 Sunset    : ${formatTime(today.Sun.Set)}
-🌃 Moonrise  : ${formatTime(today.Moon.Rise)}
-🏙️ Moonset   : ${formatTime(today.Moon.Set)}
+☀️ দিন: 📋 ${dayWeather}
+🌙 রাত: 📋 ${nightWeather}
 
 ─────────────────────
 
-☀️ Day   : ${today.Day.LongPhrase || "N/A"}
-🌙 Night : ${today.Night.LongPhrase || "N/A"}
+📌 📋 ${weatherRes.data.Headline?.Text || "Today's forecast"}
 
 ─────────────────────
-⚡ MW Legends Bot
+⚡ MW Legends Bot ☸️
       `;
 
-      // ✅ কনফার্মেশন মেসেজ ডিলিট
-      try {
-        await api.unsendMessage(confirmMsg.messageID);
-      } catch(e) {
-        console.log("Could not unsend confirmation message");
-      }
-
-      // ✅ ফলাফল পাঠানো
+      try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
       await message.reply(msg);
 
     } catch (error) {
-      console.error("Weather error:", error);
-      try {
-        await api.unsendMessage(confirmMsg.messageID);
-      } catch(e) {}
-      message.reply(`❌ Could not fetch weather for "${area}". Please check the city name and try again.`);
+      try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
+      message.reply(`❌ "${area}" এর আবহাওয়া পাওয়া যায়নি।`);
     }
   }
 };
