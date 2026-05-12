@@ -7,11 +7,11 @@ module.exports = {
     name: "mw",
     version: "2.3.0",
     author: "OMOR TE",
-    countDown: 4,
+    countDown: 3,
     role: 0,
     shortDescription: "Random Modern Warships Photos",
     longDescription: "Send random Modern Warships game images",
-    guide: "{pn} mw",
+    guide: "{p}mw",
     category: "fun"
   },
 
