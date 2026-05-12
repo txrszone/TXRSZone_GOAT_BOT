@@ -1,78 +1,70 @@
 const axios = require("axios");
 
-module.exports.config = {
- name: "nagadf",
- version: "1.0",
- hasPermssion: 0,
- credits: "ULLASH",
- description: "Create a fake Nagad screenshot",
- usePrefix: true,
- prefix: true,
- commandCategory: "Fun",
- usages: "<number> - <transaction ID> - <amount> - <charge>",
- cooldowns: 5,
-};
+module.exports = {
+  config: {
+    name: "nagadf",
+    version: "1.4",
+    author: "Omor TE",
+    countDown: 4,
+    role: 0,
+    shortDescription: "Fake Nagad Screenshot",
+    longDescription: "Create a fake Nagad transaction screenshot",
+    guide: "{p}nagadf 019xxxxxxxx - TXN12345 - 5000 - 10",
+    category: "fun"
+  },
 
-module.exports.run = async function ({ api, event, args }) {
- const input = args.join(" ");
- if (!input.includes("-")) {
- return api.sendMessage(
- `❌| Wrong format!\nUse: ${global.config.PREFIX}nagadf 019xxxxxxxx - TXN12345 - 5000 - 10`,
- event.threadID,
- event.messageID
- );
- }
+  onStart: async function ({ message, event, args, api }) {
+    const input = args.join(" ");
+    
+    if (!input.includes("-")) {
+      return message.reply(`❌ Wrong format!\n📌 Use: nagadf 019xxxxxxxx - TXN12345 - 5000 - 10`);
+    }
 
- const [numberRaw, transactionRaw, amountRaw, chargeRaw] = input.split("-");
- const number = numberRaw.trim();
- const transaction = transactionRaw.trim();
- const amount = chargeRaw ? amountRaw.trim() : "0";
- const charge = chargeRaw ? chargeRaw.trim() : "0";
- const total = (parseFloat(amount) + parseFloat(charge)).toFixed(2);
+    const [numberRaw, transactionRaw, amountRaw, chargeRaw] = input.split("-");
+    const number = numberRaw.trim();
+    const transaction = transactionRaw.trim();
+    const amount = chargeRaw ? amountRaw.trim() : "0";
+    const charge = chargeRaw ? chargeRaw.trim() : "0";
+    const total = (parseFloat(amount) + parseFloat(charge)).toFixed(2);
 
- const url = `https://masterapi.site/api/nagadf.php?number=${encodeURIComponent(number)}&transaction=${encodeURIComponent(transaction)}&amount=${encodeURIComponent(amount)}&charge=${encodeURIComponent(charge)}&total=${encodeURIComponent(total)}`;
+    const url = `https://masterapi.site/api/nagadf.php?number=${encodeURIComponent(number)}&transaction=${encodeURIComponent(transaction)}&amount=${encodeURIComponent(amount)}&charge=${encodeURIComponent(charge)}&total=${encodeURIComponent(total)}`;
 
- api.sendMessage(
- `📤 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗶𝗻𝗴 𝗳𝗮𝗸𝗲 𝗡𝗮𝗴𝗮𝗱 𝘀𝗰𝗿𝗲𝗲𝗻𝘀𝗵𝗼𝘁... 𝗣𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁 🕐`,
- event.threadID,
- (err, info) =>
- setTimeout(() => {
- api.unsendMessage(info.messageID);
- }, 4000)
- );
+    // 1️⃣ কনফার্মেশন মেসেজ
+    const confirmMsg = await message.reply(`📤 **Generating fake Nagad screenshot...**\n━━━━━━━━━━━━━━━━━━━━\n⏳ Please wait!`);
 
- try {
- const response = await axios.get(url, { responseType: "stream" });
- const attachment = response.data;
+    // 4 সেকেন্ড পর কনফার্মেশন মেসেজ ডিলিট
+    setTimeout(async () => {
+      try {
+        await api.unsendMessage(confirmMsg.messageID);
+      } catch(e) {}
+    }, 4000);
 
- api.sendMessage(
- {
- body: `━━━━━━━━━━━━━━━━━━━━━━━
-📸 𝗙𝗮𝗸𝗲 𝗡𝗔𝗚𝗔𝗗 𝗦𝗖𝗥𝗘𝗘𝗡𝗦𝗛𝗢𝗧 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗘𝗗 ✅
+    try {
+      const response = await axios.get(url, { responseType: "stream" });
+      const attachment = response.data;
+
+      await message.reply({
+        body: `━━━━━━━━━━━━━━━━━━━━━━━
+📸 **FAKE NAGAD SCREENSHOT GENERATED** ✅
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-📱 𝗠𝗼𝗯𝗶𝗹𝗲 𝗡𝘂𝗺𝗯𝗲𝗿 : ${number}
-🧾 𝗧𝗿𝗮𝗻𝘀𝗮𝗰𝘁𝗶𝗼𝗻 𝗜𝗗 : ${transaction}
-💵 𝗔𝗺𝗼𝘂𝗻𝘁 : ৳${amount}
-💸 𝗖𝗵𝗮𝗿𝗴𝗲 : ৳${charge}
-💰 𝗧𝗼𝘁𝗮𝗹 : ৳${total}
+📱 Mobile Number : ${number}
+🧾 Transaction ID : ${transaction}
+💵 Amount : ৳${amount}
+💸 Charge : ৳${charge}
+💰 Total : ৳${total}
 
-📤 𝗬𝗼𝘂𝗿 𝗳𝗮𝗸𝗲 𝗡𝗮𝗴𝗮𝗱 𝗿𝗲𝗰𝗲𝗶𝗽𝘁 𝗶𝘀 𝗿𝗲𝗮𝗱𝘆!
+📤 Your fake Nagad receipt is ready!
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-🛠 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆: 𝗜𝘀𝗹𝗮𝗺𝗶𝗰𝗸 𝗰𝗵𝗮𝘁 𝗯𝗼𝘁 | ᵁᴸᴸ⁴ˢᴴ
+🛠 Powered by: ★ OMOR TE ★
 ━━━━━━━━━━━━━━━━━━━━━━━`,
- attachment,
- },
- event.threadID,
- event.messageID
- );
- } catch (err) {
- console.error(err);
- api.sendMessage(
- "❌ An error occurred while generating the screenshot.",
- event.threadID,
- event.messageID
- );
- }
+        attachment: attachment,
+      });
+
+    } catch (err) {
+      console.error(err);
+      message.reply("❌ An error occurred while generating the screenshot. Try again later!");
+    }
+  }
 };
