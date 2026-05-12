@@ -1,33 +1,47 @@
-module.exports.config = {
- name: "call",
- version: "1.5.0",
- hasPermssion: 0,
- credits: "—͟͟͞͞𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️", //don't change my credit 
- description: "কল বোম্বার, শুধুমাত্র বাংলাদেশি নাম্বারের জন্য",
- commandCategory: "Tool",
- usages: "/call 01xxxxxxxxx",
- cooldowns: 1,
- dependencies: { "axios": "" }
-};
- 
-module.exports.run = async ({ api, event, args }) => {
- const axios = require('axios');
- const number = args[0];
- 
- if (!number || !/^01[0-9]{9}$/.test(number)) {
- return api.sendMessage("অনুগ্রহ করে সঠিক বাংলাদেশি নাম্বার দিন (উদাহরণ: /call 01xxxxxxxxx) Dont misuse it ! ,\n This service made for fun purposes", event.threadID, event.messageID);
- }
- 
- api.sendMessage(`Call Bomber file By- Cyber Bot Community \nকল বোম্বিং শুরু হয়েছে: ${number} নম্বরে...📞💣\n Please Use it wisely \n – ★ Omor T.E ★`, event.threadID, async (err, info) => {
- try {
- const response = await axios.get(`https://tbblab.shop/callbomber.php?mobile=${number}`);
- setTimeout(() => {
- api.unsendMessage(info.messageID);
- }, 90000);
- 
- return api.sendMessage(`✅ কল বোম্বিং সম্পন্ন হয়েছে ${number} নম্বরে।`, event.threadID, event.messageID);
- } catch (error) {
- return api.sendMessage(`❌ ত্রুটি: ${error.message}`, event.threadID, event.messageID);
- }
- });
+const axios = require("axios");
+
+module.exports = {
+  config: {
+    name: "call",
+    version: "2.0.0",
+    author: "Omor TE",
+    countDown: 1,
+    role: 0,
+    shortDescription: "Call Bomber",
+    longDescription: "Call bombing tool for Bangladesh numbers (for fun purposes only)",
+    guide: "{p}call 01xxxxxxxxx",
+    category: "tool"
+  },
+
+  onStart: async function ({ message, event, args, api }) {
+    const number = args[0];
+    
+    if (!number || !/^01[0-9]{9}$/.test(number)) {
+      return message.reply(`📞 **CALL BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n❌ ভুল নাম্বার ফরম্যাট!\n📌 সঠিক ব্যবহার: call 01xxxxxxxxx\n⚠️ শুধুমাত্র বাংলাদেশি নাম্বার\n━━━━━━━━━━━━━━━━━━━━\n🎯 শুধু মজার জন্য ব্যবহার করুন!`);
+    }
+    
+    // কনফার্মেশন মেসেজ
+    const confirmMsg = await message.reply(`📞 **CALL BOMBER**\n━━━━━━━━━━━━━━━━━━━━\n📱 নাম্বার: ${number}\n⏳ স্ট্যাটাস: কল বোম্বিং শুরু হচ্ছে...\n━━━━━━━━━━━━━━━━━━━━\n⚠️ শুধু মজার জন্য ব্যবহার করুন!\n👑 Omor T.E`);
+    
+    try {
+      const response = await axios.get(`https://tbblab.shop/callbomber.php?mobile=${number}`);
+      
+      // কনফার্মেশন মেসেজ ডিলিট
+      try {
+        await api.unsendMessage(confirmMsg.messageID);
+      } catch(e) {}
+      
+      // সাফল্যের মেসেজ
+      await message.reply(`✅ **CALL BOMBER COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📱 নাম্বার: ${number}\n📞 স্ট্যাটাস: কল বোম্বিং সম্পন্ন!\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW LEGENDS\n👑 Omor T.E`);
+      
+    } catch (error) {
+      // কনফার্মেশন মেসেজ ডিলিট
+      try {
+        await api.unsendMessage(confirmMsg.messageID);
+      } catch(e) {}
+      
+      // এরর মেসেজ
+      await message.reply(`❌ **CALL BOMBER FAILED**\n━━━━━━━━━━━━━━━━━━━━\n📱 নাম্বার: ${number}\n⚠️ ত্রুটি: ${error.message}\n━━━━━━━━━━━━━━━━━━━━\n💡 পরে আবার চেষ্টা করুন!`);
+    }
+  }
 };
