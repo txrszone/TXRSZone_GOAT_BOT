@@ -2,7 +2,7 @@ module.exports = {
  config: {
  name: "antiout",
  version: "1.0",
- author: "Chitron Bhattacharjee",
+ author: "[ Omor TE ]",
  countDown: 5,
  role: 1, // Only admin can use this command
  shortDescription: {
@@ -13,7 +13,7 @@ module.exports = {
  },
  category: "admin",
  guide: {
- en: "{pn} [on|off] - Turn anti-out feature on or off"
+ en: "{p}[on|off] - Turn anti-out feature on or off"
  }
  },
 
