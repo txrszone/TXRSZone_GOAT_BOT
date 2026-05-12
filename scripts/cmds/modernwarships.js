@@ -5,13 +5,13 @@ const path = require("path");
 module.exports = {
   config: {
     name: "modernwarships",
-    version: "2.3.0",
+    version: "2.4.0",
     author: "OMOR TE",
-    countDown: 4,
+    countDown: 3,
     role: 0,
     shortDescription: "Random Modern Warships Photos",
     longDescription: "Send random Modern Warships game images",
-    guide: "{pn} mw",
+    guide: "{p}mw",
     category: "fun"
   },
 
