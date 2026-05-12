@@ -2,122 +2,144 @@ const axios = require("axios");
 const moment = require("moment-timezone");
 const Canvas = require("canvas");
 const fs = require("fs-extra");
+const path = require("path");
 
-Canvas.registerFont(
-	__dirname + "/assets/font/BeVietnamPro-SemiBold.ttf", {
-	family: "BeVietnamPro-SemiBold"
-});
-Canvas.registerFont(
-	__dirname + "/assets/font/BeVietnamPro-Regular.ttf", {
-	family: "BeVietnamPro-Regular"
-});
+// ফন্ট রেজিস্টার (যদি ফাইল থাকে)
+const fontSemiBold = path.join(__dirname, "assets", "font", "BeVietnamPro-SemiBold.ttf");
+const fontRegular = path.join(__dirname, "assets", "font", "BeVietnamPro-Regular.ttf");
+
+if (fs.existsSync(fontSemiBold)) {
+  Canvas.registerFont(fontSemiBold, { family: "BeVietnamPro-SemiBold" });
+}
+if (fs.existsSync(fontRegular)) {
+  Canvas.registerFont(fontRegular, { family: "BeVietnamPro-Regular" });
+}
 
 function convertFtoC(F) {
-	return Math.floor((F - 32) / 1.8);
+  return Math.floor((F - 32) / 1.8);
 }
+
 function formatHours(hours) {
-	return moment(hours).tz("Asia/Ho_Chi_Minh").format("HH[h]mm[p]");
+  return moment(hours).tz("Asia/Dhaka").format("HH[h]mm[p]");
 }
 
 module.exports = {
-	config: {
-		name: "weather",
-		version: "1.2",
-		author: "NTKhang",
-		countDown: 5,
-		role: 0,
-		description: {
-			vi: "xem dự báo thời tiết hiện tại và 5 ngày sau",
-			en: "view the current and next 5 days weather forecast"
-		},
-		category: "other",
-		guide: {
-			vi: "{pn} <địa điểm>",
-			en: "{pn} <location>"
-		},
-		envGlobal: {
-			weatherApiKey: "d7e795ae6a0d44aaa8abb1a0a7ac19e4"
-		}
-	},
+  config: {
+    name: "weather",
+    version: "1.2",
+    author: "NTKhang (Converted by OMOR TE)",
+    countDown: 5,
+    role: 0,
+    shortDescription: "Weather Forecast",
+    longDescription: "View current and next days weather forecast",
+    guide: "{p}weather <location>",
+    category: "other"
+  },
 
-	langs: {
-		vi: {
-			syntaxError: "Vui lòng nhập địa điểm",
-			notFound: "Không thể tìm thấy địa điểm: %1",
-			error: "Đã xảy ra lỗi: %1",
-			today: "Thời tiết hôm nay: %1\n%2\n🌡 Nhiệt độ thấp nhất - cao nhất %3°C - %4°C\n🌡 Nhiệt độ cảm nhận được %5°C - %6°C\n🌅 Mặt trời mọc %7\n🌄 Mặt trời lặn %8\n🌃 Mặt trăng mọc %9\n🏙️ Mặt trăng lặn %10\n🌞 Ban ngày: %11\n🌙 Ban đêm: %12"
-		},
-		en: {
-			syntaxError: "Please enter a location",
-			notFound: "Location not found: %1",
-			error: "An error has occurred: %1",
-			today: "Today's weather: %1\n%2\n🌡 Low - high temperature %3°C - %4°C\n🌡 Feels like %5°C - %6°C\n🌅 Sunrise %7\n🌄 Sunset %8\n🌃 Moonrise %9\n🏙️ Moonset %10\n🌞 Day: %11\n🌙 Night: %12"
-		}
-	},
+  onStart: async function ({ message, args }) {
+    const apikey = "d7e795ae6a0d44aaa8abb1a0a7ac19e4";
+    const area = args.join(" ");
+    
+    if (!area) {
+      return message.reply(`🌤️ **WEATHER FORECAST**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: weather Dhaka\n📌 উদাহরণ: weather London\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+    }
 
-	onStart: async function ({ args, message, envGlobal, getLang }) {
-		const apikey = envGlobal.weatherApiKey;
+    // কনফার্মেশন মেসেজ
+    const confirmMsg = await message.reply(`🌤️ **Fetching weather for ${area}...**\n━━━━━━━━━━━━━━━━━━━━\n⏳ Please wait!`);
 
-		const area = args.join(" ");
-		if (!area)
-			return message.reply(getLang("syntaxError"));
-		let areaKey, dataWeather, areaName;
+    try {
+      // 1. লোকেশন সার্চ
+      const locationRes = await axios.get(`https://api.accuweather.com/locations/v1/cities/search.json?q=${encodeURIComponent(area)}&apikey=${apikey}&language=en`);
+      
+      if (locationRes.data.length === 0) {
+        try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
+        return message.reply(`❌ Location not found: ${area}`);
+      }
 
-		try {
-			const response = (await axios.get(`https://api.accuweather.com/locations/v1/cities/search.json?q=${encodeURIComponent(area)}&apikey=${apikey}&language=vi-vn`)).data;
-			if (response.length == 0)
-				return message.reply(getLang("notFound", area));
-			const data = response[0];
-			areaKey = data.Key;
-			areaName = data.LocalizedName;
-		}
-		catch (err) {
-			return message.reply(getLang("error", err.response.data.Message));
-		}
+      const location = locationRes.data[0];
+      const areaKey = location.Key;
+      const areaName = location.LocalizedName;
+      const country = location.Country?.LocalizedName || "";
 
-		try {
-			dataWeather = (await axios.get(`http://api.accuweather.com/forecasts/v1/daily/10day/${areaKey}?apikey=${apikey}&details=true&language=vi`)).data;
-		}
-		catch (err) {
-			return message.reply(`❌ Đã xảy ra lỗi: ${err.response.data.Message}`);
-		}
+      // 2. আবহাওয়ার তথ্য
+      const weatherRes = await axios.get(`http://api.accuweather.com/forecasts/v1/daily/10day/${areaKey}?apikey=${apikey}&details=true&language=en`);
+      const weatherData = weatherRes.data;
+      const dailyForecasts = weatherRes.data.DailyForecasts;
+      const today = dailyForecasts[0];
 
-		const dataWeatherDaily = dataWeather.DailyForecasts;
-		const dataWeatherToday = dataWeatherDaily[0];
-		const msg = getLang("today", areaName, dataWeather.Headline.Text, convertFtoC(dataWeatherToday.Temperature.Minimum.Value), convertFtoC(dataWeatherToday.Temperature.Maximum.Value), convertFtoC(dataWeatherToday.RealFeelTemperature.Minimum.Value), convertFtoC(dataWeatherToday.RealFeelTemperature.Maximum.Value), formatHours(dataWeatherToday.Sun.Rise), formatHours(dataWeatherToday.Sun.Set), formatHours(dataWeatherToday.Moon.Rise), formatHours(dataWeatherToday.Moon.Set), dataWeatherToday.Day.LongPhrase, dataWeatherToday.Night.LongPhrase);
+      // টেক্সট মেসেজ
+      const msg = `🌤️ **WEATHER FORECAST**\n━━━━━━━━━━━━━━━━━━━━\n📍 ${areaName}, ${country}\n📅 ${moment().format("DD MMMM YYYY")}\n━━━━━━━━━━━━━━━━━━━━\n📌 ${weatherData.Headline?.Text || "Today's forecast"}\n━━━━━━━━━━━━━━━━━━━━\n🌡️ Min: ${convertFtoC(today.Temperature.Minimum.Value)}°C\n🌡️ Max: ${convertFtoC(today.Temperature.Maximum.Value)}°C\n🌡️ Feels like: ${convertFtoC(today.RealFeelTemperature.Minimum.Value)}°C - ${convertFtoC(today.RealFeelTemperature.Maximum.Value)}°C\n━━━━━━━━━━━━━━━━━━━━\n🌅 Sunrise: ${formatHours(today.Sun.Rise)}\n🌄 Sunset: ${formatHours(today.Sun.Set)}\n🌃 Moonrise: ${formatHours(today.Moon.Rise)}\n🏙️ Moonset: ${formatHours(today.Moon.Set)}\n━━━━━━━━━━━━━━━━━━━━\n☀️ Day: ${today.Day.LongPhrase || "N/A"}\n🌙 Night: ${today.Night.LongPhrase || "N/A"}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`;
 
-		const bg = await Canvas.loadImage(__dirname + "/assets/image/bgWeather.jpg");
-		const { width, height } = bg;
-		const canvas = Canvas.createCanvas(width, height);
-		const ctx = canvas.getContext("2d");
-		ctx.drawImage(bg, 0, 0, width, height);
-		let X = 100;
-		ctx.fillStyle = "#ffffff";
-		const data = dataWeather.DailyForecasts.slice(0, 7);
-		for (const item of data) {
-			const icon = await Canvas.loadImage("http://vortex.accuweather.com/adc2010/images/slate/icons/" + item.Day.Icon + ".svg");
-			ctx.drawImage(icon, X, 210, 80, 80);
+      // ইমেজ জেনারেট করার চেষ্টা (যদি ব্যাকগ্রাউন্ড থাকে)
+      const bgPath = path.join(__dirname, "assets", "image", "bgWeather.jpg");
+      let attachment = null;
 
-			ctx.font = "30px BeVietnamPro-SemiBold";
-			const maxC = `${convertFtoC(item.Temperature.Maximum.Value)}°C `;
-			ctx.fillText(maxC, X, 366);
+      if (fs.existsSync(bgPath)) {
+        try {
+          const bg = await Canvas.loadImage(bgPath);
+          const { width, height } = bg;
+          const canvas = Canvas.createCanvas(width, height);
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(bg, 0, 0, width, height);
+          
+          let X = 100;
+          ctx.fillStyle = "#ffffff";
+          const sevenDays = dailyForecasts.slice(0, 7);
+          
+          for (const item of sevenDays) {
+            try {
+              const iconUrl = `http://vortex.accuweather.com/adc2010/images/slate/icons/${item.Day.Icon}.svg`;
+              const iconRes = await axios.get(iconUrl, { responseType: "arraybuffer" });
+              const icon = await Canvas.loadImage(iconRes.data);
+              ctx.drawImage(icon, X, 210, 80, 80);
+            } catch(e) {}
+            
+            ctx.font = "30px BeVietnamPro-SemiBold";
+            const maxC = `${convertFtoC(item.Temperature.Maximum.Value)}°C `;
+            ctx.fillText(maxC, X, 366);
+            
+            ctx.font = "30px BeVietnamPro-Regular";
+            const minC = `${convertFtoC(item.Temperature.Minimum.Value)}°C`;
+            const day = moment(item.Date).format("DD");
+            ctx.fillText(minC, X, 445);
+            ctx.fillText(day, X + 20, 140);
+            
+            X += 135;
+          }
+          
+          const cacheDir = path.join(__dirname, "cache");
+          if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+          
+          const imgPath = path.join(cacheDir, `weather_${areaKey}.png`);
+          fs.writeFileSync(imgPath, canvas.toBuffer());
+          attachment = fs.createReadStream(imgPath);
+          
+          setTimeout(() => {
+            try { fs.unlinkSync(imgPath); } catch(e) {}
+          }, 30000);
+          
+        } catch (imgErr) {
+          console.error("Image generation error:", imgErr);
+        }
+      }
 
-			ctx.font = "30px BeVietnamPro-Regular";
-			const minC = String(`${convertFtoC(item.Temperature.Minimum.Value)}°C`);
-			const day = moment(item.Date).format("DD");
-			ctx.fillText(minC, X, 445);
-			ctx.fillText(day, X + 20, 140);
+      // কনফার্মেশন মেসেজ ডিলিট
+      try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
 
-			X += 135;
-		}
+      // ফলাফল পাঠানো
+      if (attachment) {
+        await message.reply({
+          body: msg,
+          attachment: attachment
+        });
+      } else {
+        await message.reply(msg);
+      }
 
-		const pathSaveImg = `${__dirname}/tmp/weather_${areaKey}.jpg`;
-		fs.writeFileSync(pathSaveImg, canvas.toBuffer());
-
-		return message.reply({
-			body: msg,
-			attachment: fs.createReadStream(pathSaveImg)
-		}, () => fs.unlinkSync(pathSaveImg));
-
-	}
+    } catch (error) {
+      console.error("Weather error:", error);
+      try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
+      message.reply(`❌ Error: ${error.message || "Could not fetch weather data"}`);
+    }
+  }
 };
