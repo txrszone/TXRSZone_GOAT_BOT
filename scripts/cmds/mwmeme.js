@@ -5,7 +5,7 @@ const path = require("path");
 module.exports = {
   config: {
     name: "mwmeme",
-    version: "11.0.0",
+    version: "11.0.3",
     author: "OMOR TE",
     countDown: 3,
     role: 0,
@@ -134,7 +134,7 @@ module.exports = {
       ? videoLinks[Math.floor(Math.random() * videoLinks.length)]
       : imageLinks[Math.floor(Math.random() * imageLinks.length)];
 
-    // 📢 1️⃣ কনফার্মেশন মেসেজ পাঠানো
+    // 1️⃣ কনফার্মেশন মেসেজ
     const confirmMsg = await message.reply(`🖼️ **Fetching Modern Warships Meme...**\n━━━━━━━━━━━━━━━━━━━━\n⏳ Please wait, loading from ${totalMemes} memes!`);
 
     try {
@@ -148,27 +148,24 @@ module.exports = {
 
       // 2️⃣ আসল মেম পাঠানো
       await message.reply({
-        body: `🖼️ **Modern Warships Meme!**\n━━━━━━━━━━━━━━━━━━━━\n📦 Total memes: ${totalMemes}\n━━━━━━━━━━━━━━━━━━━━\n⚡ Enjoy! 🚀`,
+        body: `🖼️ Modern Warships Meme!\n📦 Total memes available: ${totalMemes}`,
         attachment: response.data
       });
 
-      // 3️⃣ মেম পাঠানোর 1.5 সেকেন্ড পর কনফার্মেশন মেসেজ ডিলিট
+      // 3️⃣ র‍্যান্ডম ডিলে টাইম (1 সেকেন্ড থেকে 1.5 সেকেন্ডের মধ্যে)
+      const randomDelay = Math.floor(Math.random() * (1500 - 1000 + 1) + 1000); // 1000ms থেকে 1500ms
+      
       setTimeout(async () => {
         try {
           await api.unsendMessage(confirmMsg.messageID);
-        } catch(e) {
-          console.log("Could not unsend confirmation message");
-        }
-      }, 1500);
+        } catch(e) {}
+      }, randomDelay);
 
     } catch (err) {
       console.error(err);
-      
-      // error হলে কনফার্মেশন মেসেজ ডিলিট
       try {
         await api.unsendMessage(confirmMsg.messageID);
       } catch(e) {}
-      
       message.reply("⚠️ Failed to fetch meme. Please try again later.");
     }
   }
