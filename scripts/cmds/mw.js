@@ -5,7 +5,7 @@ const path = require("path");
 module.exports = {
   config: {
     name: "mw",
-    version: "2.3.0",
+    version: "2.0",
     author: "OMOR TE",
     countDown: 3,
     role: 0,
