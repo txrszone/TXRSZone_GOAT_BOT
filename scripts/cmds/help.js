@@ -13,7 +13,7 @@ module.exports = {
     countDown: 5,
     role: 0,
     shortDescription: {
-      en: "View command usage and list all commands directly",
+      en: "View all commands and usage",
     },
     longDescription: {
       en: "View command usage and list all commands directly",
@@ -75,15 +75,19 @@ module.exports = {
       const command = commands.get(commandName) || commands.get(aliases.get(commandName));
 
       if (!command) {
-        await message.reply(`Command "${commandName}" not found.`);
+        await message.reply(`❌ Command "${commandName}" not found.`);
       } else {
         const configCommand = command.config;
         const roleText = roleTextToString(configCommand.role);
-        const author = configCommand.author || "Unknown";
         const cmdCategory = configCommand.category || "Uncategorized";
-        const longDescription = configCommand.longDescription?.en || configCommand.longDescription || "No description available";
         
-        // Guide/Usage build
+        // ✅ শর্ট ডেসক্রিপশন
+        const shortDesc = configCommand.shortDescription?.en || configCommand.shortDescription || "";
+        
+        // ✅ লং ডেসক্রিপশন
+        const longDesc = configCommand.longDescription?.en || configCommand.longDescription || "";
+        
+        // গাইড তৈরি
         let guideText = "No guide available.";
         if (configCommand.guide) {
           if (typeof configCommand.guide === 'object') {
@@ -95,14 +99,24 @@ module.exports = {
         
         const usage = guideText.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
 
+        // ✅ শর্ট + লং ডেসক্রিপশন আলাদা লাইনে
+        let descriptionLines = "";
+        if (shortDesc) {
+          descriptionLines += `│ 📝 Short Description: ${shortDesc}\n`;
+        }
+        if (longDesc) {
+          descriptionLines += `│ 📖 Long Description: ${longDesc}\n`;
+        }
+        if (!shortDesc && !longDesc) {
+          descriptionLines = `│ 📝 Description: No description available\n`;
+        }
+
         const response = `
 ╭───⊙
 │ 🔶 ${configCommand.name}
 ├── INFO
 │ 📦 Category: ${cmdCategory}
-│ 📝 Description: ${longDescription}
-│ 👑 Author: ${author}
-├── USAGE
+${descriptionLines}├── USAGE
 │ ${usage}
 │ 🔯 Version: ${configCommand.version || "1.0"}
 │ ♻ Role: ${roleText}
@@ -125,4 +139,4 @@ function roleTextToString(roleValue) {
     default:
       return "❓ অজানা (Unknown)";
   }
-               }
+}
