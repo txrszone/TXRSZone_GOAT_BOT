@@ -3,7 +3,6 @@ const axios = require("axios");
 const path = require("path");
 const { getPrefix } = global.utils;
 const { commands, aliases } = global.GoatBot;
-const doNotDelete = "[ U L L A S H]"; 
 
 module.exports = {
   config: {
@@ -13,14 +12,14 @@ module.exports = {
     countDown: 5,
     role: 0,
     shortDescription: {
-      en: "View command usage and list all commands directly",
+      en: "Show all commands"
     },
     longDescription: {
-      en: "View command usage and list all commands directly",
+      en: "View command usage and list all commands"
     },
     category: "info",
     guide: {
-      en: "{p}help <cmdName> ",
+      en: "{p}help / {p}help <cmd>"
     },
     priority: 1,
   },
@@ -32,97 +31,105 @@ module.exports = {
 
     if (args.length === 0) {
       const categories = {};
-      let msg = "╭───────❁";
+      let msg = "";
 
-      msg += `\n│ 𝗛𝗘𝗟𝗣 𝗟𝗜𝗦𝗧\n╰────────────❁`; 
+      // Header
+      msg += `╭─❅─❅─❅─❅─❅─╮\n`;
+      msg += `│  ✨ 𝗛𝗘𝗟𝗣 𝗠𝗘𝗡𝗨 ✨  │\n`;
+      msg += `╰─❅─❅─❅─❅─❅─╯\n\n`;
 
       for (const [name, value] of commands) {
         if (value.config.role > 1 && role < value.config.role) continue;
-
-        const cmdCategory = value.config.category || "Uncategorized";
-        categories[cmdCategory] = categories[cmdCategory] || { commands: [] };
-        categories[cmdCategory].commands.push(name);
+        const cmdCategory = value.config.category || "Other";
+        if (!categories[cmdCategory]) categories[cmdCategory] = [];
+        categories[cmdCategory].push(name);
       }
 
-      Object.keys(categories).forEach((catName) => {
-        if (catName !== "info") {
-          msg += `\n╭─────✰『  ${catName.toUpperCase()}  』`;
-
-          const names = categories[catName].commands.sort();
-          for (let i = 0; i < names.length; i += 3) {
-            const cmds = names.slice(i, i + 2).map((item) => `⭔${item}`);
-            msg += `\n│${cmds.join(" ".repeat(Math.max(1, 5 - cmds.join("").length)))}`;
+      // Categories sorted
+      const sortedCategories = Object.keys(categories).sort();
+      
+      for (const catName of sortedCategories) {
+        if (catName === "info") continue;
+        
+        msg += `◇─────◇ ${catName.toUpperCase()} ◇─────◇\n`;
+        const names = categories[catName].sort();
+        let line = "";
+        
+        for (let i = 0; i < names.length; i++) {
+          line += `  ${names[i]}`;
+          if ((i + 1) % 3 === 0 || i === names.length - 1) {
+            msg += line + "\n";
+            line = "";
           }
-
-          msg += `\n╰────────────✰`;
         }
-      });
+        msg += `◇───────────────◇\n\n`;
+      }
 
       const totalCommands = commands.size;
-      msg += `\n\n╭─────✰[𝗘𝗡𝗝𝗢𝗬]\n│>𝗧𝗢𝗧𝗔𝗟 𝗖𝗠𝗗𝗦: [${totalCommands}].\n│𝗧𝗬𝗣𝗘𝖳:[ ${prefix}𝗛𝗘𝗟𝗣 𝗧𝗢\n│<𝗖𝗠𝗗> 𝗧𝗢 𝗟𝗘𝗔𝗥𝗡 𝗧𝗛𝗘 𝗨𝗦𝗔𝗚𝗘.]\n╰────────────✰`;
-      msg += ``;
-      msg += `\n╭─────✰\n│ ♥︎╣[❉Omor TE❉]╠♥︎\n╰────────────✰`; 
+      msg += `📊 𝗧𝗢𝗧𝗔𝗟 𝗖𝗠𝗗𝗦: ${totalCommands}\n`;
+      msg += `💡 𝗧𝗬𝗣𝗘: ${prefix}help <command>\n`;
+      msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+      msg += `✨ 𝗠𝗪 𝗟𝗲𝗴𝗲𝗻𝗱𝘀 𝗕𝗼𝘁 ✨\n`;
 
-      const helpListImages = [ "https://i.postimg.cc/0jRGknT9/FB-IMG-1744474199349.jpg", "https://i.postimg.cc/Y9KK7KC0/Polish-20250526-101350151.jpg", "https://i.postimg.cc/VNvjbDPq/Image-Download-26-05-2025-09-56-48.jpg", "https://i.postimg.cc/brgK1ZHS/Hitube-c-Rb-Pat-Cm-XZ-2025-05-26-10-05-46.jpg", "https://i.postimg.cc/MT84479j/Hitube-Bt4-Wyjgo-WZ-2025-05-26-10-05-58.jpg", "https://i.postimg.cc/YS8YKk3f/received-395252956651820.jpg", "https://i.postimg.cc/0N5ZJVXn/a844a740b33eba79b486744759914953-1.jpg", "https://i.postimg.cc/L6kG8BS4/received-1875128426597909.png", "https://i.postimg.cc/7ZxdGGP3/received-1258556092530363.png" ];
-      const helpListImage = helpListImages[Math.floor(Math.random() * helpListImages.length)];
+      const helpImages = [
+        "https://i.postimg.cc/0jRGknT9/FB-IMG-1744474199349.jpg",
+        "https://i.postimg.cc/Y9KK7KC0/Polish-20250526-101350151.jpg",
+        "https://i.postimg.cc/VNvjbDPq/Image-Download-26-05-2025-09-56-48.jpg",
+        "https://i.postimg.cc/brgK1ZHS/Hitube-c-Rb-Pat-Cm-XZ-2025-05-26-10-05-46.jpg"
+      ];
+      const randomImg = helpImages[Math.floor(Math.random() * helpImages.length)];
 
       await message.reply({
         body: msg,
-        attachment: await global.utils.getStreamFromURL(helpListImage)
+        attachment: await global.utils.getStreamFromURL(randomImg)
       });
+      
     } else {
+      // Single command info
       const commandName = args[0].toLowerCase();
       const command = commands.get(commandName) || commands.get(aliases.get(commandName));
 
       if (!command) {
-        await message.reply(`Command "${commandName}" not found.`);
-      } else {
-        const configCommand = command.config;
-        const roleText = roleTextToString(configCommand.role);
-        const author = configCommand.author || "Unknown";
-        const cmdCategory = configCommand.category || "Uncategorized";
-        const longDescription = configCommand.longDescription?.en || configCommand.longDescription || "No description available";
-        
-        // Guide/Usage build
-        let guideText = "No guide available.";
-        if (configCommand.guide) {
-          if (typeof configCommand.guide === 'object') {
-            guideText = configCommand.guide.en || Object.values(configCommand.guide)[0] || "No guide available";
-          } else {
-            guideText = configCommand.guide;
-          }
-        }
-        
-        const usage = guideText.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
-
-        const response = `
-╭───⊙
-│ 🔶 ${configCommand.name}
-├── INFO
-│ 📦 Category: ${cmdCategory}
-│ 📝 Description: ${longDescription}
-│ 👑 Author: ${author}
-├── USAGE
-│ ${usage}
-│ 🔯 Version: ${configCommand.version || "1.0"}
-│ ♻ Role: ${roleText}
-╰────────────⊙`;
-
-        await message.reply(response);
+        return message.reply(`❌ "${commandName}" খুঁজে পাওয়া যায়নি।`);
       }
+
+      const cfg = command.config;
+      const roleText = getRoleText(cfg.role);
+      
+      let guideText = "No guide available";
+      if (cfg.guide) {
+        if (typeof cfg.guide === 'object') {
+          guideText = cfg.guide.en || Object.values(cfg.guide)[0];
+        } else {
+          guideText = cfg.guide;
+        }
+      }
+      const usage = guideText.replace(/{p}/g, prefix).replace(/{n}/g, cfg.name);
+
+      const response = `
+╭─❅─❅─❅─❅─╮
+│  📌 ${cfg.name.toUpperCase()}  │
+╰─❅─❅─❅─❅─╯
+
+📦 ${cfg.category || "Other"}
+📝 ${cfg.description || cfg.shortDescription?.en || "No description"}
+👑 ${cfg.author || "Unknown"}
+
+📖 𝗨𝗦𝗔𝗚𝗘:
+${usage}
+
+🔄 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: ${cfg.version || "1.0"}
+🔐 𝗥𝗼𝗹𝗲: ${roleText}
+━━━━━━━━━━━━━━━━━━━━`;
+
+      await message.reply(response);
     }
-  },
+  }
 };
 
-function roleTextToString(roleValue) {
-  switch (roleValue) {
-    case 0:
-      return "0 (All users)";
-    case 1:
-      return "1 (Group administrators)";
-    case 2:
-      return "2 (Admin bot)";
-    default:
-      return "Unknown role";
-  }
+function getRoleText(role) {
+  if (role === 0) return "👤 সবাই";
+  if (role === 1) return "👑 গ্রুপ এডমিন";
+  if (role === 2) return "⚡ বট এডমিন";
+  return "❓ অজানা";
 }
