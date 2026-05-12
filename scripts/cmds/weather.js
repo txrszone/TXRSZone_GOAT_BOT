@@ -56,9 +56,9 @@ module.exports = {
 
       // ✅ সুন্দর ফরম্যাট (পাশাপাশি দেখাবে)
       const msg = `
-╭─────────────────────╮
-│   🌤️ WEATHER FORECAST   │
-╰─────────────────────╯
+╭───────────────────╮
+│ 🌤️ WEATHER FORECAST  │
+╰───────────────────╯
 
 📍 ${areaName}, ${country}
 📅 ${moment().format("DD/MM/YYYY")}
