@@ -7,15 +7,23 @@ module.exports = {
     name: "mwmeme",
     version: "10.5.0",
     author: "OMOR TE",
-    countDown: 5,
+    countDown: 3,
     role: 0,
     shortDescription: "Get Random Modern Warships Meme",
     longDescription: "Send random Modern Warships meme image or video",
-    guide: "{pn} mwmeme",
+    guide: "{p}mwmeme",
     category: "fun"
   },
 
-  onStart: async function ({ message, args }) {
+  onStart: async function ({ message, event, args, api }) {
+    const messageID = event.messageID;
+    const threadID = event.threadID;
+
+    // ⏳ প্রথম রিঅ্যাক্ট (কমান্ড দেওয়ার সাথে সাথে)
+    try {
+      await api.setMessageReaction("⏳", messageID);
+    } catch(e) {}
+
     const imageLinks = [
       "https://i.postimg.cc/MKVXGB2K/FB-IMG-1748861685846.jpg",
       "https://i.postimg.cc/mDgTNc5M/FB-IMG-1748861673272.jpg",
@@ -147,9 +155,20 @@ module.exports = {
         body: `🖼️ Modern Warships Meme!\n📦 Total memes available: ${totalMemes}`,
         attachment: response.data
       });
+
+      // ✅ মিম পাঠানোর পর সফল রিঅ্যাক্ট
+      try {
+        await api.setMessageReaction("✅", messageID);
+      } catch(e) {}
+
     } catch (err) {
       console.error(err);
       message.reply("⚠️ Failed to fetch meme. Please try again later.");
+      
+      // ❌ error হলে ক্রস রিঅ্যাক্ট
+      try {
+        await api.setMessageReaction("❌", messageID);
+      } catch(e) {}
     }
   }
 };
