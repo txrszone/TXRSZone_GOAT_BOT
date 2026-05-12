@@ -8,7 +8,7 @@ module.exports = {
     countDown: 1,
     role: 0,
     shortDescription: "Chat with AI & Generate Image",
-    longDescription: "Chat with Verba character, generate images, and ask questions with photos",
+    longDescription: "Chat with Verba API, generate images, and ask questions with photos",
     guide: "{p}chat <message>\n{p}chat img:<prompt>\n{p}chat [reply to image] <question>",
     category: "ai"
   },
