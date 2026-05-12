@@ -5,7 +5,7 @@ const path = require("path");
 module.exports = {
   config: {
     name: "mwmeme",
-    version: "10.5.0",
+    version: "11.0.0",
     author: "OMOR TE",
     countDown: 3,
     role: 0,
@@ -16,14 +16,6 @@ module.exports = {
   },
 
   onStart: async function ({ message, event, args, api }) {
-    const messageID = event.messageID;
-    const threadID = event.threadID;
-
-    // ⏳ প্রথম রিঅ্যাক্ট (কমান্ড দেওয়ার সাথে সাথে)
-    try {
-      await api.setMessageReaction("⏳", messageID);
-    } catch(e) {}
-
     const imageLinks = [
       "https://i.postimg.cc/MKVXGB2K/FB-IMG-1748861685846.jpg",
       "https://i.postimg.cc/mDgTNc5M/FB-IMG-1748861673272.jpg",
@@ -142,6 +134,9 @@ module.exports = {
       ? videoLinks[Math.floor(Math.random() * videoLinks.length)]
       : imageLinks[Math.floor(Math.random() * imageLinks.length)];
 
+    // 📢 1️⃣ কনফার্মেশন মেসেজ পাঠানো
+    const confirmMsg = await message.reply(`🖼️ **Fetching Modern Warships Meme...**\n━━━━━━━━━━━━━━━━━━━━\n⏳ Please wait, loading from ${totalMemes} memes!`);
+
     try {
       const response = await axios({
         method: 'get',
@@ -151,24 +146,30 @@ module.exports = {
 
       response.data.path = `mwmeme_${Date.now()}${isVideo ? '.mp4' : '.jpg'}`;
 
+      // 2️⃣ আসল মেম পাঠানো
       await message.reply({
-        body: `🖼️ Modern Warships Meme!\n📦 Total memes available: ${totalMemes}`,
+        body: `🖼️ **Modern Warships Meme!**\n━━━━━━━━━━━━━━━━━━━━\n📦 Total memes: ${totalMemes}\n━━━━━━━━━━━━━━━━━━━━\n⚡ Enjoy! 🚀`,
         attachment: response.data
       });
 
-      // ✅ মিম পাঠানোর পর সফল রিঅ্যাক্ট
-      try {
-        await api.setMessageReaction("✅", messageID);
-      } catch(e) {}
+      // 3️⃣ মেম পাঠানোর 1.5 সেকেন্ড পর কনফার্মেশন মেসেজ ডিলিট
+      setTimeout(async () => {
+        try {
+          await api.unsendMessage(confirmMsg.messageID);
+        } catch(e) {
+          console.log("Could not unsend confirmation message");
+        }
+      }, 1500);
 
     } catch (err) {
       console.error(err);
-      message.reply("⚠️ Failed to fetch meme. Please try again later.");
       
-      // ❌ error হলে ক্রস রিঅ্যাক্ট
+      // error হলে কনফার্মেশন মেসেজ ডিলিট
       try {
-        await api.setMessageReaction("❌", messageID);
+        await api.unsendMessage(confirmMsg.messageID);
       } catch(e) {}
+      
+      message.reply("⚠️ Failed to fetch meme. Please try again later.");
     }
   }
 };
