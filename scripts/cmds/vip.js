@@ -4,20 +4,20 @@ const path = require("path");
 const VIP_FILE = path.join(__dirname, "vip.json");
 
 // Owner Facebook UID
-const OWNER_UID = "100015168369582"; 
+const OWNER_UID = "100071151280531"; 
 
 module.exports = {
   config: {
     name: "vip",
     version: "2.4",
-    author: "Arijit (Edited for Ownership + Updated by Kakashi)",
+    author: "Omor TE",
     countDown: 0,
     role: 0,
     shortDescription: "Manage VIP users",
     longDescription: "Add, remove, list VIP users and see VIP commands (VIPs only).",
     category: "vip",
     guide: {
-      en: "{pn} add [@tag/reply] [days]\n{pn} remove [@tag/reply]\n{pn} list\n{pn} cmds"
+      en: "{p}add [@tag/reply] [days]\n{p}remove [@tag/reply]\n{p}list\n{pn} cmds"
     }
   },
 
