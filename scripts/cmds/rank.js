@@ -3,16 +3,18 @@ const fs = require("fs-extra");
 const path = require("path");
 const { randomString } = global.utils;
 
-const defaultFontName = "BeVietnamPro-SemiBold";
-const defaultPathFontName = `${__dirname}/assets/font/BeVietnamPro-SemiBold.ttf`;
 const percentage = total => total / 100;
 
-Canvas.registerFont(`${__dirname}/assets/font/BeVietnamPro-Bold.ttf`, {
-  family: "BeVietnamPro-Bold"
-});
-Canvas.registerFont(defaultPathFontName, {
-  family: defaultFontName
-});
+// ফন্ট রেজিস্টার (যদি ফাইল থাকে)
+const fontBoldPath = `${__dirname}/assets/font/BeVietnamPro-Bold.ttf`;
+const fontSemiBoldPath = `${__dirname}/assets/font/BeVietnamPro-SemiBold.ttf`;
+
+if (fs.existsSync(fontBoldPath)) {
+  Canvas.registerFont(fontBoldPath, { family: "BeVietnamPro-Bold" });
+}
+if (fs.existsSync(fontSemiBoldPath)) {
+  Canvas.registerFont(fontSemiBoldPath, { family: "BeVietnamPro-SemiBold" });
+}
 
 let deltaNext = 5;
 const expToLevel = (exp, deltaNextLevel = deltaNext) => Math.floor((1 + Math.sqrt(1 + 8 * exp / deltaNextLevel)) / 2);
@@ -40,49 +42,49 @@ module.exports = {
     else
       targetUsers = arrayMentions;
 
-    const rankCards = await Promise.all(targetUsers.map(async userID => {
-      const rankCard = await makeRankCard(userID, usersData, threadsData, event.threadID, deltaNext, api);
-      const imgPath = path.join(__dirname, "cache", `${randomString(10)}.png`);
-      const cacheDir = path.join(__dirname, "cache");
-      if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
-      
-      // Stream থেকে ফাইল সেভ করা
-      const buffer = [];
-      for await (const chunk of rankCard) {
-        buffer.push(chunk);
+    const rankCards = [];
+    
+    for (const userID of targetUsers) {
+      try {
+        const rankCard = await makeRankCard(userID, usersData, threadsData, event.threadID, deltaNext, api);
+        const imgPath = path.join(__dirname, "cache", `${randomString(10)}.png`);
+        const cacheDir = path.join(__dirname, "cache");
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+        
+        // Stream থেকে ফাইল সেভ করা
+        const chunks = [];
+        for await (const chunk of rankCard) {
+          chunks.push(chunk);
+        }
+        fs.writeFileSync(imgPath, Buffer.concat(chunks));
+        
+        rankCards.push(fs.createReadStream(imgPath));
+        
+        // ফাইল ডিলিট করার জন্য টাইমার
+        setTimeout(() => {
+          try { fs.unlinkSync(imgPath); } catch(e) {}
+        }, 10000);
+      } catch(e) {
+        console.error("Rank card error for user", userID, e);
       }
-      fs.writeFileSync(imgPath, Buffer.concat(buffer));
-      
-      return fs.createReadStream(imgPath);
-    }));
+    }
+
+    if (rankCards.length === 0) {
+      return message.reply("❌ র‍্যাঙ্ক কার্ড জেনারেট করতে ব্যর্থ হয়েছে।");
+    }
 
     return message.reply({
       attachment: rankCards
-    }, () => {
-      // ফাইল ডিলিট
-      setTimeout(() => {
-        const cacheDir = path.join(__dirname, "cache");
-        if (fs.existsSync(cacheDir)) {
-          fs.readdirSync(cacheDir).forEach(file => {
-            if (file.endsWith(".png")) {
-              fs.unlinkSync(path.join(cacheDir, file));
-            }
-          });
-        }
-      }, 5000);
     });
   },
 
   onEvent: async function ({ usersData, event }) {
-    let { exp } = await usersData.get(event.senderID);
-    if (isNaN(exp) || typeof exp != "number")
-      exp = 0;
+    if (!event.senderID) return;
     try {
-      await usersData.set(event.senderID, {
-        exp: exp + 1
-      });
-    }
-    catch (e) { }
+      let { exp } = await usersData.get(event.senderID);
+      if (isNaN(exp) || typeof exp != "number") exp = 0;
+      await usersData.set(event.senderID, { exp: exp + 1 });
+    } catch (e) { }
   }
 };
 
@@ -97,52 +99,35 @@ const defaultDesignCard = {
   text_color: "#000000"
 };
 
-async function makeRankCard(userID, usersData, threadsData, threadID, deltaNext, api = global.GoatBot?.fcaApi || null) {
-  const { exp } = await usersData.get(userID);
+async function makeRankCard(userID, usersData, threadsData, threadID, deltaNext, api = null) {
+  const userData = await usersData.get(userID);
+  const exp = userData.exp || 0;
   const levelUser = expToLevel(exp, deltaNext);
 
   const expNextLevel = levelToExp(levelUser + 1, deltaNext) - levelToExp(levelUser, deltaNext);
   const currentExp = expNextLevel - (levelToExp(levelUser + 1, deltaNext) - exp);
 
   const allUser = await usersData.getAll();
-  allUser.sort((a, b) => b.exp - a.exp);
+  allUser.sort((a, b) => (b.exp || 0) - (a.exp || 0));
   const rank = allUser.findIndex(user => user.userID == userID) + 1;
+  const userName = userData.name || (await usersData.getName(userID)) || "User";
+  const avatarUrl = await usersData.getAvatarUrl(userID);
 
-  const customRankCard = (await threadsData.get(threadID, "data.customRankCard")) || {};
   const dataLevel = {
     exp: currentExp,
     expNextLevel,
-    name: allUser[rank - 1].name,
+    name: userName,
     rank: `#${rank}/${allUser.length}`,
     level: levelUser,
-    avatar: await usersData.getAvatarUrl(userID)
+    avatar: avatarUrl
   };
-
-  const configRankCard = {
-    ...defaultDesignCard,
-    ...customRankCard
-  };
-
-  const checkImagKey = [
-    "main_color",
-    "sub_color",
-    "line_color",
-    "exp_color",
-    "expNextLevel_color"
-  ];
-
-  for (const key of checkImagKey) {
-    if (configRankCard[key] && !isNaN(configRankCard[key]))
-      configRankCard[key] = await api?.resolvePhotoUrl?.(configRankCard[key]) || configRankCard[key];
-  }
 
   const image = new RankCard({
-    ...configRankCard,
+    ...defaultDesignCard,
     ...dataLevel
   });
   return await image.buildCard();
 }
-
 
 class RankCard {
   constructor(options) {
@@ -159,131 +144,6 @@ class RankCard {
 
     for (const key in options)
       this[key] = options[key];
-  }
-
-  registerFont(path, name) {
-    Canvas.registerFont(path, { family: name });
-    return this;
-  }
-
-  setFontName(fontName) {
-    this.fontName = fontName;
-    return this;
-  }
-
-  increaseTextSize(size) {
-    if (isNaN(size)) throw new Error("Size must be a number");
-    if (size < 0) throw new Error("Size must be greater than 0");
-    this.textSize = size;
-    return this;
-  }
-
-  decreaseTextSize(size) {
-    if (isNaN(size)) throw new Error("Size must be a number");
-    if (size < 0) throw new Error("Size must be greater than 0");
-    this.textSize = -size;
-    return this;
-  }
-
-  setWidthCard(widthCard) {
-    if (isNaN(widthCard)) throw new Error("Width card must be a number");
-    if (widthCard < 0) throw new Error("Width card must be greater than 0");
-    this.widthCard = Number(widthCard);
-    return this;
-  }
-
-  setHeightCard(heightCard) {
-    if (isNaN(heightCard)) throw new Error("Height card must be a number");
-    if (heightCard < 0) throw new Error("Height card must be greater than 0");
-    this.heightCard = Number(heightCard);
-    return this;
-  }
-
-  setAlphaSubCard(alpha_subcard) {
-    if (isNaN(alpha_subcard)) throw new Error("Alpha subcard must be a number");
-    if (alpha_subcard < 0 || alpha_subcard > 1) throw new Error("Alpha subcard must be between 0 and 1");
-    this.alpha_subcard = Number(alpha_subcard);
-    return this;
-  }
-
-  setMainColor(main_color) {
-    this.main_color = main_color;
-    return this;
-  }
-
-  setSubColor(sub_color) {
-    this.sub_color = sub_color;
-    return this;
-  }
-
-  setExpColor(exp_color) {
-    this.exp_color = exp_color;
-    return this;
-  }
-
-  setExpBarColor(expNextLevel_color) {
-    this.expNextLevel_color = expNextLevel_color;
-    return this;
-  }
-
-  setTextColor(text_color) {
-    this.text_color = text_color;
-    return this;
-  }
-
-  setNameColor(name_color) {
-    this.name_color = name_color;
-    return this;
-  }
-
-  setLevelColor(level_color) {
-    this.level_color = level_color;
-    return this;
-  }
-
-  setExpTextColor(exp_text_color) {
-    this.exp_text_color = exp_text_color;
-    return this;
-  }
-
-  setRankColor(rank_color) {
-    this.rank_color = rank_color;
-    return this;
-  }
-
-  setLineColor(line_color) {
-    this.line_color = line_color;
-    return this;
-  }
-
-  setExp(exp) {
-    this.exp = exp;
-    return this;
-  }
-
-  setExpNextLevel(expNextLevel) {
-    this.expNextLevel = expNextLevel;
-    return this;
-  }
-
-  setLevel(level) {
-    this.level = level;
-    return this;
-  }
-
-  setRank(rank) {
-    this.rank = rank;
-    return this;
-  }
-
-  setName(name) {
-    this.name = name;
-    return this;
-  }
-
-  setAvatar(avatar) {
-    this.avatar = avatar;
-    return this;
   }
 
   async buildCard() {
@@ -304,7 +164,7 @@ class RankCard {
     const Alpha = parseFloat(alpha_subcard || 0);
 
     ctx.globalAlpha = Alpha;
-    await checkColorOrImageAndDraw(alignRim, alignRim, widthCard - alignRim * 2, heightCard - alignRim * 2, ctx, sub_color, 20, alpha_subcard);
+    await this.checkColorOrImageAndDraw(alignRim, alignRim, widthCard - alignRim * 2, heightCard - alignRim * 2, ctx, sub_color, 20);
     ctx.globalAlpha = 1;
 
     ctx.globalCompositeOperation = "destination-out";
@@ -318,8 +178,8 @@ class RankCard {
     const edge = heightCard / 2 * Math.tan(angleLineCenter * Math.PI / 180);
 
     if (line_color) {
-      if (!isUrl(line_color)) {
-        ctx.fillStyle = ctx.strokeStyle = checkGradientColor(ctx,
+      if (!this.isUrl(line_color)) {
+        ctx.fillStyle = ctx.strokeStyle = this.checkGradientColor(ctx,
           Array.isArray(line_color) ? line_color : [line_color],
           xyAvatar - resizeAvatar / 2 - heightLineBetween, 0,
           xyAvatar + resizeAvatar / 2 + widthLineBetween + edge, 0
@@ -350,12 +210,12 @@ class RankCard {
       }
     }
     ctx.beginPath();
-    if (!isUrl(line_color))
+    if (!this.isUrl(line_color))
       ctx.rect(xyAvatar + resizeAvatar / 2, heightCard / 2 - heightLineBetween / 2, widthLineBetween, heightLineBetween);
     ctx.fill();
 
     ctx.beginPath();
-    if (!isUrl(line_color)) {
+    if (!this.isUrl(line_color)) {
       ctx.moveTo(xyAvatar + resizeAvatar / 2 + widthLineBetween + edge, 0);
       ctx.lineTo(xyAvatar + resizeAvatar / 2 + widthLineBetween - edge, heightCard);
       ctx.lineWidth = heightLineBetween;
@@ -363,7 +223,7 @@ class RankCard {
     }
 
     ctx.beginPath();
-    if (!isUrl(line_color))
+    if (!this.isUrl(line_color))
       ctx.arc(xyAvatar, xyAvatar, resizeAvatar / 2 + heightLineBetween, 0, 2 * Math.PI);
     ctx.fill();
     ctx.globalCompositeOperation = "destination-out";
@@ -380,13 +240,13 @@ class RankCard {
     
     try {
       const avatarImg = await Canvas.loadImage(avatar);
-      centerImage(ctx, avatarImg, xyAvatar, xyAvatar, resizeAvatar, resizeAvatar);
+      this.centerImage(ctx, avatarImg, xyAvatar, xyAvatar, resizeAvatar, resizeAvatar);
     } catch(e) {}
 
-    // Draw Exp bar
-    if (!isUrl(expNextLevel_color)) {
+    // Draw Exp bar background
+    if (!this.isUrl(expNextLevel_color)) {
       ctx.beginPath();
-      ctx.fillStyle = checkGradientColor(ctx, expNextLevel_color, xStartExp, yStartExp, xStartExp + widthExp, yStartExp);
+      ctx.fillStyle = this.checkGradientColor(ctx, expNextLevel_color, xStartExp, yStartExp, xStartExp + widthExp, yStartExp);
       ctx.arc(xStartExp, yStartExp + radius, radius, 1.5 * Math.PI, 0.5 * Math.PI, true);
       ctx.fill();
       ctx.fillRect(xStartExp, yStartExp, widthExp, heightExp);
@@ -412,8 +272,8 @@ class RankCard {
     }
 
     const widthExpCurrent = (100 / expNextLevel * exp) * percentage(widthExp);
-    if (!isUrl(exp_color)) {
-      ctx.fillStyle = checkGradientColor(ctx, exp_color, xStartExp, yStartExp, xStartExp + widthExp, yStartExp);
+    if (!this.isUrl(exp_color)) {
+      ctx.fillStyle = this.checkGradientColor(ctx, exp_color, xStartExp, yStartExp, xStartExp + widthExp, yStartExp);
       ctx.beginPath();
       ctx.arc(xStartExp, yStartExp + radius, radius, 1.5 * Math.PI, 0.5 * Math.PI, true);
       ctx.fill();
@@ -448,9 +308,9 @@ class RankCard {
     ctx.textAlign = "end";
 
     // Draw Rank
-    ctx.font = autoSizeFont(18.4 * percentage(widthCard), maxSizeFont_Rank, rank, ctx, this.fontName);
+    ctx.font = this.autoSizeFont(18.4 * percentage(widthCard), maxSizeFont_Rank, rank, ctx, this.fontName);
     const metricsRank = ctx.measureText(rank);
-    ctx.fillStyle = checkGradientColor(ctx, rank_color || text_color,
+    ctx.fillStyle = this.checkGradientColor(ctx, rank_color || text_color,
       94 * percentage(widthCard) - metricsRank.width,
       76 * percentage(heightCard) + metricsRank.emHeightDescent,
       94 * percentage(widthCard),
@@ -460,11 +320,11 @@ class RankCard {
 
     // Draw Level
     const textLevel = `Lv ${level}`;
-    ctx.font = autoSizeFont(9.8 * percentage(widthCard), maxSizeFont_Level, textLevel, ctx, this.fontName);
+    ctx.font = this.autoSizeFont(9.8 * percentage(widthCard), maxSizeFont_Level, textLevel, ctx, this.fontName);
     const metricsLevel = ctx.measureText(textLevel);
     const xStartLevel = 94 * percentage(widthCard);
     const yStartLevel = 32 * percentage(heightCard);
-    ctx.fillStyle = checkGradientColor(ctx, level_color || text_color,
+    ctx.fillStyle = this.checkGradientColor(ctx, level_color || text_color,
       xStartLevel - ctx.measureText(textLevel).width,
       yStartLevel + metricsLevel.emHeightDescent,
       xStartLevel,
@@ -472,12 +332,12 @@ class RankCard {
     );
     ctx.fillText(textLevel, xStartLevel, yStartLevel);
     
-    ctx.font = autoSizeFont(52.1 * percentage(widthCard), maxSizeFont_Name, name, ctx, this.fontName);
+    ctx.font = this.autoSizeFont(52.1 * percentage(widthCard), maxSizeFont_Name, name, ctx, this.fontName);
     ctx.textAlign = "center";
 
     // Draw Name
     const metricsName = ctx.measureText(name);
-    ctx.fillStyle = checkGradientColor(ctx, name_color || text_color,
+    ctx.fillStyle = this.checkGradientColor(ctx, name_color || text_color,
       47.5 * percentage(widthCard) - metricsName.width / 2,
       40 * percentage(heightCard) + metricsName.emHeightDescent,
       47.5 * percentage(widthCard) + metricsName.width / 2,
@@ -487,9 +347,9 @@ class RankCard {
 
     // Draw Exp text
     const textExp = `Exp ${exp}/${expNextLevel}`;
-    ctx.font = autoSizeFont(49 * percentage(widthCard), maxSizeFont_Exp, textExp, ctx, this.fontName);
+    ctx.font = this.autoSizeFont(49 * percentage(widthCard), maxSizeFont_Exp, textExp, ctx, this.fontName);
     const metricsExp = ctx.measureText(textExp);
-    ctx.fillStyle = checkGradientColor(ctx, exp_text_color || text_color,
+    ctx.fillStyle = this.checkGradientColor(ctx, exp_text_color || text_color,
       47.5 * percentage(widthCard) - metricsExp.width / 2,
       61.4 * percentage(heightCard) + metricsExp.emHeightDescent,
       47.5 * percentage(widthCard) + metricsExp.width / 2,
@@ -515,99 +375,100 @@ class RankCard {
       const bgImg = await Canvas.loadImage(main_color);
       ctx.drawImage(bgImg, 0, 0, widthCard, heightCard);
     } else {
-      ctx.fillStyle = checkGradientColor(ctx, main_color, 0, 0, widthCard, heightCard);
-      drawSquareRounded(ctx, 0, 0, widthCard, heightCard, radius, main_color);
+      ctx.fillStyle = this.checkGradientColor(ctx, main_color, 0, 0, widthCard, heightCard);
+      this.drawSquareRounded(ctx, 0, 0, widthCard, heightCard, radius, main_color);
     }
     return canvas.createPNGStream();
   }
-}
 
-async function checkColorOrImageAndDraw(xStart, yStart, width, height, ctx, colorOrImage, r) {
-  if (!colorOrImage?.match?.(/^https?:\/\//)) {
-    if (Array.isArray(colorOrImage)) {
-      const gradient = ctx.createLinearGradient(xStart, yStart, xStart + width, yStart + height);
-      colorOrImage.forEach((color, index) => {
-        gradient.addColorStop(index / (colorOrImage.length - 1), color);
-      });
-      ctx.fillStyle = gradient;
+  async checkColorOrImageAndDraw(xStart, yStart, width, height, ctx, colorOrImage, r) {
+    if (!colorOrImage?.match?.(/^https?:\/\//)) {
+      if (Array.isArray(colorOrImage)) {
+        const gradient = ctx.createLinearGradient(xStart, yStart, xStart + width, yStart + height);
+        colorOrImage.forEach((color, index) => {
+          gradient.addColorStop(index / (colorOrImage.length - 1), color);
+        });
+        ctx.fillStyle = gradient;
+      }
+      this.drawSquareRounded(ctx, xStart, yStart, width, height, r, colorOrImage);
+    } else {
+      const imageLoad = await Canvas.loadImage(colorOrImage);
+      ctx.save();
+      this.roundedImage(xStart, yStart, width, height, r, ctx);
+      ctx.clip();
+      ctx.drawImage(imageLoad, xStart, yStart, width, height);
+      ctx.restore();
     }
-    drawSquareRounded(ctx, xStart, yStart, width, height, r, colorOrImage);
-  } else {
-    const imageLoad = await Canvas.loadImage(colorOrImage);
+  }
+
+  drawSquareRounded(ctx, x, y, w, h, r, color) {
     ctx.save();
-    roundedImage(xStart, yStart, width, height, r, ctx);
-    ctx.clip();
-    ctx.drawImage(imageLoad, xStart, yStart, width, height);
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (color) ctx.fillStyle = color;
+    ctx.fill();
     ctx.restore();
   }
-}
 
-function drawSquareRounded(ctx, x, y, w, h, r, color, defaultGlobalCompositeOperation, notChangeColor) {
-  ctx.save();
-  if (defaultGlobalCompositeOperation)
-    ctx.globalCompositeOperation = "source-over";
-  if (w < 2 * r) r = w / 2;
-  if (h < 2 * r) r = h / 2;
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-  if (!notChangeColor) ctx.fillStyle = color;
-  ctx.fill();
-  ctx.restore();
-}
-
-function roundedImage(x, y, width, height, radius, ctx) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
-function centerImage(ctx, img, xCenter, yCenter, w, h) {
-  const x = xCenter - w / 2;
-  const y = yCenter - h / 2;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(xCenter, yCenter, w / 2, 0, 2 * Math.PI);
-  ctx.clip();
-  ctx.closePath();
-  ctx.drawImage(img, x, y, w, h);
-  ctx.restore();
-}
-
-function autoSizeFont(maxWidthText, maxSizeFont, text, ctx, fontName) {
-  let sizeFont = 0;
-  while (true) {
-    sizeFont += 1;
-    ctx.font = sizeFont + "px " + fontName;
-    const widthText = ctx.measureText(text).width;
-    if (widthText > maxWidthText || sizeFont > maxSizeFont) break;
+  roundedImage(x, y, width, height, radius, ctx) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
   }
-  return sizeFont + "px " + fontName;
-}
 
-function checkGradientColor(ctx, color, x1, y1, x2, y2) {
-  if (Array.isArray(color)) {
-    const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-    color.forEach((c, index) => {
-      gradient.addColorStop(index / (color.length - 1), c);
-    });
-    return gradient;
+  centerImage(ctx, img, xCenter, yCenter, w, h) {
+    const x = xCenter - w / 2;
+    const y = yCenter - h / 2;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(xCenter, yCenter, w / 2, 0, 2 * Math.PI);
+    ctx.clip();
+    ctx.drawImage(img, x, y, w, h);
+    ctx.restore();
   }
-  return color;
-}
 
-function isUrl(string) {
-  try { new URL(string); return true; } catch (err) { return false; }
+  autoSizeFont(maxWidthText, maxSizeFont, text, ctx, fontName) {
+    let sizeFont = 1;
+    while (sizeFont < maxSizeFont) {
+      ctx.font = sizeFont + "px " + fontName;
+      if (ctx.measureText(text).width > maxWidthText) break;
+      sizeFont++;
+    }
+    return (sizeFont - 1) + "px " + fontName;
+  }
+
+  checkGradientColor(ctx, color, x1, y1, x2, y2) {
+    if (Array.isArray(color)) {
+      const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+      color.forEach((c, index) => {
+        gradient.addColorStop(index / (color.length - 1), c);
+      });
+      return gradient;
+    }
+    return color;
+  }
+
+  isUrl(string) {
+    if (typeof string !== 'string') return false;
+    try { new URL(string); return true; } catch (err) { return false; }
+  }
 }
