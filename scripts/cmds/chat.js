@@ -14,7 +14,7 @@ module.exports = {
   },
 
   onStart: async function ({ message, event, args, api }) {
-    const VERBA_API_KEY = "vka_PvZgCZOeiEUHOtmX-V2gSY19YsvQi2xu";
+    const VERBA_API_KEY = "vka_txyELvLw-xJfWKTUsw_upDxhCFCPbRpa";
     const VERB_ID = "41f803c01969e6fb1db498fc";
     const BASE_URL = "https://api.verba.ink";
 
