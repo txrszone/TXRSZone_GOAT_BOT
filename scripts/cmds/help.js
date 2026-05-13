@@ -116,7 +116,7 @@ module.exports = {
 │ 🔶 ${configCommand.name}
 ├── INFO
 │ 📦 Category: ${cmdCategory}
-${descriptionLines}├── USAGE
+${descriptionLines}├── USAGE:
 │ ${usage}
 │ 🔯 Version: ${configCommand.version || "1.0"}
 │ ♻ Role: ${roleText}
