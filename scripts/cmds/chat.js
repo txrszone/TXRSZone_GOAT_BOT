@@ -66,8 +66,8 @@ module.exports = {
 └─ [ছবি রিপ্লাই] ${prefix}chat ছবিটি সম্পর্কে বর্ণনা দাও
 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
-📩
---
+ 📩
+--–--
 ☸️ MW Legends Bot ⚡`, threadID, messageID);
     }
 
