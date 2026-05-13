@@ -3,7 +3,7 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "chat",
-    version: "3.1.0",
+    version: "3.2.0",
     author: "OMOR TE",
     countDown: 1,
     role: 0,
@@ -19,6 +19,7 @@ module.exports = {
     const BASE_URL = "https://api.verba.ink";
     
     const messageID = event.messageID;
+    const threadID = event.threadID;
 
     // রিপ্লাই করা ছবি চেক করা
     let replyingImage = null;
@@ -41,9 +42,15 @@ module.exports = {
       return message.reply(`🤖 **Verba AI**\n━━━━━━━━━━━━━━━━━━━━\n📌 টেক্সট চ্যাট: chat hello\n📌 ইমেজ জেনারেট: chat img: a cat\n📌 ছবি বুঝতে: [ছবি রিপ্লাই করে] chat এই ছবিতে কি আছে?\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
 
+    // 📨 রিঅ্যাক্ট ফাংশন (সিম্পল এবং নিশ্চিত)
+    const sendReaction = (emoji) => {
+      api.setMessageReaction(emoji, messageID, (err) => {
+        if (err) console.log("React error:", err);
+      });
+    };
+
     // 🖼️ ইমেজ জেনারেশন (img: দিয়ে শুরু হলে)
     if (userText && userText.toLowerCase().startsWith("img")) {
-      // "img:" বা "img " দুই ফরম্যাটেই কাজ করবে
       let prompt = userText.slice(3).trim();
       if (prompt.startsWith(":")) prompt = prompt.slice(1).trim();
       if (prompt.startsWith(" ")) prompt = prompt.trim();
@@ -53,7 +60,7 @@ module.exports = {
       }
 
       // 📨 রিঅ্যাক্ট (প্রসেসিং শুরু)
-      try { await api.setMessageReaction("📨", messageID); } catch(e) {}
+      sendReaction("📨");
 
       try {
         const response = await axios.post(`${BASE_URL}/v1/image`, {
@@ -65,16 +72,17 @@ module.exports = {
           headers: {
             "Authorization": `Bearer ${VERBA_API_KEY}`,
             "Content-Type": "application/json"
-          }
+          },
+          timeout: 30000
         });
 
         const imageUrl = response.data?.data?.[0]?.url;
         if (!imageUrl) throw new Error("No image URL returned");
 
-        const imageStream = await axios.get(imageUrl, { responseType: "stream" });
+        const imageStream = await axios.get(imageUrl, { responseType: "stream", timeout: 30000 });
 
         // ✅ সফল হলে টিক রিঅ্যাক্ট
-        try { await api.setMessageReaction("✅", messageID); } catch(e) {}
+        sendReaction("✅");
 
         await message.reply({
           body: `🎨 **ইমেজ জেনারেটেড**\n━━━━━━━━━━━━━━━━━━━━\n📝 প্রম্পট: ${prompt}`,
@@ -84,7 +92,7 @@ module.exports = {
       } catch (error) {
         console.error("Image gen error:", error);
         // ❌ ব্যর্থ হলে ক্রস রিঅ্যাক্ট
-        try { await api.setMessageReaction("❌", messageID); } catch(e) {}
+        sendReaction("❌");
         message.reply(`❌ ইমেজ জেনারেট করতে ব্যর্থ হয়েছে।\n💡 ${error.message}`);
       }
       return;
@@ -93,7 +101,7 @@ module.exports = {
     // 💬 টেক্সট চ্যাট
     try {
       // 📨 রিঅ্যাক্ট (প্রসেসিং শুরু)
-      try { await api.setMessageReaction("📨", messageID); } catch(e) {}
+      sendReaction("📨");
 
       let requestBody = {
         character: CHARACTER_ID,
@@ -120,14 +128,15 @@ module.exports = {
         headers: {
           "Authorization": `Bearer ${VERBA_API_KEY}`,
           "Content-Type": "application/json"
-        }
+        },
+        timeout: 60000
       });
 
       let reply = response.data?.choices?.[0]?.message?.content;
       if (!reply) throw new Error("Empty response from API");
 
       // ✅ সফল হলে টিক রিঅ্যাক্ট
-      try { await api.setMessageReaction("✅", messageID); } catch(e) {}
+      sendReaction("✅");
 
       // লম্বা রিপ্লাই স্প্লিট করে পাঠানো
       if (reply.length > 2000) {
@@ -144,7 +153,7 @@ module.exports = {
     } catch (error) {
       console.error("Chat error:", error);
       // ❌ ব্যর্থ হলে ক্রস রিঅ্যাক্ট
-      try { await api.setMessageReaction("❌", messageID); } catch(e) {}
+      sendReaction("❌");
       
       let errorMsg = error.message;
       if (error.response) {
