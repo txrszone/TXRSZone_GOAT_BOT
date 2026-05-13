@@ -38,7 +38,7 @@ module.exports = {
       }
     }
 
-    // 🎯 হেল্প মেসেজ (প্রিফিক্স সহ)
+    // হেল্প মেসেজ
     if (!userText && !replyingImage) {
       return api.sendMessage(
         `╭───────────────────╮
@@ -63,7 +63,7 @@ module.exports = {
 ⚡ MW Legends Bot`, threadID, messageID);
     }
 
-    // 🖼️ ইমেজ জেনারেশন
+    // ইমেজ জেনারেশন
     if (userText && userText.toLowerCase().startsWith("img")) {
       let prompt = userText.slice(3).trim();
       if (prompt.startsWith(":")) prompt = prompt.slice(1).trim();
@@ -84,13 +84,13 @@ module.exports = {
             "Authorization": `Bearer ${VERBA_API_KEY}`,
             "Content-Type": "application/json"
           },
-          timeout: 15000
+          timeout: 60000
         });
 
         const imageUrl = response.data?.data?.[0]?.url;
         if (!imageUrl) throw new Error("No image URL");
 
-        const imageStream = await axios.get(imageUrl, { responseType: "stream", timeout: 15000 });
+        const imageStream = await axios.get(imageUrl, { responseType: "stream", timeout: 60000 });
 
         await api.sendMessage({
           body: `🎨 **${prompt}**`,
@@ -105,7 +105,7 @@ module.exports = {
       return;
     }
 
-    // 💬 টেক্সট চ্যাট
+    // টেক্সট চ্যাট
     try {
       let requestBody = { character: CHARACTER_ID, messages: [] };
 
@@ -128,7 +128,7 @@ module.exports = {
           "Authorization": `Bearer ${VERBA_API_KEY}`,
           "Content-Type": "application/json"
         },
-        timeout: 20000
+        timeout: 90000
       });
 
       let reply = response.data?.choices?.[0]?.message?.content;
