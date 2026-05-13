@@ -5,7 +5,7 @@ module.exports = {
     name: "chat",
     version: "3.0.0",
     author: "OMOR TE",
-    countDown: 1,
+    countDown: 2,
     role: 0,
     shortDescription: "Chat with AI & Generate Image",
     longDescription: "Chat with Verba API, generate images, and ask questions with photos",
@@ -15,7 +15,10 @@ module.exports = {
 
   onStart: async function ({ message, event, args, api }) {
     const VERBA_API_KEY = "vka_txyELvLw-xJfWKTUsw_upDxhCFCPbRpa";
-    const VERB_ID = "41f803c01969e6fb1db498fc";
+    
+    // ✅ আপনার দেওয়া সঠিক Vanity Path
+    const CHARACTER_ID = "/v/mwlegends_hpu";
+    
     const BASE_URL = "https://api.verba.ink";
 
     // রিপ্লাই করা ছবি চেক করা
@@ -29,7 +32,6 @@ module.exports = {
           break;
         }
       }
-      // যদি শুধু ছবি রিপ্লাই করে থাকে (কোনো টেক্সট না থাকে)
       if (!userText && event.messageReply.body) {
         userText = event.messageReply.body;
       }
@@ -49,7 +51,7 @@ module.exports = {
 
       try {
         const response = await axios.post(`${BASE_URL}/v1/image`, {
-          character: VERB_ID,
+          character: CHARACTER_ID,
           prompt: prompt,
           size: "1024x1024",
           response_format: "url"
@@ -77,11 +79,11 @@ module.exports = {
       return;
     }
 
-    // 💬 টেক্সট চ্যাট (ছবি থাকলে ভিজন, না থাকলে সাধারণ চ্যাট)
+    // 💬 টেক্সট চ্যাট
     try {
       let requestBody = {
-        character: VERB_ID,
-        stream: false
+        character: CHARACTER_ID,
+        messages: []
       };
 
       // ছবি থাকলে vision format এ পাঠানো
@@ -125,7 +127,13 @@ module.exports = {
 
     } catch (error) {
       console.error("Chat error:", error);
-      message.reply(`❌ Verba API কল ব্যর্থ: ${error.message}`);
+      
+      let errorMsg = error.message;
+      if (error.response) {
+        errorMsg = `Status: ${error.response.status}\n${JSON.stringify(error.response.data)}`;
+      }
+      
+      message.reply(`❌ Verba API কল ব্যর্থ: ${errorMsg}`);
     }
   }
 };
