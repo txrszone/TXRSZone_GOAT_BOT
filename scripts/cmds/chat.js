@@ -3,23 +3,22 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "chat",
-    version: "3.0.0",
+    version: "3.1.0",
     author: "OMOR TE",
-    countDown: 2,
+    countDown: 1,
     role: 0,
     shortDescription: "Chat with AI & Generate Image",
     longDescription: "Chat with Verba API, generate images, and ask questions with photos",
-    guide: "{p}chat <message>\n{p}chat img:<prompt>\n{p}chat [reply to image] <question>",
+    guide: "{p}chat <message>\n{p}chat img: <prompt>\n{p}chat [reply to image] <question>",
     category: "ai"
   },
 
   onStart: async function ({ message, event, args, api }) {
     const VERBA_API_KEY = "vka_txyELvLw-xJfWKTUsw_upDxhCFCPbRpa";
-    
-    // ✅ আপনার দেওয়া সঠিক Vanity Path
     const CHARACTER_ID = "/v/mwlegends_hpu";
-    
     const BASE_URL = "https://api.verba.ink";
+    
+    const messageID = event.messageID;
 
     // রিপ্লাই করা ছবি চেক করা
     let replyingImage = null;
@@ -39,15 +38,22 @@ module.exports = {
 
     // খালি মেসেজ চেক
     if (!userText && !replyingImage) {
-      return message.reply(`🤖 **Verba AI**\n━━━━━━━━━━━━━━━━━━━━\n📌 টেক্সট চ্যাট: chat hello\n📌 ইমেজ জেনারেট: chat img:a cat\n📌 ছবি বুঝতে: [ছবি রিপ্লাই করে] chat এই ছবিতে কি আছে?\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`🤖 **Verba AI**\n━━━━━━━━━━━━━━━━━━━━\n📌 টেক্সট চ্যাট: chat hello\n📌 ইমেজ জেনারেট: chat img: a cat\n📌 ছবি বুঝতে: [ছবি রিপ্লাই করে] chat এই ছবিতে কি আছে?\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
 
     // 🖼️ ইমেজ জেনারেশন (img: দিয়ে শুরু হলে)
-    if (userText && userText.startsWith("img:")) {
-      const prompt = userText.slice(4).trim();
+    if (userText && userText.toLowerCase().startsWith("img")) {
+      // "img:" বা "img " দুই ফরম্যাটেই কাজ করবে
+      let prompt = userText.slice(3).trim();
+      if (prompt.startsWith(":")) prompt = prompt.slice(1).trim();
+      if (prompt.startsWith(" ")) prompt = prompt.trim();
+      
       if (!prompt) {
-        return message.reply("❌ ইমেজ তৈরির জন্য প্রম্পট দিন। যেমন: `chat img:a robot`");
+        return message.reply("❌ ইমেজ তৈরির জন্য প্রম্পট দিন। যেমন: `chat img: a robot`");
       }
+
+      // 📨 রিঅ্যাক্ট (প্রসেসিং শুরু)
+      try { await api.setMessageReaction("📨", messageID); } catch(e) {}
 
       try {
         const response = await axios.post(`${BASE_URL}/v1/image`, {
@@ -67,6 +73,9 @@ module.exports = {
 
         const imageStream = await axios.get(imageUrl, { responseType: "stream" });
 
+        // ✅ সফল হলে টিক রিঅ্যাক্ট
+        try { await api.setMessageReaction("✅", messageID); } catch(e) {}
+
         await message.reply({
           body: `🎨 **ইমেজ জেনারেটেড**\n━━━━━━━━━━━━━━━━━━━━\n📝 প্রম্পট: ${prompt}`,
           attachment: imageStream.data
@@ -74,6 +83,8 @@ module.exports = {
 
       } catch (error) {
         console.error("Image gen error:", error);
+        // ❌ ব্যর্থ হলে ক্রস রিঅ্যাক্ট
+        try { await api.setMessageReaction("❌", messageID); } catch(e) {}
         message.reply(`❌ ইমেজ জেনারেট করতে ব্যর্থ হয়েছে।\n💡 ${error.message}`);
       }
       return;
@@ -81,12 +92,14 @@ module.exports = {
 
     // 💬 টেক্সট চ্যাট
     try {
+      // 📨 রিঅ্যাক্ট (প্রসেসিং শুরু)
+      try { await api.setMessageReaction("📨", messageID); } catch(e) {}
+
       let requestBody = {
         character: CHARACTER_ID,
         messages: []
       };
 
-      // ছবি থাকলে vision format এ পাঠানো
       if (replyingImage) {
         requestBody.messages = [
           {
@@ -113,6 +126,9 @@ module.exports = {
       let reply = response.data?.choices?.[0]?.message?.content;
       if (!reply) throw new Error("Empty response from API");
 
+      // ✅ সফল হলে টিক রিঅ্যাক্ট
+      try { await api.setMessageReaction("✅", messageID); } catch(e) {}
+
       // লম্বা রিপ্লাই স্প্লিট করে পাঠানো
       if (reply.length > 2000) {
         const parts = reply.match(/[\s\S]{1,2000}/g) || [];
@@ -127,10 +143,12 @@ module.exports = {
 
     } catch (error) {
       console.error("Chat error:", error);
+      // ❌ ব্যর্থ হলে ক্রস রিঅ্যাক্ট
+      try { await api.setMessageReaction("❌", messageID); } catch(e) {}
       
       let errorMsg = error.message;
       if (error.response) {
-        errorMsg = `Status: ${error.response.status}\n${JSON.stringify(error.response.data)}`;
+        errorMsg = `Status: ${error.response.status}`;
       }
       
       message.reply(`❌ Verba API কল ব্যর্থ: ${errorMsg}`);
