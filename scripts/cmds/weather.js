@@ -4,7 +4,7 @@ const moment = require("moment-timezone");
 module.exports = {
   config: {
     name: "weather",
-    version: "3.0.0",
+    version: "3.1.0",
     author: "OMOR TE",
     countDown: 2,
     role: 0,
@@ -41,34 +41,30 @@ module.exports = {
         return Math.floor((F - 32) / 1.8);
       }
 
-      function formatTime(t) {
-        if (!t) return "N/A";
-        const date = new Date(t);
-        return date.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: false });
+      // ✅ 12 ঘন্টা ফরম্যাটে সময় দেখানোর ফাংশন
+      function formatTime12(timeStr) {
+        if (!timeStr) return "N/A";
+        const date = new Date(timeStr);
+        let hours = date.getUTCHours();
+        const minutes = date.getUTCMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
       }
 
-      // 🔆 UV রেটিং ও গাইড
-      const uvIndex = today.Day?.UVIndex || "N/A";
-      let uvGuide = "";
-      let uvEmoji = "☀️";
-      
-      if (uvIndex !== "N/A") {
-        if (uvIndex <= 2) {
-          uvGuide = "নিরাপদ - বাইরে যেতে পারেন";
-          uvEmoji = "🟢";
-        } else if (uvIndex <= 5) {
-          uvGuide = "মাঝারি - সানস্ক্রিন ব্যবহার করুন";
-          uvEmoji = "🟡";
-        } else if (uvIndex <= 7) {
-          uvGuide = "উচ্চ - ছাতা~সানস্ক্রিন লাগবে";
-          uvEmoji = "🟠";
-        } else if (uvIndex <= 10) {
-          uvGuide = "খুব উচ্চ - দুপুরে বাইরে যাবেন না";
-          uvEmoji = "🔴";
-        } else {
-          uvGuide = "চরম উচ্চ - বাইরে যাওয়া বিপজ্জনক!";
-          uvEmoji = "⚫";
-        }
+      // 🌅 সূর্যোদয়/সূর্যাস্ত ঠিক করা (UTC to Local)
+      function formatSunTime(timeStr) {
+        if (!timeStr) return "N/A";
+        // AccuWeather থেকে আসা সময় UTC, বাংলাদেশের জন্য +6 ঘন্টা যোগ
+        const date = new Date(timeStr);
+        date.setHours(date.getHours() + 6); // UTC+6 for Bangladesh
+        let hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
       }
 
       // তাপমাত্রা
@@ -91,11 +87,32 @@ module.exports = {
       // মেঘ
       let cloud = "N/A";
       if (today.Day?.CloudCover) cloud = `${today.Day.CloudCover}%`;
+      
+      // UV রেটিং
+      const uvIndex = today.Day?.UVIndex || "N/A";
+      let uvGuide = "";
+      let uvEmoji = "☀️";
+      
+      if (uvIndex !== "N/A") {
+        if (uvIndex <= 2) { uvGuide = "নিরাপদ - বাইরে যেতে পারেন"; uvEmoji = "🟢"; }
+        else if (uvIndex <= 5) { uvGuide = "মাঝারি - সানস্ক্রিন ব্যবহার করুন"; uvEmoji = "🟡"; }
+        else if (uvIndex <= 7) { uvGuide = "উচ্চ - ছাতা~সানস্ক্রিন লাগবে"; uvEmoji = "🟠"; }
+        else if (uvIndex <= 10) { uvGuide = "খুব উচ্চ - দুপুরে বাইরে যাবেন না"; uvEmoji = "🔴"; }
+        else { uvGuide = "চরম উচ্চ - বাইরে যাওয়া বিপজ্জনক!!"; uvEmoji = "⚫"; }
+      }
 
-      // ☀️ দিনের আবহাওয়া অ্যালার্ট
+      // ✅ সূর্যোদয়/সূর্যাস্ত (ঠিক সময়)
+      const sunrise = formatSunTime(today.Sun?.Rise);
+      const sunset = formatSunTime(today.Sun?.Set);
+      
+      // ✅ চন্দ্রোদয়/চন্দ্রাস্ত
+      const moonrise = formatTime12(today.Moon?.Rise);
+      const moonset = formatTime12(today.Moon?.Set);
+
+      // ☀️ দিনের আবহাওয়া
       const dayWeather = today.Day?.LongPhrase || "N/A";
       
-      // 🌙 রাতের আবহাওয়া অ্যালার্ট
+      // 🌙 রাতের আবহাওয়া
       const nightWeather = today.Night?.LongPhrase || "N/A";
 
       const msg = `
@@ -118,17 +135,19 @@ module.exports = {
 
 ─────────────────────
 
-🌅 সূর্যোদয়: ${formatTime(today.Sun.Rise)}
-🌄 সূর্যাস্ত: ${formatTime(today.Sun.Set)}
+🌅 সূর্যোদয়: ${sunrise}
+🌄 সূর্যাস্ত: ${sunset}
+🌙 চন্দ্রোদয়: ${moonrise}
+🌙 চন্দ্রাস্ত: ${moonset}
 
 ─────────────────────
 
-☀️ দিন: 📋 ${dayWeather}
-🌙 রাত: 📋 ${nightWeather}
+☀️ দিন: ${dayWeather}
+🌙 রাত: ${nightWeather}
 
 ─────────────────────
 
-📌 📋 ${weatherRes.data.Headline?.Text || "Today's forecast"}
+📌 ${weatherRes.data.Headline?.Text || "Today's forecast"}
 
 ─────────────────────
 ⚡ MW Legends Bot ☸️
