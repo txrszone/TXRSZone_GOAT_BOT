@@ -7,7 +7,7 @@ const sessions = {};
 module.exports = {
   config: {
     name: "chat",
-    version: "5.2.0 FINAL",
+    version: "5.3.0 FINAL",
     author: "OMOR TE",
     countDown: 1,
     role: 0,
@@ -45,7 +45,7 @@ module.exports = {
     // সেশন আইডি
     const sessionId = `${threadID}_${senderID}`;
 
-    // 🎯 হেল্প মেসেজ (আপনার ডিজাইন)
+    // 🎯 হেল্প মেসেজ
     if (!userText && !replyingImage) {
       return api.sendMessage(
         `╭───────────────────╮
@@ -120,7 +120,7 @@ module.exports = {
         messages: []
       };
 
-      // ✅ আগের সেশন আইডি থাকলে ব্যবহার করব (কথা চালিয়ে যেতে)
+      // আগের সেশন আইডি থাকলে ব্যবহার করব
       if (sessions[sessionId]) {
         requestBody.session_id = sessions[sessionId];
       }
@@ -150,20 +150,63 @@ module.exports = {
       let reply = response.data?.choices?.[0]?.message?.content;
       if (!reply) throw new Error("No response");
 
-      // ✅ নতুন সেশন আইডি সেভ করা
+      // নতুন সেশন আইডি সেভ করা
       if (response.data?.session_id) {
         sessions[sessionId] = response.data.session_id;
       }
 
-      // ✅ রিপ্লাই হিসেবে মেসেজ পাঠানো (api.sendMessage এর পরিবর্তে message.reply)
-      if (reply.length > 2000) {
-        const parts = reply.match(/[\s\S]{1,2000}/g) || [];
-        await message.reply(parts[0]);
-        for (let i = 1; i < parts.length; i++) {
-          await message.reply(parts[i]);
+      // ✅ মাল্টিপল রেসপন্স প্রসেস করা (যদি Verba AI 2-3টি আলাদা মেসেজ পাঠায়)
+      // চেক করা: রেসপন্সে একাধিক প্যারাগ্রাফ বা লাইন ব্রেক আছে কিনা
+      
+      // মেথড ১: সংখ্যা বা বুলেট পয়েন্ট দিয়ে আলাদা করা রেসপন্স
+      // মেথড ২: খালি লাইন দিয়ে আলাদা করা রেসপন্স
+      
+      let responses = [];
+      
+      // যদি রেসপন্সে "1.", "2.", "3." অথবা "•", "*", "-" দিয়ে শুরু হওয়া লাইন থাকে
+      const bulletPattern = /^[\s]*([0-9]+\.|•|\*|-)\s/m;
+      
+      if (bulletPattern.test(reply)) {
+        // বুলেট পয়েন্ট বা সংখ্যা দিয়ে আলাদা করা রেসপন্স
+        const parts = reply.split(/\n(?=[\s]*([0-9]+\.|•|\*|-)\s)/);
+        for (const part of parts) {
+          if (part.trim()) {
+            responses.push(part.trim());
+          }
         }
-      } else {
-        await message.reply(reply);
+      } 
+      // যদি রেসপন্সে একাধিক প্যারাগ্রাফ থাকে (খালি লাইন দিয়ে আলাদা)
+      else if (reply.includes('\n\n')) {
+        const parts = reply.split(/\n\s*\n/);
+        for (const part of parts) {
+          if (part.trim()) {
+            responses.push(part.trim());
+          }
+        }
+      }
+      // যদি রেসপন্স খুব বড় হয় (2000 ক্যারেক্টারের বেশি)
+      else if (reply.length > 2000) {
+        const parts = reply.match(/[\s\S]{1,1900}/g) || [];
+        responses = parts;
+      }
+      // সাধারণ রেসপন্স
+      else {
+        responses = [reply];
+      }
+
+      // ✅ মাল্টিপল রেসপন্স পাঠানো
+      for (let i = 0; i < responses.length; i++) {
+        const responseText = responses[i];
+        if (responseText && responseText.trim()) {
+          // প্রথম রেসপন্সটি রিপ্লাই হিসেবে পাঠাবো, বাকিগুলো সাধারণ মেসেজ
+          if (i === 0) {
+            await message.reply(responseText);
+          } else {
+            // বাকি রেসপন্সগুলি সামান্য delay দিয়ে পাঠানো
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await api.sendMessage(responseText, threadID);
+          }
+        }
       }
 
     } catch (error) {
