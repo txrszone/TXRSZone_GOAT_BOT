@@ -7,7 +7,7 @@ const sessions = {};
 module.exports = {
   config: {
     name: "chat",
-    version: "5.3.0 FINAL",
+    version: "5.4.0 FINAL",
     author: "OMOR TE",
     countDown: 1,
     role: 0,
@@ -67,7 +67,7 @@ module.exports = {
 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
  📩
---–--
+-----
 ☸️ MW Legends Bot ⚡`, threadID, messageID);
     }
 
@@ -155,19 +155,12 @@ module.exports = {
         sessions[sessionId] = response.data.session_id;
       }
 
-      // ✅ মাল্টিপল রেসপন্স প্রসেস করা (যদি Verba AI 2-3টি আলাদা মেসেজ পাঠায়)
-      // চেক করা: রেসপন্সে একাধিক প্যারাগ্রাফ বা লাইন ব্রেক আছে কিনা
-      
-      // মেথড ১: সংখ্যা বা বুলেট পয়েন্ট দিয়ে আলাদা করা রেসপন্স
-      // মেথড ২: খালি লাইন দিয়ে আলাদা করা রেসপন্স
-      
+      // ✅ মাল্টিপল রেসপন্স প্রসেস করা
       let responses = [];
       
-      // যদি রেসপন্সে "1.", "2.", "3." অথবা "•", "*", "-" দিয়ে শুরু হওয়া লাইন থাকে
       const bulletPattern = /^[\s]*([0-9]+\.|•|\*|-)\s/m;
       
       if (bulletPattern.test(reply)) {
-        // বুলেট পয়েন্ট বা সংখ্যা দিয়ে আলাদা করা রেসপন্স
         const parts = reply.split(/\n(?=[\s]*([0-9]+\.|•|\*|-)\s)/);
         for (const part of parts) {
           if (part.trim()) {
@@ -175,7 +168,6 @@ module.exports = {
           }
         }
       } 
-      // যদি রেসপন্সে একাধিক প্যারাগ্রাফ থাকে (খালি লাইন দিয়ে আলাদা)
       else if (reply.includes('\n\n')) {
         const parts = reply.split(/\n\s*\n/);
         for (const part of parts) {
@@ -184,26 +176,24 @@ module.exports = {
           }
         }
       }
-      // যদি রেসপন্স খুব বড় হয় (2000 ক্যারেক্টারের বেশি)
       else if (reply.length > 2000) {
         const parts = reply.match(/[\s\S]{1,1900}/g) || [];
         responses = parts;
       }
-      // সাধারণ রেসপন্স
       else {
         responses = [reply];
       }
 
-      // ✅ মাল্টিপল রেসপন্স পাঠানো
+      // ✅ মাল্টিপল রেসপন্স পাঠানো (প্রথম 0ms, বাকি 400ms)
       for (let i = 0; i < responses.length; i++) {
         const responseText = responses[i];
         if (responseText && responseText.trim()) {
-          // প্রথম রেসপন্সটি রিপ্লাই হিসেবে পাঠাবো, বাকিগুলো সাধারণ মেসেজ
           if (i === 0) {
+            // প্রথম মেসেজ: 0ms ডিলে (সাথে সাথে)
             await message.reply(responseText);
           } else {
-            // বাকি রেসপন্সগুলি সামান্য delay দিয়ে পাঠানো
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // পরবর্তী মেসেজ: 400ms ডিলে (0.4 সেকেন্ড)
+            await new Promise(resolve => setTimeout(resolve, 400));
             await api.sendMessage(responseText, threadID);
           }
         }
