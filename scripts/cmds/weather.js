@@ -56,9 +56,8 @@ module.exports = {
       // 🌅 সূর্যোদয়/সূর্যাস্ত ঠিক করা (UTC to Local)
       function formatSunTime(timeStr) {
         if (!timeStr) return "N/A";
-        // AccuWeather থেকে আসা সময় UTC, বাংলাদেশের জন্য +6 ঘন্টা যোগ
         const date = new Date(timeStr);
-        date.setHours(date.getHours() + 6); // UTC+6 for Bangladesh
+        date.setHours(date.getHours() + 6);
         let hours = date.getHours();
         const minutes = date.getMinutes();
         const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -88,20 +87,26 @@ module.exports = {
       let cloud = "N/A";
       if (today.Day?.CloudCover) cloud = `${today.Day.CloudCover}%`;
       
-      // UV রেটিং
-      const uvIndex = today.Day?.UVIndex || "N/A";
-      let uvGuide = "";
-      let uvEmoji = "☀️";
+      // ✅ UV রেটিং ফিক্স (N/A হলে "তথ্য নেই" দেখাবে)
+      let uvDisplay = "";
+      const uvIndex = today.Day?.UVIndex;
       
-      if (uvIndex !== "N/A") {
+      if (uvIndex !== undefined && uvIndex !== null && !isNaN(uvIndex)) {
+        let uvGuide = "";
+        let uvEmoji = "☀️";
+        
         if (uvIndex <= 2) { uvGuide = "নিরাপদ - বাইরে যেতে পারেন"; uvEmoji = "🟢"; }
         else if (uvIndex <= 5) { uvGuide = "মাঝারি - সানস্ক্রিন ব্যবহার করুন"; uvEmoji = "🟡"; }
-        else if (uvIndex <= 7) { uvGuide = "উচ্চ - ছাতা~সানস্ক্রিন লাগবে"; uvEmoji = "🟠"; }
+        else if (uvIndex <= 7) { uvGuide = "উচ্চ - ছাতা/সানস্ক্রিন লাগবে"; uvEmoji = "🟠"; }
         else if (uvIndex <= 10) { uvGuide = "খুব উচ্চ - দুপুরে বাইরে যাবেন না"; uvEmoji = "🔴"; }
-        else { uvGuide = "চরম উচ্চ - বাইরে যাওয়া বিপজ্জনক!!"; uvEmoji = "⚫"; }
+        else { uvGuide = "চরম উচ্চ - বাইরে যাওয়া বিপজ্জনক!"; uvEmoji = "⚫"; }
+        
+        uvDisplay = `${uvIndex} ${uvEmoji} (${uvGuide})`;
+      } else {
+        uvDisplay = "তথ্য নেই";
       }
 
-      // ✅ সূর্যোদয়/সূর্যাস্ত (ঠিক সময়)
+      // ✅ সূর্যোদয়/সূর্যাস্ত
       const sunrise = formatSunTime(today.Sun?.Rise);
       const sunset = formatSunTime(today.Sun?.Set);
       
@@ -131,7 +136,7 @@ module.exports = {
 💨 বাতাস: ${wind}
 ☔ বৃষ্টি: ${rainChance}
 ☁️ মেঘ: ${cloud}
-☀️ ইউভি: ${uvIndex} ${uvEmoji} (${uvGuide})
+☀️ ইউভি: ${uvDisplay}
 
 ─────────────────────
 
