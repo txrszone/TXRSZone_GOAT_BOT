@@ -1,13 +1,13 @@
 const axios = require("axios");
 const { getPrefix } = global.utils;
 
-// 🧠 Session memory
+// সেশন মেমোরি স্টোর
 const sessions = {};
 
 module.exports = {
   config: {
     name: "chat",
-    version: "5.5.0 FINAL",
+    version: "5.2.0 FINAL FIXED",
     author: "OMOR TE",
     countDown: 1,
     role: 0,
@@ -20,7 +20,6 @@ module.exports = {
   },
 
   onStart: async function ({ api, event, args, message }) {
-
     const VERBA_API_KEY =
       "vka_txyELvLw-xJfWKTUsw_upDxhCFCPbRpa";
 
@@ -30,21 +29,15 @@ module.exports = {
     const threadID = event.threadID;
     const messageID = event.messageID;
     const senderID = event.senderID;
-
     const prefix = getPrefix(threadID);
 
     let replyingImage = null;
     let userText = args.join(" ").trim();
 
-    // 🖼️ Detect replied image
-    if (event.messageReply?.attachments) {
-
+    // 🖼️ Reply image detect
+    if (event.messageReply && event.messageReply.attachments) {
       for (const attach of event.messageReply.attachments) {
-
-        if (
-          attach.type === "photo" ||
-          attach.type === "image"
-        ) {
+        if (attach.type === "photo" || attach.type === "image") {
           replyingImage = attach.url;
           break;
         }
@@ -55,14 +48,13 @@ module.exports = {
       }
     }
 
-    // 🧠 Unique Session
+    // 🎯 Unique session ID
     const sessionId = `${threadID}_${senderID}`;
 
-    // 📌 Help Message
+    // 📌 Help message
     if (!userText && !replyingImage) {
-
       return api.sendMessage(
-`╭───────────────────╮
+        `╭───────────────────╮
 │      🤖  MW Legends AI  ⚡      │
 ╰───────────────────╯
 
@@ -80,7 +72,7 @@ module.exports = {
 └─ [ছবি রিপ্লাই] ${prefix}chat ছবিটি সম্পর্কে বর্ণনা দাও
 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
- 📩
+📩
 -----
 ☸️ MW Legends Bot ⚡`,
         threadID,
@@ -89,11 +81,7 @@ module.exports = {
     }
 
     // 🎨 IMAGE GENERATION
-    if (
-      userText &&
-      userText.toLowerCase().startsWith("img")
-    ) {
-
+    if (userText && userText.toLowerCase().startsWith("img")) {
       let prompt = userText.slice(3).trim();
 
       if (prompt.startsWith(":")) {
@@ -101,16 +89,14 @@ module.exports = {
       }
 
       if (!prompt) {
-
         return api.sendMessage(
-          "❌ Prompt দিন\nExample:\nchat img: futuristic battleship",
+          "❌ প্রম্পট দিন। যেমন:\nchat img: a robot warrior",
           threadID,
           messageID
         );
       }
 
       try {
-
         const response = await axios.post(
           `${BASE_URL}/v1/image`,
           {
@@ -128,20 +114,16 @@ module.exports = {
           }
         );
 
-        const imageUrl =
-          response.data?.data?.[0]?.url;
+        const imageUrl = response.data?.data?.[0]?.url;
 
         if (!imageUrl) {
-          throw new Error("No image URL");
+          throw new Error("No image URL received");
         }
 
-        const imageStream = await axios.get(
-          imageUrl,
-          {
-            responseType: "stream",
-            timeout: 120000
-          }
-        );
+        const imageStream = await axios.get(imageUrl, {
+          responseType: "stream",
+          timeout: 120000
+        });
 
         await api.sendMessage(
           {
@@ -150,18 +132,16 @@ module.exports = {
           },
           threadID
         );
-
       } catch (error) {
-
         console.error("Image Error:", error);
 
-        const errMsg =
+        let errMsg =
           error.response?.status === 404
             ? "API Error 404"
             : error.message;
 
         api.sendMessage(
-          `❌ ${errMsg}`,
+          `❌ Image generation failed:\n${errMsg}`,
           threadID,
           messageID
         );
@@ -170,32 +150,27 @@ module.exports = {
       return;
     }
 
-    // 💬 CHAT SYSTEM
+    // 💬 AI CHAT
     try {
-
       let requestBody = {
         character: CHARACTER_ID,
         messages: []
       };
 
-      // 🧠 Use old session
+      // পুরাতন session ব্যবহার
       if (sessions[sessionId]) {
-        requestBody.session_id =
-          sessions[sessionId];
+        requestBody.session_id = sessions[sessionId];
       }
 
-      // 🖼️ Image Question
+      // 🖼️ Image + text
       if (replyingImage) {
-
         requestBody.messages = [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text:
-                  userText ||
-                  "What's in this image?"
+                text: userText || "What's in this image?"
               },
               {
                 type: "image_url",
@@ -206,10 +181,10 @@ module.exports = {
             ]
           }
         ];
+      }
 
-      } else {
-
-        // 💬 Normal Text
+      // 💬 Normal text
+      else {
         requestBody.messages = [
           {
             role: "user",
@@ -234,76 +209,41 @@ module.exports = {
         response.data?.choices?.[0]?.message?.content;
 
       if (!reply) {
-        throw new Error("No response");
+        throw new Error("No response received");
       }
 
-      // 🧠 Save session
+      // ✅ Save new session
       if (response.data?.session_id) {
-
-        sessions[sessionId] =
-          response.data.session_id;
+        sessions[sessionId] = response.data.session_id;
       }
 
-      // 🧹 Clean weird markdown
+      // 🧹 Clean weird markdown issue
       reply = reply
         .replace(/\n\s*\*\s*\n/g, "\n")
         .replace(/\n{3,}/g, "\n\n")
         .trim();
 
-      // ✅ 300 Character Smart Split
-      const chunkSize = 300;
+      // ✅ Messenger safe sending
+      if (reply.length <= 1900) {
+        await message.reply(reply);
+      } else {
+        const chunks =
+          reply.match(/[\s\S]{1,1900}/g) || [];
 
-      const responses = [];
+        for (let i = 0; i < chunks.length; i++) {
+          if (i !== 0) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, 400)
+            );
+          }
 
-      let currentChunk = "";
-
-      const words = reply.split(" ");
-
-      for (const word of words) {
-
-        if (
-          (currentChunk + word).length >
-          chunkSize
-        ) {
-
-          responses.push(
-            currentChunk.trim()
-          );
-
-          currentChunk = word + " ";
-
-        } else {
-
-          currentChunk += word + " ";
-        }
-      }
-
-      // last chunk
-      if (currentChunk.trim()) {
-
-        responses.push(
-          currentChunk.trim()
-        );
-      }
-
-      // 🚀 Send messages one by one
-      for (let i = 0; i < responses.length; i++) {
-
-        if (i !== 0) {
-
-          await new Promise(resolve =>
-            setTimeout(resolve, 500)
+          await api.sendMessage(
+            chunks[i],
+            threadID
           );
         }
-
-        await api.sendMessage(
-          responses[i],
-          threadID
-        );
       }
-
     } catch (error) {
-
       console.error("Chat Error:", error);
 
       // ⏳ Timeout
@@ -311,22 +251,22 @@ module.exports = {
         error.code === "ECONNABORTED" ||
         error.message?.includes("timeout")
       ) {
-
         api.sendMessage(
-          "⏳ MW Legends AI সার্ভার রেসপন্স দিতে বেশি সময় নিচ্ছে। পরে আবার চেষ্টা করুন।",
+          "⏳ MW Legends AI সার্ভার রেসপন্স দিতে বেশি সময় নিচ্ছে। একটু পরে আবার চেষ্টা করুন অথবা সাপোর্টে যোগাযোগ করুন।",
           threadID,
           messageID
         );
+      }
 
-      } else {
-
-        const errMsg =
+      // ❌ Other error
+      else {
+        let errMsg =
           error.response?.status === 404
             ? "API Error 404"
             : error.message;
 
         api.sendMessage(
-          `❌ ${errMsg}`,
+          `❌ Error:\n${errMsg}`,
           threadID,
           messageID
         );
