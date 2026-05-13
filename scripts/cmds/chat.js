@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { getPrefix } = global.utils;
 
 module.exports = {
   config: {
@@ -20,6 +21,7 @@ module.exports = {
     
     const threadID = event.threadID;
     const messageID = event.messageID;
+    const prefix = getPrefix(threadID);
 
     let replyingImage = null;
     let userText = args.join(" ").trim();
@@ -36,11 +38,11 @@ module.exports = {
       }
     }
 
-    // 🎯 হেল্প মেসেজ (পারফেক্ট বক্স ডিজাইন)
+    // 🎯 হেল্প মেসেজ (প্রিফিক্স সহ)
     if (!userText && !replyingImage) {
       return api.sendMessage(
         `╭───────────────────╮
-│     🤖 MW AI 🚀      │
+│      🤖  MW Legends AI  ⚡      │
 ╰───────────────────╯
 
 📌 **কিভাবে ব্যবহার করবেন?**
@@ -48,13 +50,13 @@ module.exports = {
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
 
 💬 **টেক্সট চ্যাট**
-└─ {p}chat hello
+└─ ${prefix}chat hello
 
 🎨 **ইমেজ জেনারেট**
-└─ {p}chat img: a cat
+└─ ${prefix}chat img: a cat
 
 🖼️ **ছবি দেখে প্রশ্ন**
-└─ [ছবি রিপ্লাই] {p}chat কি দেখছো?
+└─ [ছবি রিপ্লাই] ${prefix}chat কি দেখছো?
 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
 
@@ -71,8 +73,6 @@ module.exports = {
         return api.sendMessage("❌ প্রম্পট দিন। যেমন: `chat img: a robot`", threadID, messageID);
       }
 
-      api.setMessageReaction("📨", messageID, (err) => {});
-
       try {
         const response = await axios.post(`${BASE_URL}/v1/image`, {
           character: CHARACTER_ID,
@@ -84,13 +84,13 @@ module.exports = {
             "Authorization": `Bearer ${VERBA_API_KEY}`,
             "Content-Type": "application/json"
           },
-          timeout: 30000
+          timeout: 15000
         });
 
         const imageUrl = response.data?.data?.[0]?.url;
         if (!imageUrl) throw new Error("No image URL");
 
-        const imageStream = await axios.get(imageUrl, { responseType: "stream", timeout: 30000 });
+        const imageStream = await axios.get(imageUrl, { responseType: "stream", timeout: 15000 });
 
         await api.sendMessage({
           body: `🎨 **${prompt}**`,
@@ -100,15 +100,12 @@ module.exports = {
       } catch (error) {
         console.error("Image error:", error);
         let errMsg = error.response?.status === 404 ? "API Error 404" : error.message;
-        api.setMessageReaction("❌", messageID, (err) => {});
         api.sendMessage(`❌ ${errMsg}`, threadID, messageID);
       }
       return;
     }
 
     // 💬 টেক্সট চ্যাট
-    api.setMessageReaction("📨", messageID, (err) => {});
-
     try {
       let requestBody = { character: CHARACTER_ID, messages: [] };
 
@@ -131,7 +128,7 @@ module.exports = {
           "Authorization": `Bearer ${VERBA_API_KEY}`,
           "Content-Type": "application/json"
         },
-        timeout: 60000
+        timeout: 20000
       });
 
       let reply = response.data?.choices?.[0]?.message?.content;
@@ -150,7 +147,6 @@ module.exports = {
     } catch (error) {
       console.error("Chat error:", error);
       let errMsg = error.response?.status === 404 ? "API Error 404" : error.message;
-      api.setMessageReaction("❌", messageID, (err) => {});
       api.sendMessage(`❌ ${errMsg}`, threadID, messageID);
     }
   }
