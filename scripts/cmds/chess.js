@@ -8,7 +8,8 @@ const AI_LEVELS = {
   beginner: {
     name: "Felix",
     title: "Beginner",
-    description: "Very random, weak moves",
+    description: "🌟 Very random, weak moves | Best for learning chess",
+    emoji: "🌱",
     depth: 1,
     randomness: 0.8,
     taunts: ["Hmm, let me think...", "Interesting move!", "🤔"]
@@ -16,7 +17,8 @@ const AI_LEVELS = {
   novice: {
     name: "Ava",
     title: "Novice", 
-    description: "Slightly better, avoids blunders",
+    description: "📖 Slightly better, avoids basic blunders",
+    emoji: "📘",
     depth: 1,
     randomness: 0.6,
     taunts: ["Not bad!", "I see what you're doing", "🙂"]
@@ -24,7 +26,8 @@ const AI_LEVELS = {
   club: {
     name: "Oliver",
     title: "Club Player",
-    description: "Recognizes basic tactics",
+    description: "🎯 Recognizes basic tactics and forks",
+    emoji: "⚡",
     depth: 2,
     randomness: 0.4,
     taunts: ["Nice try!", "That's risky...", "😏"]
@@ -32,7 +35,8 @@ const AI_LEVELS = {
   advanced: {
     name: "Emma",
     title: "Advanced",
-    description: "Plays more positionally",
+    description: "🧠 Plays positionally, understands pawn structure",
+    emoji: "🎯",
     depth: 2,
     randomness: 0.2,
     taunts: ["Solid move", "Let's see...", "🎯"]
@@ -40,7 +44,8 @@ const AI_LEVELS = {
   cm: {
     name: "Lucas",
     title: "Candidate Master",
-    description: "Basic strategy + some tactics",
+    description: "⚙️ Basic strategy + tactical combinations",
+    emoji: "⚙️",
     depth: 3,
     randomness: 0.1,
     taunts: ["Predictable", "I expected that", "⚡"]
@@ -48,7 +53,8 @@ const AI_LEVELS = {
   fm: {
     name: "Sofia",
     title: "FIDE Master",
-    description: "Stronger, understands pawn structure",
+    description: "🔥 Strong positional play, punishes mistakes",
+    emoji: "🔥",
     depth: 3,
     randomness: 0.05,
     taunts: ["Interesting choice", "Bold move", "🔥"]
@@ -56,7 +62,8 @@ const AI_LEVELS = {
   im: {
     name: "Alexander",
     title: "International Master",
-    description: "Very competent, defends well",
+    description: "💪 Very competent, excellent defense",
+    emoji: "💪",
     depth: 4,
     randomness: 0.02,
     taunts: ["Is that your best?", "Impressive", "💪"]
@@ -64,7 +71,8 @@ const AI_LEVELS = {
   gm: {
     name: "Magnus",
     title: "Grandmaster",
-    description: "Highest level, nearly optimal",
+    description: "👑 Highest level, nearly optimal play | Extreme challenge!",
+    emoji: "👑",
     depth: 4,
     randomness: 0.01,
     taunts: ["Weak", "Did you really just blunder?", "👑"]
@@ -108,17 +116,66 @@ const KNIGHT_TABLE = [
 module.exports = {
   config: {
     name: "chess",
-    aliases: ["chessplay", "chessoff"],
+    aliases: ["chessplay"],
     version: "2.1.0",
     author: "OMOR TE",
     role: 0,
-    description: { en: "Play chess with AI opponents of various skill levels" },
+    description: { 
+      en: "♟️ Play chess with AI opponents of various skill levels" 
+    },
     category: "games",
     countDown: 5,
-    guide: "chess [ai_level/ai_name] - Start game with AI level/name\nchess off - End current game\n{p}chess    -beginner level এ গেম শুরু\n{p}chess beginner    -Beginner AI (Easy) এর সাথে\n{p}chess novice    -Novice এর সাথে\n{p}chess club    -Club Player এর সাথে\n{p}chess advanced    -Advanced AI (Normal) এর সাথে\n{p}chess cm    -Candidate Master এর সাথে\n{p}chess fm    -FIDE Master (Hard) এর সাথে\n{p}chess im    -International Master এর সাথে\n{p}chess gm    -Grandmaster (Extreme Hard) এর সাথে"
+    guide: `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            ♟️ 𝐂𝐇𝐄𝐒𝐒 𝐆𝐀𝐌𝐄 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ♟️
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            🎮 𝐒𝐓𝐀𝐑𝐓 𝐆𝐀𝐌𝐄:
+            
+            🌱 {p}chess beginner    → Felix (Beginner)
+            📘 {p}chess novice      → Ava (Novice)
+            ⚡ {p}chess club        → Oliver (Club)
+            🎯 {p}chess advanced    → Emma (Advanced)
+            ⚙️ {p}chess cm          → Lucas (CM)
+            🔥 {p}chess fm          → Sofia (FM)
+            💪 {p}chess im          → Alexander (IM)
+            👑 {p}chess gm          → Magnus (GM)
+            
+            🎮 {p}chess             → Default (Beginner)
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            🛑 𝐎𝐓𝐇𝐄𝐑 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒:
+            
+            🔴 {p}chess off         → End current game
+            📖 {p}chess guide       → Show this guide
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            🎯 𝐀𝐈 𝐃𝐈𝐅𝐅𝐈𝐂𝐔𝐋𝐓𝐘:
+            
+            🌱 Beginner  → Very easy for learning
+            📘 Novice    → Easy for beginners  
+            ⚡ Club      → Normal difficulty
+            🎯 Advanced  → Intermediate challenge
+            ⚙️ CM        → Hard difficulty
+            🔥 FM        → Very hard
+            💪 IM        → Expert level
+            👑 GM        → Grandmaster (Extreme)
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            
+            💡 𝐇𝐎𝐖 𝐓𝐎 𝐏𝐋𝐀𝐘:
+            
+            • Enter moves by replying msg like: e2 e4
+            • Or: e2-e4 or e2e4
+            • Castle: e1 g1 or e8 g8
+            • Promotion auto to Queen
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            ⚡ MW Legends Bot`
   },
 
-  onStart: async function ({ message, event, args, usersData, api, getText, role }) {
+  onStart: async function ({ message, event, args, usersData, api, role }) {
     const { threadID, messageID, senderID } = event;
 
     if (!global.game) global.game = {};
@@ -126,6 +183,11 @@ module.exports = {
 
     const gameKey = `${threadID}_${senderID}`;
     const existingGame = global.game.chess.get(gameKey);
+
+    // Show guide
+    if (args[0] && args[0].toLowerCase() === 'guide') {
+      return message.reply(this.config.guide.replace(/{p}/g, global.GoatBot.config.prefix));
+    }
 
     // Handle chess off command
     if (args[0] && args[0].toLowerCase() === 'off') {
@@ -135,22 +197,23 @@ module.exports = {
 
       // Check if user has permission to end the game
       const isGameOwner = existingGame.userId === senderID;
-      const isAdmin = role === 'admin' || role === 'moderator';
-      const isBotAdmin = global.config.admins?.includes(senderID);
+      const isGroupAdmin = role === 'admin' || role === 'moderator';
+      // FIXED: GoatBot V2 এর জন্য সঠিক admin check
+      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
 
-      if (isGameOwner || isAdmin || isBotAdmin) {
+      if (isGameOwner || isGroupAdmin || isBotAdmin) {
         await unsendPreviousBoard(api, existingGame);
         global.game.chess.delete(gameKey);
-        return api.sendMessage("🏁 Chess game has been ended!", threadID, messageID);
+        return api.sendMessage("🏁 **CHESS GAME ENDED**\n━━━━━━━━━━━━━━━━━━━━\nGame terminated successfully!\n💡 Start new: chess beginner", threadID, messageID);
       } else {
-        return api.sendMessage("❌ You don't have permission to end this game! Only the game owner, group admin, or bot admin can end it.", threadID, messageID);
+        return api.sendMessage("❌ **Permission denied!**\nOnly the game starter, group admin, or bot admin can end this game.", threadID, messageID);
       }
     }
 
     // If user has an active game, continue it
     if (existingGame && existingGame.gameOn) {
       return api.sendMessage({
-        body: `♟️ You already have an active game against ${existingGame.aiName}!\nEnter your move (e.g., 'e2 e4'):\nType '{p}chess off' to end the game.`,
+        body: `♟️ **GAME IN PROGRESS**\n━━━━━━━━━━━━━━━━━━━━\n🎯 Opponent: ${existingGame.aiName} (${existingGame.aiTitle})\n👤 Your turn: ${existingGame.playerColor === 'white' ? 'White' : 'Black'}\n━━━━━━━━━━━━━━━━━━━━\nEnter your move (e.g., 'e2 e4'):\nType 'chess off' to end the game.`,
         attachment: await displayBoard(existingGame)
       }, threadID, (error, info) => {
         if (!error) {
@@ -179,14 +242,26 @@ module.exports = {
     const newData = startBoard({ aiLevel, userId: senderID, playerName });
     global.game.chess.set(gameKey, newData);
 
-    const colorText = newData.playerColor === 'white' ? 'White (you go first)' : 'Black (AI goes first)';
+    const colorText = newData.playerColor === 'white' ? '♔ White (You go first)' : '♚ Black (AI goes first)';
 
     // If player is black, AI goes first
     if (newData.playerColor === 'black') {
       const aiResult = processAIMove(newData);
 
       return api.sendMessage({
-        body: `♟️ New chess game started!\n🎯 Opponent: ${aiConfig.name} (${aiConfig.title})\n📝 ${aiConfig.description}\n🎨 You are playing as ${colorText}\n\n${aiResult.message}\n\nEnter your move (e.g., 'e2 e4'):\nType '{p}chess off' to end the game.`,
+        body: `♟️ **NEW CHESS GAME STARTED!** ♟️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${aiConfig.emoji} **Opponent:** ${aiConfig.name} (${aiConfig.title})
+📝 **Skill Level:** ${aiConfig.description}
+🎨 **Your Color:** ${colorText}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${aiResult.message}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 Enter your move(e.g., 'e2 e4'):
+📝 [simply reply to this message]
+🔴 Type '{p}chess off' to end game
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ MW Legends Bot`,
         attachment: await displayBoard(newData)
       }, threadID, (error, info) => {
         if (!error) {
@@ -201,7 +276,17 @@ module.exports = {
     } else {
       // Player is white, they go first
       return api.sendMessage({
-        body: `♟️ New chess game started!\n🎯 Opponent: ${aiConfig.name} (${aiConfig.title})\n📝 ${aiConfig.description}\n🎨 You are playing as ${colorText}\n\nEnter your move (e.g., 'e2 e4'):\nType '{p}chess off' to end the game.`,
+        body: `♟️ **NEW CHESS GAME STARTED!** ♟️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${aiConfig.emoji} **Opponent:** ${aiConfig.name} (${aiConfig.title})
+📝 **Skill Level:** ${aiConfig.description}
+🎨 **Your Color:** ${colorText}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 Enter your move (e.g., 'e2 e4'):
+📝 [simply reply to this message]
+🔴 Type '{p}chess off' to end game
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ MW Legends Bot`,
         attachment: await displayBoard(newData)
       }, threadID, (error, info) => {
         if (!error) {
@@ -216,7 +301,7 @@ module.exports = {
     }
   },
 
-  onReply: async function ({ message, event, api, getText, role }) {
+  onReply: async function ({ message, event, api, role }) {
     const { body, threadID, messageID, senderID } = event;
 
     if (!global.game) global.game = {};
@@ -293,7 +378,7 @@ module.exports = {
   }
 };
 
-// Helper Functions
+// Helper Functions (Rest of the functions remain the same as your original)
 function startBoard({ aiLevel, userId, playerName }) {
   const chess = new Chess();
   const aiConfig = AI_LEVELS[aiLevel];
@@ -557,9 +642,9 @@ function processAIMove(data) {
 
 function getGameOverMessage(result) {
   switch (result) {
-    case 'player_wins': return '🎉 Congratulations! You win! 🎉';
-    case 'ai_wins': return '😔 AI wins! Better luck next time! 😔';
-    case 'draw': return '🤝 It\'s a draw! Well played! 🤝';
+    case 'player_wins': return '🎉 **CONGRATULATIONS!** You win! 🎉';
+    case 'ai_wins': return '😔 **GAME OVER!** AI wins! Better luck next time! 😔';
+    case 'draw': return '🤝 **IT\'S A DRAW!** Well played! 🤝';
     default: return 'Game over!';
   }
 }
@@ -748,7 +833,7 @@ async function displayBoard(data) {
     if (file.startsWith('chess_') && file.endsWith('.png')) {
       const filePath = path.join(cacheDir, file);
       const stats = fs.statSync(filePath);
-      if (Date.now() - stats.mtimeMs > 60000) { // Delete files older than 1 minute
+      if (Date.now() - stats.mtimeMs > 60000) {
         fs.unlinkSync(filePath);
       }
     }
@@ -761,8 +846,6 @@ async function unsendPreviousBoard(api, data) {
   if (data.lastMessageID) {
     try {
       await api.unsendMessage(data.lastMessageID);
-    } catch (error) {
-      // Ignore errors if message can't be unsent
-    }
+    } catch (error) {}
   }
 }
