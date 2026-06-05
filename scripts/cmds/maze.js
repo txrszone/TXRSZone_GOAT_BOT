@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = {
   config: {
     name: "maze",
-    version: "1.0.4",
+    version: "1.0.5",
     author: "OMOR TE",
     role: 0,
     countDown: 40,
@@ -31,7 +31,9 @@ module.exports = {
       }
       const isGameOwner = existingGame.senderID === senderID;
       const isGroupAdmin = role === 'admin' || role === 'moderator';
-      const isBotAdmin = global.config.admins?.includes(senderID);
+      // FIXED: GoatBot V2 এর জন্য সঠিক admin check
+      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
+      
       if (isGameOwner || isGroupAdmin || isBotAdmin) {
         global.mazeGames.delete(threadKey);
         return message.reply("🏁 The maze game has been ended.");
@@ -127,7 +129,9 @@ module.exports = {
     if (body.trim().toLowerCase() === 'off') {
       const isGameOwner = gameData.senderID === senderID;
       const isGroupAdmin = role === 'admin' || role === 'moderator';
-      const isBotAdmin = global.config.admins?.includes(senderID);
+      // FIXED: GoatBot V2 এর জন্য সঠিক admin check
+      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
+      
       if (isGameOwner || isGroupAdmin || isBotAdmin) {
         global.mazeGames.delete(threadKey);
         return message.reply("🏁 Maze game ended.");
@@ -248,7 +252,7 @@ module.exports = {
   }
 };
 
-// ========== HELPER FUNCTIONS (unchanged but kept for completeness) ==========
+// ========== HELPER FUNCTIONS ==========
 function generateMazeImage(difficulty = 15, grid = null, cols = null, highlightPath = null, wrongPath = null, currentPosition = null, progressPath = null) {
   difficulty = Math.max(1, Math.min(difficulty, 15));
 
