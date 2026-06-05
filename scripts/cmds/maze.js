@@ -42,7 +42,7 @@ module.exports = {
 
     // If there's already an active game in this thread
     if (existingGame) {
-      return message.reply(`⚠️ A maze game is already in progress in this thread! Only ${existingGame.playerName || "the player who started it"} can play.\nType \`maze off\` to end it.`);
+      return message.reply(`⚠️ A maze game is already in progress in this thread! Only ${existingGame.playerName || "the player who started it"} can play.\nType \`{p}maze off\` to end it.`);
     }
 
     // Parse difficulty
@@ -87,7 +87,7 @@ module.exports = {
     await new Promise((resolve) => writeStream.on('finish', resolve));
 
     const reply = await message.reply({
-      body: `🧩 **Maze Game Started!**\n👤 Player: ${playerName}\n🎚️ Difficulty: ${difficultyMessage}\n\n• Send your path in one message (e.g., ➡️➡️⬇️...)\n• A is the start, B is the end.\n• You have 3 attempts for wrong moves.\n• Type \`maze off\` to end the game.`,
+      body: `🧩 **Maze Game Started!**\n👤 Player: ${playerName}\n🎚️ Difficulty: ${difficultyMessage}\n\n• Send your path in one message (e.g., ➡️➡️⬇️...)\n• A is the start, B is the end.\n• You have 3 attempts for wrong moves.\n• Type \`{p}maze off\` to end the game.`,
       attachment: fs.createReadStream(imagePath)
     });
     fs.unlinkSync(imagePath);
@@ -120,7 +120,7 @@ module.exports = {
 
     // Only the player who started can play
     if (senderID !== gameData.senderID) {
-      return message.reply(`❌ Only ${gameData.playerName || "the player who started this game"} can play. Type \`maze off\` to end the game.`);
+      return message.reply(`❌ Only ${gameData.playerName || "the player who started this game"} can play. Type \`{p}maze off\` to end the game.`);
     }
 
     // Handle "off" inside reply as well
@@ -209,7 +209,7 @@ module.exports = {
       }
 
       const newReply = await message.reply({
-        body: `✅ **Correct path!** Continue from your position.\n📍 Progress: ${fullCode.length}/${gameData.solution.length} moves\n🎯 Keep going to reach point B!\nType \`maze off\` to end the game.`,
+        body: `✅ **Correct path!** Continue from your position.\n📍 Progress: ${fullCode.length}/${gameData.solution.length} moves\n🎯 Keep going to reach point B!\nType \`{p}maze off\` to end the game.`,
         attachment: fs.createReadStream(imagePath)
       });
       fs.unlinkSync(imagePath);
