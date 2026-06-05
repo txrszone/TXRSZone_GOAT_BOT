@@ -30,6 +30,7 @@ module.exports = {
         const totalScore = userData?.guessnumber_score || 0;
         return message.reply(`💰 **YOUR SCORE** 💰\n━━━━━━━━━━━━━━━━━━━━\n👤 ${await getUserName(senderID, usersData)}\n⭐ Total: ${totalScore} points\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       } catch(e) {
+        console.error("Score fetch error:", e);
         return message.reply(`💰 Your score: 0 points`);
       }
     }
@@ -79,6 +80,7 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━
 ⚡ MW Legends Bot`);
       } catch(e) {
+        console.error("Info fetch error:", e);
         return message.reply(`❌ Could not find stats for this player!`);
       }
     }
@@ -203,23 +205,24 @@ ${config.emoji} Difficulty: ${difficulty.toUpperCase()}
       const diffConfig = difficultyLevels[game.difficulty];
 
       try {
-        // পুরনো ডাটা নিয়ে নতুন ডাটা সেট করা
-        let userData = await usersData.get(senderID);
-        if (!userData) userData = {};
+        // Get current user data
+        const userData = await usersData.get(senderID);
         
-        const currentScore = userData.guessnumber_score || 0;
-        const currentPlayed = userData.guessnumber_played || 0;
-        const currentWon = userData.guessnumber_won || 0;
-        const currentMoney = userData.money || 0;
+        // Calculate new values
+        const newScore = (userData?.guessnumber_score || 0) + pointsEarned;
+        const newPlayed = (userData?.guessnumber_played || 0) + 1;
+        const newWon = (userData?.guessnumber_won || 0) + 1;
+        const newMoney = (userData?.money || 0) + pointsEarned;
         
-        // সম্পূর্ণ ডাটা আপডেট
+        // Update user data using proper method
         await usersData.set(senderID, {
-          ...userData,
-          guessnumber_score: currentScore + pointsEarned,
-          guessnumber_played: currentPlayed + 1,
-          guessnumber_won: currentWon + 1,
-          money: currentMoney + pointsEarned
+          money: newMoney,
+          guessnumber_score: newScore,
+          guessnumber_played: newPlayed,
+          guessnumber_won: newWon
         });
+        
+        console.log(`Score updated for ${senderID}: +${pointsEarned} points, Total: ${newScore}`);
         
       } catch (e) {
         console.error("Score update error:", e);
@@ -243,15 +246,18 @@ ${diffConfig.emoji} Difficulty: ${game.difficulty.toUpperCase()}
       const diffConfig = difficultyLevels[game.difficulty];
       
       try {
-        let userData = await usersData.get(senderID);
-        if (!userData) userData = {};
-        const currentPlayed = userData.guessnumber_played || 0;
+        const userData = await usersData.get(senderID);
+        const newPlayed = (userData?.guessnumber_played || 0) + 1;
         
         await usersData.set(senderID, {
-          ...userData,
-          guessnumber_played: currentPlayed + 1
+          guessnumber_played: newPlayed
         });
-      } catch (e) {}
+        
+        console.log(`Game played updated for ${senderID}: Total played: ${newPlayed}`);
+        
+      } catch (e) {
+        console.error("Game over update error:", e);
+      }
 
       await message.reply(`❌ **GAME OVER!** ❌
 ━━━━━━━━━━━━━━━━━━━━
