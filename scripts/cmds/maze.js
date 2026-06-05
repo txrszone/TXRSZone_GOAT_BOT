@@ -5,16 +5,47 @@ const path = require('path');
 module.exports = {
   config: {
     name: "maze",
-    version: "1.0.3",
+    version: "1.0.4",
     author: "OMOR TE",
     role: 0,
     countDown: 40,
     description: "Play maze with adjustable difficulty.",
-    guide: "{pn} [1-10] or {pn} [easy|medium|hard]",
+    guide: "{pn} [1-10] or {pn} [easy|medium|hard] | {pn} off",
     category: "game",
   },
 
-  onStart: async function ({ message, args, event }) {
+  onStart: async function ({ message, event, args, usersData, role }) {
+    const { threadID, messageID, senderID } = event;
+
+    // Initialize global storage
+    if (!global.mazeGames) global.mazeGames = new Map();
+
+    // Thread-based game key (only one game per thread)
+    const threadKey = `thread_${threadID}`;
+    const existingGame = global.mazeGames.get(threadKey);
+
+    // Handle "off" command
+    if (args[0] && args[0].toLowerCase() === 'off') {
+      if (!existingGame) {
+        return message.reply("❌ No active maze game in this thread to end.");
+      }
+      const isGameOwner = existingGame.senderID === senderID;
+      const isGroupAdmin = role === 'admin' || role === 'moderator';
+      const isBotAdmin = global.config.admins?.includes(senderID);
+      if (isGameOwner || isGroupAdmin || isBotAdmin) {
+        global.mazeGames.delete(threadKey);
+        return message.reply("🏁 The maze game has been ended.");
+      } else {
+        return message.reply("❌ You don't have permission to end this game. Only the player who started it, a group admin, or a bot admin can end it.");
+      }
+    }
+
+    // If there's already an active game in this thread
+    if (existingGame) {
+      return message.reply(`⚠️ A maze game is already in progress in this thread! Only ${existingGame.playerName || "the player who started it"} can play.\nType \`maze off\` to end it.`);
+    }
+
+    // Parse difficulty
     let difficultyLevel = 8;
     let difficultyMessage = "Medium";
 
@@ -37,31 +68,35 @@ module.exports = {
       }
     }
 
+    // Get player name
+    let playerName = 'Player';
+    try {
+      const userData = await usersData.get(senderID);
+      playerName = userData.name || 'Player';
+    } catch (e) {}
+
+    // Generate maze image and data
     const data = generateMazeImage(difficultyLevel);
 
     const cacheDir = path.join(__dirname, 'cache');
     if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
     const imagePath = path.join(cacheDir, `${Date.now()}.png`);
-
     const writeStream = fs.createWriteStream(imagePath);
     data.image.pipe(writeStream);
-
     await new Promise((resolve) => writeStream.on('finish', resolve));
 
     const reply = await message.reply({
-      body: `🧩 Solve the maze! Difficulty: ${difficultyMessage}\n\n• Send your path in one message (e.g., ➡️➡️⬇️...)\n• A is the start, B is the end.\n• You have 3 attempts for wrong answers.`,
+      body: `🧩 **Maze Game Started!**\n👤 Player: ${playerName}\n🎚️ Difficulty: ${difficultyMessage}\n\n• Send your path in one message (e.g., ➡️➡️⬇️...)\n• A is the start, B is the end.\n• You have 3 attempts for wrong moves.\n• Type \`maze off\` to end the game.`,
       attachment: fs.createReadStream(imagePath)
     });
-
     fs.unlinkSync(imagePath);
 
-    // Store game data
-    if (!global.mazeGames) global.mazeGames = new Map();
-    
-    global.mazeGames.set(reply.messageID, {
+    // Store game with thread key
+    global.mazeGames.set(threadKey, {
       commandName: "maze",
-      senderID: event.senderID,
+      senderID: senderID,
+      playerName: playerName,
       solution: data.solution,
       solutionPath: data.solutionPath,
       grid: data.grid,
@@ -69,26 +104,46 @@ module.exports = {
       attempts: 0,
       currentProgress: "",
       currentPosition: data.grid[0],
-      finalDifficulty: difficultyLevel
+      finalDifficulty: difficultyLevel,
+      lastMessageID: reply.messageID
     });
   },
 
-  onReply: async function ({ message, event, usersData }) {
-    if (!global.mazeGames) global.mazeGames = new Map();
-    
-    const gameData = global.mazeGames.get(event.messageID);
-    if (!gameData) return;
-    
-    if (event.senderID !== gameData.senderID) return;
+  onReply: async function ({ message, event, usersData, role }) {
+    const { threadID, senderID, messageID, body } = event;
 
-    const userEmoji = event.body.trim();
+    if (!global.mazeGames) global.mazeGames = new Map();
+    const threadKey = `thread_${threadID}`;
+    const gameData = global.mazeGames.get(threadKey);
+
+    if (!gameData) return;
+
+    // Only the player who started can play
+    if (senderID !== gameData.senderID) {
+      return message.reply(`❌ Only ${gameData.playerName || "the player who started this game"} can play. Type \`maze off\` to end the game.`);
+    }
+
+    // Handle "off" inside reply as well
+    if (body.trim().toLowerCase() === 'off') {
+      const isGameOwner = gameData.senderID === senderID;
+      const isGroupAdmin = role === 'admin' || role === 'moderator';
+      const isBotAdmin = global.config.admins?.includes(senderID);
+      if (isGameOwner || isGroupAdmin || isBotAdmin) {
+        global.mazeGames.delete(threadKey);
+        return message.reply("🏁 Maze game ended.");
+      } else {
+        return message.reply("❌ You don't have permission to end this game.");
+      }
+    }
+
+    const userEmoji = body.trim();
     const userCode = trans(userEmoji);
 
     if (!/^[urdl⬆️➡️⬇️⬅️]+$/i.test(userEmoji)) {
-      return message.reply(`Please only use valid move emojis (⬆️ ➡️ ⬇️ ⬅️) or their corresponding letters (u, r, d, l) in one sequence.`);
+      return message.reply(`❌ Please only use valid move emojis (⬆️ ➡️ ⬇️ ⬅️) or their corresponding letters (u, r, d, l) in one sequence.`);
     }
     if (!/^[urdl]+$/i.test(userCode)) {
-      return message.reply(`Please only use valid move emojis (⬆️ ➡️ ⬇️ ⬅️) or their corresponding letters (u, r, d, l) in one sequence.`);
+      return message.reply(`❌ Please only use valid move emojis (⬆️ ➡️ ⬇️ ⬅️) or their corresponding letters (u, r, d, l) in one sequence.`);
     }
 
     const fullCode = gameData.currentProgress + userCode;
@@ -97,48 +152,49 @@ module.exports = {
     const isCorrectContinuation = isPartialSolutionCorrect(userPath, gameData.solutionPath, fullCode);
 
     if (isCorrectContinuation && userPath.length === gameData.solutionPath.length) {
-      // Dynamic Reward Calculation
+      // Solved! Reward calculation
       const baseCoinPerLevel = 2500;
       const rewardAmount = Math.max(2500, Math.floor(baseCoinPerLevel * (gameData.finalDifficulty || 8)));
 
       try {
-        let userData = await usersData.get(event.senderID);
+        let userData = await usersData.get(senderID);
         const currentMoney = userData.money || 0;
-        await usersData.set(event.senderID, {
+        await usersData.set(senderID, {
           money: currentMoney + rewardAmount,
           exp: userData.exp || 0
         });
 
+        // Generate solution image with green path
         const data = generateMazeImage(15, gameData.grid, gameData.cols, gameData.solutionPath, null);
 
         const cacheDir = path.join(__dirname, 'cache');
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
-
         const imagePath = path.join(cacheDir, `${Date.now()}.png`);
         const writeStream = fs.createWriteStream(imagePath);
         data.image.pipe(writeStream);
         await new Promise((resolve) => writeStream.on('finish', resolve));
 
         await message.reply({
-          body: `🎉 Correct! You solved the maze and earned $${rewardAmount.toLocaleString()}! The solution is shown in green.`,
+          body: `🎉 **Correct!** You solved the maze and earned **$${rewardAmount.toLocaleString()}**! The solution is shown in green.`,
           attachment: fs.createReadStream(imagePath)
         });
         fs.unlinkSync(imagePath);
-        global.mazeGames.delete(event.messageID);
+        global.mazeGames.delete(threadKey);
       } catch (e) {
         message.reply(`🎉 You solved the maze! (Error crediting money: ${e.message})`);
-        global.mazeGames.delete(event.messageID);
+        global.mazeGames.delete(threadKey);
       }
       return;
     }
 
     if (isCorrectContinuation) {
-      // CORRECT CONTINUATION
+      // Correct partial path – continue
       const currentCell = userPath[userPath.length - 1];
       gameData.currentProgress = fullCode;
       gameData.currentPosition = currentCell;
       gameData.attempts = 0;
 
+      // Generate image showing current position and progress (yellow trail)
       const data = generateMazeImage(5, gameData.grid, gameData.cols, null, null, currentCell, userPath);
 
       const cacheDir = path.join(__dirname, 'cache');
@@ -147,22 +203,26 @@ module.exports = {
       data.image.pipe(writeStream);
       await new Promise((resolve) => writeStream.on('finish', resolve));
 
-      global.mazeGames.delete(event.messageID);
+      // Unsend previous board message (optional, to keep chat clean)
+      if (gameData.lastMessageID) {
+        try { await message.unsend(gameData.lastMessageID); } catch(e) {}
+      }
 
       const newReply = await message.reply({
-        body: `✅ Correct path! Continue from your position.\n\n📍 Progress: ${fullCode.length}/${gameData.solution.length} moves\n🎯 Keep going to reach point B!`,
+        body: `✅ **Correct path!** Continue from your position.\n📍 Progress: ${fullCode.length}/${gameData.solution.length} moves\n🎯 Keep going to reach point B!\nType \`maze off\` to end the game.`,
         attachment: fs.createReadStream(imagePath)
       });
       fs.unlinkSync(imagePath);
 
-      global.mazeGames.set(newReply.messageID, gameData);
+      gameData.lastMessageID = newReply.messageID;
+      global.mazeGames.set(threadKey, gameData);
       return;
     }
 
-    // WRONG PATH/MOVE
+    // Wrong path/move
     gameData.attempts++;
     if (gameData.attempts >= 3) {
-      // GAME OVER
+      // Game over – show solution in green and wrong path in red
       const data = generateMazeImage(15, gameData.grid, gameData.cols, gameData.solutionPath, userPath);
 
       const cacheDir = path.join(__dirname, 'cache');
@@ -171,20 +231,24 @@ module.exports = {
       data.image.pipe(writeStream);
       await new Promise((resolve) => writeStream.on('finish', resolve));
 
+      if (gameData.lastMessageID) {
+        try { await message.unsend(gameData.lastMessageID); } catch(e) {}
+      }
+
       await message.reply({
-        body: `❌ Game over! You ran out of attempts.\n\n✅ Correct solution shown in green\n❌ Your incorrect path shown in red`,
+        body: `❌ **Game over!** You ran out of attempts.\n✅ Correct solution shown in green\n❌ Your incorrect path shown in red`,
         attachment: fs.createReadStream(imagePath)
       });
       fs.unlinkSync(imagePath);
-      global.mazeGames.delete(event.messageID);
+      global.mazeGames.delete(threadKey);
     } else {
-      // WRONG MOVE, ATTEMPTS REMAINING
-      await message.reply(`❌ Wrong path or move! Try again from your last checkpoint.\n\n🔄 Attempts remaining: ${3 - gameData.attempts}`);
+      // Wrong move, attempts remaining
+      await message.reply(`❌ Wrong path or move! Try again from your last checkpoint.\n🔄 Attempts remaining: ${3 - gameData.attempts}`);
     }
   }
 };
 
-// Helper functions
+// ========== HELPER FUNCTIONS (unchanged but kept for completeness) ==========
 function generateMazeImage(difficulty = 15, grid = null, cols = null, highlightPath = null, wrongPath = null, currentPosition = null, progressPath = null) {
   difficulty = Math.max(1, Math.min(difficulty, 15));
 
