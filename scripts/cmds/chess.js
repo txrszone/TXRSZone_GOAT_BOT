@@ -110,12 +110,12 @@ module.exports = {
     name: "chess",
     aliases: ["chessplay", "chessoff"],
     version: "2.1.0",
-    author: "eden (Converted by OMOR TE)",
+    author: "OMOR TE",
     role: 0,
     description: { en: "Play chess with AI opponents of various skill levels" },
     category: "games",
     countDown: 5,
-    guide: "chess [ai_level/ai_name] - Start game with AI level/name\nchess off - End current game"
+    guide: "chess [ai_level/ai_name] - Start game with AI level/name\nchess off - End current game\n{p}chess    -beginner level এ গেম শুরু\n{p}chess beginner    -Beginner AI (Easy) এর সাথে\n{p}chess novice    -Novice এর সাথে\n{p}chess club    -Club Player এর সাথে\n{p}chess advanced    -Advanced AI (Normal) এর সাথে\n{p}chess cm    -Candidate Master এর সাথে\n{p}chess fm    -FIDE Master (Hard) এর সাথে\n{p}chess im    -International Master এর সাথে\n{p}chess gm    -Grandmaster (Extreme Hard) এর সাথে"
   },
 
   onStart: async function ({ message, event, args, usersData, api, getText, role }) {
