@@ -11,41 +11,38 @@ module.exports = {
   config: {
     name: "guessnumber",
     aliases: ["gn", "guessnum"],
-    version: "2.3.0",
+    version: "2.4.0",
     author: "OMOR TE",
     role: 0,
     countDown: 5,
     description: { en: "Guess the number challenge with AI difficulty levels" },
     category: "game",
-    guide: "━━━━ 📜 COMMANDS ━━━━\n\n🎮 {p}guessnumber easy\n🎮 {p}guessnumber normal\n🎮 {p}guessnumber hard\n🎮 {p}guessnumber pro\n🛑 {p}guessnumber off\n💰 {p}guessnumber score\n📊 {p}guessnumber info\n📊 {p}guessnumber info @(mention)\n\n━━━━ 🎯 DIFFICULTY ━━━━\n🌟 EASY: 1-50, 8 tries, +5 pts\n⭐ NORMAL: 1-100, 10 tries, +10 pts\n🔥 HARD: 1-500, 12 tries, +20 pts\n👑 PRO: 1-1000, 8 tries, +30 pts"
+    guide: "━━━━ 📜 COMMANDS ━━━━\n\n🎮 {p}guessnumber easy\n🎮 {p}guessnumber normal\n🎮 {p}guessnumber hard\n🎮 {p}guessnumber pro\n🛑 {p}guessnumber off\n💰 {p}guessnumber score\n📊 {p}guessnumber info\n📊 {p}guessnumber info @mention\n\n━━━━ 🎯 DIFFICULTY ━━━━\n🌟 EASY: 1-50, 8 tries, +5 pts\n⭐ NORMAL: 1-100, 10 tries, +10 pts\n🔥 HARD: 1-500, 12 tries, +20 pts\n👑 PRO: 1-1000, 8 tries, +30 pts"
   },
 
   onStart: async function ({ message, event, args, usersData, api, role }) {
     const { threadID, senderID, mentions } = event;
 
-    // ========== SCORE COMMAND (শুধু স্কোর) ==========
+    // ========== SCORE COMMAND ==========
     if (args[0] && args[0].toLowerCase() === "score") {
       try {
         const userData = await usersData.get(senderID);
-        const totalScore = userData.guessnumber_score || 0;
-        
+        const totalScore = userData?.guessnumber_score || 0;
         return message.reply(`💰 **YOUR SCORE** 💰\n━━━━━━━━━━━━━━━━━━━━\n👤 ${await getUserName(senderID, usersData)}\n⭐ Total: ${totalScore} points\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       } catch(e) {
         return message.reply(`💰 Your score: 0 points`);
       }
     }
 
-    // ========== INFO COMMAND (পূর্ণ তথ্য + মেনশন সাপোর্ট) ==========
+    // ========== INFO COMMAND ==========
     if (args[0] && args[0].toLowerCase() === "info") {
       let targetID = senderID;
       let targetName = await getUserName(senderID, usersData);
       
-      // মেনশন চেক করা
       if (Object.keys(mentions).length > 0) {
         targetID = Object.keys(mentions)[0];
         targetName = mentions[targetID];
       }
-      // অথবা আর্গুমেন্ট হিসেবে আইডি দিলে
       else if (args[1] && args[1].match(/[0-9]+/)) {
         targetID = args[1];
         targetName = await getUserName(targetID, usersData);
@@ -53,12 +50,11 @@ module.exports = {
       
       try {
         const userData = await usersData.get(targetID);
-        const totalScore = userData.guessnumber_score || 0;
-        const gamesPlayed = userData.guessnumber_played || 0;
-        const gamesWon = userData.guessnumber_won || 0;
+        const totalScore = userData?.guessnumber_score || 0;
+        const gamesPlayed = userData?.guessnumber_played || 0;
+        const gamesWon = userData?.guessnumber_won || 0;
         const winRate = gamesPlayed > 0 ? Math.floor((gamesWon / gamesPlayed) * 100) : 0;
         
-        // র‍্যাঙ্ক নির্ণয়
         let rank = "🥉 Beginner";
         let rankEmoji = "🌱";
         if (totalScore >= 1000) { rank = "👑 Grandmaster"; rankEmoji = "👑"; }
@@ -113,7 +109,7 @@ module.exports = {
       return message.reply(`❌ **GAME IN PROGRESS!**
 ━━━━━━━━━━━━━━━━━━━━
 ${diffConfig.emoji} ${existing.difficulty.toUpperCase()} | ${existing.attempts}/${existing.maxAttempts} attempts
-👤 Player: <@${existing.senderID}>
+👤 Player: ${await getUserName(existing.senderID, usersData)}
 💡 Type '${global.GoatBot.config.prefix}guessnumber off' to stop.`);
     }
 
@@ -207,18 +203,27 @@ ${config.emoji} Difficulty: ${difficulty.toUpperCase()}
       const diffConfig = difficultyLevels[game.difficulty];
 
       try {
-        const userData = await usersData.get(senderID);
+        // পুরনো ডাটা নিয়ে নতুন ডাটা সেট করা
+        let userData = await usersData.get(senderID);
+        if (!userData) userData = {};
+        
         const currentScore = userData.guessnumber_score || 0;
         const currentPlayed = userData.guessnumber_played || 0;
         const currentWon = userData.guessnumber_won || 0;
+        const currentMoney = userData.money || 0;
         
-        await usersData.set(senderID, { 
+        // সম্পূর্ণ ডাটা আপডেট
+        await usersData.set(senderID, {
+          ...userData,
           guessnumber_score: currentScore + pointsEarned,
           guessnumber_played: currentPlayed + 1,
           guessnumber_won: currentWon + 1,
-          money: (userData.money || 0) + pointsEarned 
+          money: currentMoney + pointsEarned
         });
-      } catch (e) {}
+        
+      } catch (e) {
+        console.error("Score update error:", e);
+      }
 
       await message.reply(`🎉 **CORRECT!** 🎉
 ━━━━━━━━━━━━━━━━━━━━
@@ -238,9 +243,12 @@ ${diffConfig.emoji} Difficulty: ${game.difficulty.toUpperCase()}
       const diffConfig = difficultyLevels[game.difficulty];
       
       try {
-        const userData = await usersData.get(senderID);
+        let userData = await usersData.get(senderID);
+        if (!userData) userData = {};
         const currentPlayed = userData.guessnumber_played || 0;
-        await usersData.set(senderID, { 
+        
+        await usersData.set(senderID, {
+          ...userData,
           guessnumber_played: currentPlayed + 1
         });
       } catch (e) {}
@@ -294,7 +302,7 @@ ${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}`);
 async function getUserName(userID, usersData) {
   try {
     const userData = await usersData.get(userID);
-    return userData.name || "Unknown User";
+    return userData?.name || userData?.displayName || "Unknown User";
   } catch(e) {
     return "User";
   }
