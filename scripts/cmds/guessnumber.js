@@ -1,7 +1,3 @@
-const { createCanvas } = require('canvas');
-const fs = require('fs-extra');
-const path = require('path');
-
 // Difficulty levels
 const difficultyLevels = {
   easy: { range: 50, maxAttempts: 8, rewardPoint: 5, name: "Easy" },
@@ -10,14 +6,14 @@ const difficultyLevels = {
   pro: { range: 1000, maxAttempts: 8, rewardPoint: 30, name: "Pro" }
 };
 
-// Store active games (threadID -> gameData)
+// Store active games
 let activeGames = new Map();
 
 module.exports = {
   config: {
     name: "guessnumber",
     aliases: ["gn", "guessnum"],
-    version: "2.0.0",
+    version: "2.1.0",
     author: "OMOR TE",
     role: 0,
     countDown: 5,
@@ -29,27 +25,24 @@ module.exports = {
   onStart: async function ({ message, event, args, usersData, api }) {
     const { threadID, messageID, senderID } = event;
     
-    // ✅ OFF command - force stop game
+    // OFF command
     if (args[0] && args[0].toLowerCase() === "off") {
       if (activeGames.has(threadID)) {
-        const gameData = activeGames.get(threadID);
         activeGames.delete(threadID);
         return message.reply(`❌ **GAME STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n🎮 The current game has been terminated.\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       } else {
-        return message.reply(`❌ No active game found in this group!\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+        return message.reply(`❌ No active game found!\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       }
     }
     
-    // ✅ Check if there's an active game in this thread
+    // Check existing game
     if (activeGames.has(threadID)) {
-      const existingGame = activeGames.get(threadID);
-      const remainingAttempts = existingGame.maxAttempts - existingGame.attempts;
+      const existing = activeGames.get(threadID);
       return message.reply(`❌ **A GAME IS ALREADY IN PROGRESS!**
 ━━━━━━━━━━━━━━━━━━━━
-🎮 Difficulty: ${existingGame.difficulty.toUpperCase()}
-🎯 Range: 1 - ${existingGame.range}
-📊 Progress: ${existingGame.attempts}/${existingGame.maxAttempts} attempts
-⏳ Remaining: ${remainingAttempts} chances
+🎮 Difficulty: ${existing.difficulty.toUpperCase()}
+📊 Progress: ${existing.attempts}/${existing.maxAttempts} attempts
+⏳ Remaining: ${existing.maxAttempts - existing.attempts} chances
 
 💡 Continue playing or type 'guessnumber off' to stop.
 ━━━━━━━━━━━━━━━━━━━━
@@ -77,17 +70,12 @@ module.exports = {
       difficulty: difficulty,
       rewardPoint: config.rewardPoint,
       senderID: senderID,
-      threadID: threadID,
-      lastMessageID: null
+      threadID: threadID
     };
     
     activeGames.set(threadID, gameData);
     
-    // Create canvas image
-    const canvasImage = await createGameCanvas(gameData);
-    
-    const startMsg = await message.reply({
-      body: `🎮 **GUESS THE NUMBER** 🎮
+    await message.reply(`🎮 **GUESS THE NUMBER** 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🎯 Difficulty: ${difficulty.toUpperCase()}
@@ -103,34 +91,22 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔥 Enter your first guess (e.g., ${Math.floor(config.range / 2)}):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`,
-      attachment: canvasImage
-    });
-    
-    gameData.lastMessageID = startMsg.messageID;
-    
-    global.GoatBot.onReply.set(startMsg.messageID, {
-      commandName: "guessnumber",
-      author: senderID,
-      threadID: threadID
-    });
+⚡ MW Legends Bot`);
   },
   
   onReply: async function ({ message, event, api, usersData }) {
     const { body, threadID, messageID, senderID } = event;
     
-    // ✅ Check if game exists in this thread
     if (!activeGames.has(threadID)) {
       return message.reply(`❌ No active game found!\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
     
     const game = activeGames.get(threadID);
     
-    // ✅ Only the game starter can play
     if (senderID !== game.senderID) {
       return message.reply(`❌ **NOT YOUR GAME!**
 ━━━━━━━━━━━━━━━━━━━━
-👑 This game was started by <@${game.senderID}>
+👑 This game was started by another player
 💡 Start your own game with: guessnumber
 ━━━━━━━━━━━━━━━━━━━━
 ⚡ MW Legends Bot`);
@@ -138,40 +114,28 @@ module.exports = {
     
     const guess = parseInt(body.trim());
     
-    if (isNaN(guess)) {
-      return message.reply(`❌ Please enter a valid number! (1 to ${game.range})`);
-    }
-    
-    if (guess < 1 || guess > game.range) {
-      return message.reply(`❌ Please enter a number between 1 and ${game.range}!`);
+    if (isNaN(guess) || guess < 1 || guess > game.range) {
+      return message.reply(`❌ Please enter a valid number between 1 and ${game.range}!`);
     }
     
     game.attempts++;
     game.attemptsHistory.push(guess);
     
-    let remaining = game.maxAttempts - game.attempts;
     let replyMsg = "";
     let isGameOver = false;
-    let isWin = false;
     
-    // Check guess
     if (guess === game.secretNumber) {
-      // WIN!
+      // WIN
       const timeTaken = Date.now() - game.startTime;
       const pointsEarned = game.rewardPoint + Math.max(0, (game.maxAttempts - game.attempts) * 2);
       
-      isWin = true;
-      isGameOver = true;
-      
-      // Update user money
       try {
         const userData = await usersData.get(senderID);
         const currentMoney = userData.money || 0;
         await usersData.set(senderID, { money: currentMoney + pointsEarned });
       } catch(e) {}
       
-      replyMsg = `
-🎉 **CONGRATULATIONS!** 🎉
+      replyMsg = `🎉 **CONGRATULATIONS!** 🎉
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✅ You guessed the correct number!
@@ -186,13 +150,11 @@ module.exports = {
 ⚡ MW Legends Bot`;
       
       activeGames.delete(threadID);
-      
-    } else if (game.attempts >= game.maxAttempts) {
-      // GAME OVER - LOST
       isGameOver = true;
       
-      replyMsg = `
-❌ **GAME OVER!** ❌
+    } else if (game.attempts >= game.maxAttempts) {
+      // LOST
+      replyMsg = `❌ **GAME OVER!** ❌
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 😔 You ran out of attempts!
@@ -206,29 +168,26 @@ module.exports = {
 ⚡ MW Legends Bot`;
       
       activeGames.delete(threadID);
+      isGameOver = true;
       
     } else {
-      // Continue game
+      // Continue
       const isHigher = guess < game.secretNumber;
       const hint = isHigher ? "📈 HIGHER ⬆️" : "📉 LOWER ⬇️";
       
-      // Calculate range
-      let minRange = 1;
-      let maxRange = game.range;
+      let minRange = 1, maxRange = game.range;
       for (const g of game.attemptsHistory) {
         if (g < game.secretNumber && g > minRange) minRange = g + 1;
         if (g > game.secretNumber && g < maxRange) maxRange = g - 1;
       }
       
-      // Progress bar
       const barLength = 20;
       const progress = game.attempts / game.maxAttempts;
       const filled = Math.floor(barLength * progress);
       const bar = "▓".repeat(filled) + "░".repeat(barLength - filled);
+      const remaining = game.maxAttempts - game.attempts;
       
-      replyMsg = `
-🔍 **Guess:** ${guess}
-${hint}
+      replyMsg = `🔍 **Guess:** ${guess} → ${hint}
 
 📊 Progress: ${bar}
 🎯 Attempts: ${game.attempts}/${game.maxAttempts}
@@ -242,80 +201,6 @@ ${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}
 ⚡ MW Legends Bot`;
     }
     
-    // Create canvas with current state
-    const canvasImage = await createGameCanvas(game, isGameOver);
-    
-    // Send response
-    const response = await message.reply({
-      body: replyMsg,
-      attachment: canvasImage
-    });
-    
-    if (!isGameOver) {
-      game.lastMessageID = response.messageID;
-      global.GoatBot.onReply.set(response.messageID, {
-        commandName: "guessnumber",
-        author: senderID,
-        threadID: threadID
-      });
-    }
+    await message.reply(replyMsg);
   }
 };
-
-// Create game canvas
-async function createGameCanvas(game, isGameOver = false) {
-  const width = 800;
-  const height = 500;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-  
-  // Background
-  ctx.fillStyle = "#1a1a2e";
-  ctx.fillRect(0, 0, width, height);
-  
-  // Title
-  ctx.fillStyle = "#e94560";
-  ctx.font = "bold 36px 'Arial'";
-  ctx.textAlign = "center";
-  ctx.fillText("🎲 GUESS THE NUMBER 🎲", width / 2, 50);
-  
-  // Info panel
-  ctx.fillStyle = "#0f3460";
-  ctx.fillRect(50, 80, width - 100, 100);
-  
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "18px 'Arial'";
-  ctx.fillText(`Range: 1 - ${game.range}`, 70, 115);
-  ctx.fillText(`Difficulty: ${game.difficulty.toUpperCase()}`, 70, 145);
-  ctx.fillText(`Attempts: ${game.attempts}/${game.maxAttempts}`, 70, 175);
-  
-  // Progress bar
-  const barWidth = 300;
-  const barHeight = 25;
-  const progress = game.attempts / game.maxAttempts;
-  ctx.fillStyle = "#2c2c3e";
-  ctx.fillRect(width - 370, 110, barWidth, barHeight);
-  ctx.fillStyle = "#e94560";
-  ctx.fillRect(width - 370, 110, barWidth * progress, barHeight);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "14px 'Arial'";
-  ctx.fillText(`${Math.round(progress * 100)}%`, width - 370 + barWidth / 2, 130);
-  
-  // Game over overlay
-  if (isGameOver) {
-    ctx.globalAlpha = 0.85;
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, width, height);
-    ctx.globalAlpha = 1;
-    
-    const isWin = game.attemptsHistory[game.attemptsHistory.length - 1] === game.secretNumber;
-    ctx.fillStyle = isWin ? "#4ecca3" : "#ff6b6b";
-    ctx.font = "bold 46px 'Arial'";
-    ctx.fillText(isWin ? "🎉 VICTORY! 🎉" : "💀 GAME OVER 💀", width / 2, height / 2);
-    ctx.font = "22px 'Arial'";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(`Number was: ${game.secretNumber}`, width / 2, height / 2 + 60);
-  }
-  
-  return canvas.createPNGStream();
-}
