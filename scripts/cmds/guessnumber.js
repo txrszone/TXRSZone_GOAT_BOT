@@ -11,7 +11,7 @@ module.exports = {
   config: {
     name: "guessnumber",
     aliases: ["gn", "guessnum"],
-    version: "2.1.0",
+    version: "2.2.0",
     author: "OMOR TE",
     role: 0,
     countDown: 5,
@@ -29,7 +29,7 @@ module.exports = {
         activeGames.delete(threadID);
         return message.reply(`❌ **GAME STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n🎮 Game terminated.\n💡 Start new: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       }
-      return message.reply(`❌ No active game found!\n💡 Start with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`❌ No active game found!\n💡 Start with: guessnumber`);
     }
     
     // Check existing game
@@ -38,9 +38,7 @@ module.exports = {
       return message.reply(`❌ **GAME IN PROGRESS!**
 ━━━━━━━━━━━━━━━━━━━━
 🎯 ${existing.difficulty.toUpperCase()} | ${existing.attempts}/${existing.maxAttempts} attempts
-💡 Type 'guessnumber off' to stop.
-━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`);
+💡 Type 'guessnumber off' to stop.`);
     }
     
     // Parse difficulty
@@ -69,7 +67,6 @@ module.exports = {
     
     activeGames.set(threadID, gameData);
     
-    // ✅ সঠিকভাবে onReply সেট করা
     const replyMsg = await message.reply(`🎮 **GUESS THE NUMBER** 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -78,17 +75,12 @@ module.exports = {
 🎲 Attempts: ${config.maxAttempts} chances
 ⭐ Reward: ${config.rewardPoint} points
 
-💡 **How to play:**
-• Reply with a number between 1-${config.range}
-• I'll tell you HIGHER or LOWER
-• Guess correctly to win!
+💡 Reply with a number (e.g., ${Math.floor(config.range / 2)}):
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔥 Enter your first guess (e.g., ${Math.floor(config.range / 2)}):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚡ MW Legends Bot`);
     
-    // ✅ onReply সেট করা
+    // ✅ এখানে onReply সেট করছি
     global.GoatBot.onReply.set(replyMsg.messageID, {
       commandName: "guessnumber",
       author: senderID,
@@ -99,16 +91,14 @@ module.exports = {
   onReply: async function ({ message, event, api, usersData }) {
     const { body, threadID, senderID } = event;
     
-    // ✅ চেক করা: এই থ্রেডে গেম আছে কিনা
     if (!activeGames.has(threadID)) {
-      return message.reply(`❌ No active game!\n💡 Start new: guessnumber`);
+      return message.reply(`❌ No active game! Start with: guessnumber`);
     }
     
     const game = activeGames.get(threadID);
     
-    // ✅ চেক করা: শুধু গেম স্টার্টার খেলতে পারে
     if (senderID !== game.senderID) {
-      return message.reply(`❌ Not your game! Type 'guessnumber' to start your own.`);
+      return message.reply(`❌ Not your game! Use 'guessnumber' to start your own.`);
     }
     
     const guess = parseInt(body.trim());
@@ -122,7 +112,6 @@ module.exports = {
     
     // WIN
     if (guess === game.secretNumber) {
-      const timeTaken = (Date.now() - game.startTime) / 1000;
       const pointsEarned = game.rewardPoint + Math.max(0, (game.maxAttempts - game.attempts) * 2);
       
       try {
@@ -135,11 +124,8 @@ module.exports = {
 🔢 Number: ${game.secretNumber}
 🎯 Attempts: ${game.attempts}/${game.maxAttempts}
 ⭐ Points: +${pointsEarned}
-⏱️ Time: ${timeTaken.toFixed(1)}s
 ━━━━━━━━━━━━━━━━━━━━
-🏆 YOU WIN! 🏆
-━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`);
+🏆 YOU WIN! 🏆`);
       
       activeGames.delete(threadID);
       return;
@@ -149,35 +135,30 @@ module.exports = {
     if (game.attempts >= game.maxAttempts) {
       await message.reply(`❌ **GAME OVER!** ❌
 ━━━━━━━━━━━━━━━━━━━━
-😔 You lost!
 🔢 Correct number: ${game.secretNumber}
 📊 Your guesses: ${game.attemptsHistory.join(" → ")}
 ━━━━━━━━━━━━━━━━━━━━
-💪 Better luck next time!
-━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`);
+💪 Better luck next time!`);
       
       activeGames.delete(threadID);
       return;
     }
     
-    // CONTINUE
+    // CONTINUE - calculate new range
     const isHigher = guess < game.secretNumber;
     const hint = isHigher ? "📈 HIGHER ⬆️" : "📉 LOWER ⬇️";
     const remaining = game.maxAttempts - game.attempts;
     
-    // Calculate range
     let minRange = 1, maxRange = game.range;
     for (const g of game.attemptsHistory) {
       if (g < game.secretNumber && g > minRange) minRange = g + 1;
       if (g > game.secretNumber && g < maxRange) maxRange = g - 1;
     }
     
-    // Progress bar
     const progress = Math.floor((game.attempts / game.maxAttempts) * 20);
     const bar = "▓".repeat(progress) + "░".repeat(20 - progress);
     
-    await message.reply(`🔍 **Guess:** ${guess} → ${hint}
+    const replyMsg = await message.reply(`🔍 **Guess:** ${guess} → ${hint}
 
 📊 ${bar}
 🎯 ${game.attempts}/${game.maxAttempts} attempts
@@ -186,8 +167,13 @@ module.exports = {
 📝 History: ${game.attemptsHistory.join(" → ")}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`);
+${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}`);
+    
+    // ✅ প্রতিবার রিপ্লাই করার পর নতুন onReply সেট করা
+    global.GoatBot.onReply.set(replyMsg.messageID, {
+      commandName: "guessnumber",
+      author: senderID,
+      threadID: threadID
+    });
   }
 };
