@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "maze",
     version: "1.0.3",
-    author: "eden (Converted by OMOR TE)",
+    author: "OMOR TE",
     role: 0,
     countDown: 40,
     description: "Play maze with adjustable difficulty.",
