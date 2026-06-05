@@ -150,7 +150,7 @@ module.exports = {
     // If user has an active game, continue it
     if (existingGame && existingGame.gameOn) {
       return api.sendMessage({
-        body: `♟️ You already have an active game against ${existingGame.aiName}!\nEnter your move (e.g., 'e2 e4'):\nType 'chess off' to end the game.`,
+        body: `♟️ You already have an active game against ${existingGame.aiName}!\nEnter your move (e.g., 'e2 e4'):\nType '{p}chess off' to end the game.`,
         attachment: await displayBoard(existingGame)
       }, threadID, (error, info) => {
         if (!error) {
@@ -186,7 +186,7 @@ module.exports = {
       const aiResult = processAIMove(newData);
 
       return api.sendMessage({
-        body: `♟️ New chess game started!\n🎯 Opponent: ${aiConfig.name} (${aiConfig.title})\n📝 ${aiConfig.description}\n🎨 You are playing as ${colorText}\n\n${aiResult.message}\n\nEnter your move (e.g., 'e2 e4'):\nType 'chess off' to end the game.`,
+        body: `♟️ New chess game started!\n🎯 Opponent: ${aiConfig.name} (${aiConfig.title})\n📝 ${aiConfig.description}\n🎨 You are playing as ${colorText}\n\n${aiResult.message}\n\nEnter your move (e.g., 'e2 e4'):\nType '{p}chess off' to end the game.`,
         attachment: await displayBoard(newData)
       }, threadID, (error, info) => {
         if (!error) {
@@ -201,7 +201,7 @@ module.exports = {
     } else {
       // Player is white, they go first
       return api.sendMessage({
-        body: `♟️ New chess game started!\n🎯 Opponent: ${aiConfig.name} (${aiConfig.title})\n📝 ${aiConfig.description}\n🎨 You are playing as ${colorText}\n\nEnter your move (e.g., 'e2 e4'):\nType 'chess off' to end the game.`,
+        body: `♟️ New chess game started!\n🎯 Opponent: ${aiConfig.name} (${aiConfig.title})\n📝 ${aiConfig.description}\n🎨 You are playing as ${colorText}\n\nEnter your move (e.g., 'e2 e4'):\nType '{p}chess off' to end the game.`,
         attachment: await displayBoard(newData)
       }, threadID, (error, info) => {
         if (!error) {
