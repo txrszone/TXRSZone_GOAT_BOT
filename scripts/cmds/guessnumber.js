@@ -1,8 +1,8 @@
 const difficultyLevels = {
-  easy: { range: 50, maxAttempts: 8, rewardPoint: 5, name: "Easy" },
-  normal: { range: 100, maxAttempts: 10, rewardPoint: 10, name: "Normal" },
-  hard: { range: 500, maxAttempts: 12, rewardPoint: 20, name: "Hard" },
-  pro: { range: 1000, maxAttempts: 8, rewardPoint: 30, name: "Pro" }
+  easy: { range: 50, maxAttempts: 8, rewardPoint: 5, name: "Easy", emoji: "🌟", description: "Perfect for beginners! Very forgiving." },
+  normal: { range: 100, maxAttempts: 10, rewardPoint: 10, name: "Normal", emoji: "⭐", description: "Standard difficulty. Balanced challenge." },
+  hard: { range: 500, maxAttempts: 12, rewardPoint: 20, name: "Hard", emoji: "🔥", description: "For experienced players. Think carefully!" },
+  pro: { range: 1000, maxAttempts: 8, rewardPoint: 30, name: "Pro", emoji: "👑", description: "Ultimate challenge. Only for masters!" }
 };
 
 let activeGames = new Map();
@@ -11,32 +11,96 @@ module.exports = {
   config: {
     name: "guessnumber",
     aliases: ["gn", "guessnum"],
-    version: "2.2.0",
+    version: "2.3.0",
     author: "OMOR TE",
     role: 0,
     countDown: 5,
-    description: { en: "Guess the number challenge" },
+    description: { en: "Guess the number challenge with AI difficulty levels" },
     category: "game",
-    guide: "{pn} [easy|normal|hard|pro] - Start game\n{pn} off - Stop current game"
+    guide: "━━━━ 📜 COMMANDS ━━━━\n\n🎮 {p}guessnumber easy\n🎮 {p}guessnumber normal\n🎮 {p}guessnumber hard\n🎮 {p}guessnumber pro\n🛑 {p}guessnumber off\n💰 {p}guessnumber score\n📊 {p}guessnumber info\n📊 {p}guessnumber info @(mention)\n\n━━━━ 🎯 DIFFICULTY ━━━━\n🌟 EASY: 1-50, 8 tries, +5 pts\n⭐ NORMAL: 1-100, 10 tries, +10 pts\n🔥 HARD: 1-500, 12 tries, +20 pts\n👑 PRO: 1-1000, 8 tries, +30 pts"
   },
 
   onStart: async function ({ message, event, args, usersData, api, role }) {
-    const { threadID, senderID } = event;
+    const { threadID, senderID, mentions } = event;
+
+    // ========== SCORE COMMAND (শুধু স্কোর) ==========
+    if (args[0] && args[0].toLowerCase() === "score") {
+      try {
+        const userData = await usersData.get(senderID);
+        const totalScore = userData.guessnumber_score || 0;
+        
+        return message.reply(`💰 **YOUR SCORE** 💰\n━━━━━━━━━━━━━━━━━━━━\n👤 ${await getUserName(senderID, usersData)}\n⭐ Total: ${totalScore} points\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      } catch(e) {
+        return message.reply(`💰 Your score: 0 points`);
+      }
+    }
+
+    // ========== INFO COMMAND (পূর্ণ তথ্য + মেনশন সাপোর্ট) ==========
+    if (args[0] && args[0].toLowerCase() === "info") {
+      let targetID = senderID;
+      let targetName = await getUserName(senderID, usersData);
+      
+      // মেনশন চেক করা
+      if (Object.keys(mentions).length > 0) {
+        targetID = Object.keys(mentions)[0];
+        targetName = mentions[targetID];
+      }
+      // অথবা আর্গুমেন্ট হিসেবে আইডি দিলে
+      else if (args[1] && args[1].match(/[0-9]+/)) {
+        targetID = args[1];
+        targetName = await getUserName(targetID, usersData);
+      }
+      
+      try {
+        const userData = await usersData.get(targetID);
+        const totalScore = userData.guessnumber_score || 0;
+        const gamesPlayed = userData.guessnumber_played || 0;
+        const gamesWon = userData.guessnumber_won || 0;
+        const winRate = gamesPlayed > 0 ? Math.floor((gamesWon / gamesPlayed) * 100) : 0;
+        
+        // র‍্যাঙ্ক নির্ণয়
+        let rank = "🥉 Beginner";
+        let rankEmoji = "🌱";
+        if (totalScore >= 1000) { rank = "👑 Grandmaster"; rankEmoji = "👑"; }
+        else if (totalScore >= 500) { rank = "🏆 Master"; rankEmoji = "🏆"; }
+        else if (totalScore >= 200) { rank = "⭐ Expert"; rankEmoji = "⭐"; }
+        else if (totalScore >= 100) { rank = "🌟 Advanced"; rankEmoji = "🌟"; }
+        else if (totalScore >= 50) { rank = "📈 Intermediate"; rankEmoji = "📈"; }
+        else if (totalScore >= 10) { rank = "🌱 Beginner"; rankEmoji = "🌱"; }
+        
+        const isOwnProfile = targetID === senderID;
+        
+        return message.reply(`${isOwnProfile ? '📊 **YOUR STATS**' : '📊 **PLAYER STATS**'} 📊
+━━━━━━━━━━━━━━━━━━━━
+👤 Player: ${targetName}
+🏅 Rank: ${rankEmoji} ${rank}
+
+💰 Total Score: ${totalScore} points
+🎮 Games Played: ${gamesPlayed}
+🏆 Games Won: ${gamesWon}
+📊 Win Rate: ${winRate}%
+
+━━━━━━━━━━━━━━━━━━━━
+⚡ MW Legends Bot`);
+      } catch(e) {
+        return message.reply(`❌ Could not find stats for this player!`);
+      }
+    }
 
     // ========== OFF COMMAND ==========
     if (args[0] && args[0].toLowerCase() === "off") {
       if (!activeGames.has(threadID)) {
-        return message.reply(`❌ No active game found in this thread!\n💡 Start with: guessnumber`);
+        return message.reply(`❌ No active game found!\n💡 Start with: ${global.GoatBot.config.prefix}guessnumber easy`);
       }
 
       const game = activeGames.get(threadID);
       const isGameOwner = game.senderID === senderID;
       const isGroupAdmin = role === 'admin' || role === 'moderator';
-      const isBotAdmin = global.config.admins?.includes(senderID);
+      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
 
       if (isGameOwner || isGroupAdmin || isBotAdmin) {
         activeGames.delete(threadID);
-        return message.reply(`🏁 **GAME STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n🎮 Game terminated by ${isGameOwner ? 'owner' : 'admin'}.\n💡 Start new: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+        return message.reply(`🏁 **GAME STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n🎮 Game terminated by ${isGameOwner ? 'owner' : 'admin'}.\n💡 Start new: ${global.GoatBot.config.prefix}guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       } else {
         return message.reply(`❌ **Permission denied!**\nOnly the game starter, group admin, or bot admin can end this game.`);
       }
@@ -45,7 +109,12 @@ module.exports = {
     // ========== CHECK EXISTING GAME ==========
     if (activeGames.has(threadID)) {
       const existing = activeGames.get(threadID);
-      return message.reply(`❌ **GAME IN PROGRESS!**\n━━━━━━━━━━━━━━━━━━━━\n🎯 ${existing.difficulty.toUpperCase()} | ${existing.attempts}/${existing.maxAttempts} attempts\n👤 Player: <@${existing.senderID}>\n💡 Type '{p}guessnumber off' to stop.`);
+      const diffConfig = difficultyLevels[existing.difficulty];
+      return message.reply(`❌ **GAME IN PROGRESS!**
+━━━━━━━━━━━━━━━━━━━━
+${diffConfig.emoji} ${existing.difficulty.toUpperCase()} | ${existing.attempts}/${existing.maxAttempts} attempts
+👤 Player: <@${existing.senderID}>
+💡 Type '${global.GoatBot.config.prefix}guessnumber off' to stop.`);
     }
 
     // ========== PARSE DIFFICULTY ==========
@@ -77,18 +146,18 @@ module.exports = {
     const replyMsg = await message.reply(`🎮 **GUESS THE NUMBER** 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Difficulty: ${difficulty.toUpperCase()}
+${config.emoji} Difficulty: ${difficulty.toUpperCase()}
+📝 ${config.description}
 🔢 Range: 1 to ${config.range}
 🎲 Attempts: ${config.maxAttempts} chances
 ⭐ Reward: ${config.rewardPoint} points
-👤 Player: <@${senderID}>
+👤 Player: ${await getUserName(senderID, usersData)}
 
 💡 Reply with a number (e.g., ${Math.floor(config.range / 2)}):
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚡ MW Legends Bot`);
 
-    // Set onReply for this game
     global.GoatBot.onReply.set(replyMsg.messageID, {
       commandName: "guessnumber",
       author: senderID,
@@ -100,21 +169,21 @@ module.exports = {
     const { body, threadID, senderID } = event;
 
     if (!activeGames.has(threadID)) {
-      return message.reply(`❌ No active game in this thread! Start with: {p}guessnumber`);
+      return message.reply(`❌ No active game in this thread! Start with: ${global.GoatBot.config.prefix}guessnumber`);
     }
 
     const game = activeGames.get(threadID);
 
-    // Only the player who started can guess
     if (senderID !== game.senderID) {
-      return message.reply(`❌ Not your game! Only <@${game.senderID}> can play. Type '{p}guessnumber off' to end.`);
+      return message.reply(`❌ Not your game! Only ${await getUserName(game.senderID, usersData)} can play. Type '${global.GoatBot.config.prefix}guessnumber off' to end.`);
     }
 
-    // Check if the user typed "off" inside reply
+    // Handle off in reply
     if (body.trim().toLowerCase() === "off") {
       const isGameOwner = game.senderID === senderID;
       const isGroupAdmin = role === 'admin' || role === 'moderator';
-      const isBotAdmin = global.config.admins?.includes(senderID);
+      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
+      
       if (isGameOwner || isGroupAdmin || isBotAdmin) {
         activeGames.delete(threadID);
         return message.reply(`🏁 Game ended by command.`);
@@ -135,14 +204,25 @@ module.exports = {
     // ========== WIN ==========
     if (guess === game.secretNumber) {
       const pointsEarned = game.rewardPoint + Math.max(0, (game.maxAttempts - game.attempts) * 2);
+      const diffConfig = difficultyLevels[game.difficulty];
 
       try {
         const userData = await usersData.get(senderID);
-        await usersData.set(senderID, { money: (userData.money || 0) + pointsEarned });
+        const currentScore = userData.guessnumber_score || 0;
+        const currentPlayed = userData.guessnumber_played || 0;
+        const currentWon = userData.guessnumber_won || 0;
+        
+        await usersData.set(senderID, { 
+          guessnumber_score: currentScore + pointsEarned,
+          guessnumber_played: currentPlayed + 1,
+          guessnumber_won: currentWon + 1,
+          money: (userData.money || 0) + pointsEarned 
+        });
       } catch (e) {}
 
       await message.reply(`🎉 **CORRECT!** 🎉
 ━━━━━━━━━━━━━━━━━━━━
+${diffConfig.emoji} Difficulty: ${game.difficulty.toUpperCase()}
 🔢 Number: ${game.secretNumber}
 🎯 Attempts: ${game.attempts}/${game.maxAttempts}
 ⭐ Points earned: +${pointsEarned}
@@ -153,10 +233,21 @@ module.exports = {
       return;
     }
 
-    // ========== GAME OVER (max attempts reached) ==========
+    // ========== GAME OVER ==========
     if (game.attempts >= game.maxAttempts) {
+      const diffConfig = difficultyLevels[game.difficulty];
+      
+      try {
+        const userData = await usersData.get(senderID);
+        const currentPlayed = userData.guessnumber_played || 0;
+        await usersData.set(senderID, { 
+          guessnumber_played: currentPlayed + 1
+        });
+      } catch (e) {}
+
       await message.reply(`❌ **GAME OVER!** ❌
 ━━━━━━━━━━━━━━━━━━━━
+${diffConfig.emoji} Difficulty: ${game.difficulty.toUpperCase()}
 🔢 Correct number: ${game.secretNumber}
 📊 Your guesses: ${game.attemptsHistory.join(" → ")}
 ━━━━━━━━━━━━━━━━━━━━
@@ -166,12 +257,11 @@ module.exports = {
       return;
     }
 
-    // ========== CONTINUE - Provide hint and updated range ==========
+    // ========== CONTINUE ==========
     const isHigher = guess < game.secretNumber;
     const hint = isHigher ? "📈 HIGHER ⬆️" : "📉 LOWER ⬇️";
     const remaining = game.maxAttempts - game.attempts;
 
-    // Calculate narrowed range based on past guesses
     let minRange = 1, maxRange = game.range;
     for (const g of game.attemptsHistory) {
       if (g < game.secretNumber && g > minRange) minRange = g + 1;
@@ -192,7 +282,6 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}`);
 
-    // Update onReply for next message
     global.GoatBot.onReply.set(replyMsg.messageID, {
       commandName: "guessnumber",
       author: game.senderID,
@@ -200,3 +289,13 @@ ${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}`);
     });
   }
 };
+
+// Helper function to get user name
+async function getUserName(userID, usersData) {
+  try {
+    const userData = await usersData.get(userID);
+    return userData.name || "Unknown User";
+  } catch(e) {
+    return "User";
+  }
+}
