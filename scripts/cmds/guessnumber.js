@@ -1,4 +1,3 @@
-// Difficulty levels
 const difficultyLevels = {
   easy: { range: 50, maxAttempts: 8, rewardPoint: 5, name: "Easy" },
   normal: { range: 100, maxAttempts: 10, rewardPoint: 10, name: "Normal" },
@@ -6,7 +5,6 @@ const difficultyLevels = {
   pro: { range: 1000, maxAttempts: 8, rewardPoint: 30, name: "Pro" }
 };
 
-// Store active games
 let activeGames = new Map();
 
 module.exports = {
@@ -23,28 +21,24 @@ module.exports = {
   },
 
   onStart: async function ({ message, event, args, usersData, api }) {
-    const { threadID, messageID, senderID } = event;
+    const { threadID, senderID } = event;
     
     // OFF command
     if (args[0] && args[0].toLowerCase() === "off") {
       if (activeGames.has(threadID)) {
         activeGames.delete(threadID);
-        return message.reply(`❌ **GAME STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n🎮 The current game has been terminated.\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
-      } else {
-        return message.reply(`❌ No active game found!\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+        return message.reply(`❌ **GAME STOPPED**\n━━━━━━━━━━━━━━━━━━━━\n🎮 Game terminated.\n💡 Start new: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
       }
+      return message.reply(`❌ No active game found!\n💡 Start with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
     
     // Check existing game
     if (activeGames.has(threadID)) {
       const existing = activeGames.get(threadID);
-      return message.reply(`❌ **A GAME IS ALREADY IN PROGRESS!**
+      return message.reply(`❌ **GAME IN PROGRESS!**
 ━━━━━━━━━━━━━━━━━━━━
-🎮 Difficulty: ${existing.difficulty.toUpperCase()}
-📊 Progress: ${existing.attempts}/${existing.maxAttempts} attempts
-⏳ Remaining: ${existing.maxAttempts - existing.attempts} chances
-
-💡 Continue playing or type 'guessnumber off' to stop.
+🎯 ${existing.difficulty.toUpperCase()} | ${existing.attempts}/${existing.maxAttempts} attempts
+💡 Type 'guessnumber off' to stop.
 ━━━━━━━━━━━━━━━━━━━━
 ⚡ MW Legends Bot`);
     }
@@ -75,7 +69,8 @@ module.exports = {
     
     activeGames.set(threadID, gameData);
     
-    await message.reply(`🎮 **GUESS THE NUMBER** 🎮
+    // ✅ সঠিকভাবে onReply সেট করা
+    const replyMsg = await message.reply(`🎮 **GUESS THE NUMBER** 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🎯 Difficulty: ${difficulty.toUpperCase()}
@@ -92,115 +87,107 @@ module.exports = {
 🔥 Enter your first guess (e.g., ${Math.floor(config.range / 2)}):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚡ MW Legends Bot`);
-  },
-  
-  onReply: async function ({ message, event, api, usersData }) {
-    const { body, threadID, messageID, senderID } = event;
     
+    // ✅ onReply সেট করা
+    global.GoatBot.onReply.set(replyMsg.messageID, {
+      commandName: "guessnumber",
+      author: senderID,
+      threadID: threadID
+    });
+  },
+
+  onReply: async function ({ message, event, api, usersData }) {
+    const { body, threadID, senderID } = event;
+    
+    // ✅ চেক করা: এই থ্রেডে গেম আছে কিনা
     if (!activeGames.has(threadID)) {
-      return message.reply(`❌ No active game found!\n💡 Start a new game with: guessnumber\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`❌ No active game!\n💡 Start new: guessnumber`);
     }
     
     const game = activeGames.get(threadID);
     
+    // ✅ চেক করা: শুধু গেম স্টার্টার খেলতে পারে
     if (senderID !== game.senderID) {
-      return message.reply(`❌ **NOT YOUR GAME!**
-━━━━━━━━━━━━━━━━━━━━
-👑 This game was started by another player
-💡 Start your own game with: guessnumber
-━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`);
+      return message.reply(`❌ Not your game! Type 'guessnumber' to start your own.`);
     }
     
     const guess = parseInt(body.trim());
     
     if (isNaN(guess) || guess < 1 || guess > game.range) {
-      return message.reply(`❌ Please enter a valid number between 1 and ${game.range}!`);
+      return message.reply(`❌ Enter a number between 1 and ${game.range}!`);
     }
     
     game.attempts++;
     game.attemptsHistory.push(guess);
     
-    let replyMsg = "";
-    let isGameOver = false;
-    
+    // WIN
     if (guess === game.secretNumber) {
-      // WIN
-      const timeTaken = Date.now() - game.startTime;
+      const timeTaken = (Date.now() - game.startTime) / 1000;
       const pointsEarned = game.rewardPoint + Math.max(0, (game.maxAttempts - game.attempts) * 2);
       
       try {
         const userData = await usersData.get(senderID);
-        const currentMoney = userData.money || 0;
-        await usersData.set(senderID, { money: currentMoney + pointsEarned });
+        await usersData.set(senderID, { money: (userData.money || 0) + pointsEarned });
       } catch(e) {}
       
-      replyMsg = `🎉 **CONGRATULATIONS!** 🎉
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✅ You guessed the correct number!
-🔢 Number was: ${game.secretNumber}
+      await message.reply(`🎉 **CORRECT!** 🎉
+━━━━━━━━━━━━━━━━━━━━
+🔢 Number: ${game.secretNumber}
 🎯 Attempts: ${game.attempts}/${game.maxAttempts}
-⭐ Points earned: +${pointsEarned}
-⏱️ Time: ${(timeTaken / 1000).toFixed(1)} seconds
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⭐ Points: +${pointsEarned}
+⏱️ Time: ${timeTaken.toFixed(1)}s
+━━━━━━━━━━━━━━━━━━━━
 🏆 YOU WIN! 🏆
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`;
+━━━━━━━━━━━━━━━━━━━━
+⚡ MW Legends Bot`);
       
       activeGames.delete(threadID);
-      isGameOver = true;
-      
-    } else if (game.attempts >= game.maxAttempts) {
-      // LOST
-      replyMsg = `❌ **GAME OVER!** ❌
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-😔 You ran out of attempts!
-🔢 Correct number was: ${game.secretNumber}
-🎯 Attempts used: ${game.attempts}/${game.maxAttempts}
+      return;
+    }
+    
+    // GAME OVER
+    if (game.attempts >= game.maxAttempts) {
+      await message.reply(`❌ **GAME OVER!** ❌
+━━━━━━━━━━━━━━━━━━━━
+😔 You lost!
+🔢 Correct number: ${game.secretNumber}
 📊 Your guesses: ${game.attemptsHistory.join(" → ")}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━
 💪 Better luck next time!
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`;
+━━━━━━━━━━━━━━━━━━━━
+⚡ MW Legends Bot`);
       
       activeGames.delete(threadID);
-      isGameOver = true;
-      
-    } else {
-      // Continue
-      const isHigher = guess < game.secretNumber;
-      const hint = isHigher ? "📈 HIGHER ⬆️" : "📉 LOWER ⬇️";
-      
-      let minRange = 1, maxRange = game.range;
-      for (const g of game.attemptsHistory) {
-        if (g < game.secretNumber && g > minRange) minRange = g + 1;
-        if (g > game.secretNumber && g < maxRange) maxRange = g - 1;
-      }
-      
-      const barLength = 20;
-      const progress = game.attempts / game.maxAttempts;
-      const filled = Math.floor(barLength * progress);
-      const bar = "▓".repeat(filled) + "░".repeat(barLength - filled);
-      const remaining = game.maxAttempts - game.attempts;
-      
-      replyMsg = `🔍 **Guess:** ${guess} → ${hint}
+      return;
+    }
+    
+    // CONTINUE
+    const isHigher = guess < game.secretNumber;
+    const hint = isHigher ? "📈 HIGHER ⬆️" : "📉 LOWER ⬇️";
+    const remaining = game.maxAttempts - game.attempts;
+    
+    // Calculate range
+    let minRange = 1, maxRange = game.range;
+    for (const g of game.attemptsHistory) {
+      if (g < game.secretNumber && g > minRange) minRange = g + 1;
+      if (g > game.secretNumber && g < maxRange) maxRange = g - 1;
+    }
+    
+    // Progress bar
+    const progress = Math.floor((game.attempts / game.maxAttempts) * 20);
+    const bar = "▓".repeat(progress) + "░".repeat(20 - progress);
+    
+    await message.reply(`🔍 **Guess:** ${guess} → ${hint}
 
-📊 Progress: ${bar}
-🎯 Attempts: ${game.attempts}/${game.maxAttempts}
-⏳ Remaining: ${remaining} chances
+📊 ${bar}
+🎯 ${game.attempts}/${game.maxAttempts} attempts
+⏳ ${remaining} chances left
 💡 Range: ${minRange} - ${maxRange}
 📝 History: ${game.attemptsHistory.join(" → ")}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${remaining === 1 ? "⚠️ LAST CHANCE!" : "🔥 Enter your next guess:"}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`;
-    }
-    
-    await message.reply(replyMsg);
+⚡ MW Legends Bot`);
   }
 };
