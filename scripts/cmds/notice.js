@@ -22,7 +22,7 @@ module.exports = {
       return message.reply(`❌ Usage: notice <message>\nExample: notice Hello everyone!`);
     }
 
-    const noticeText = `📢 NOTICE FROM ADMIN\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `📢 NOTICE FROM ADMIN\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
     // Handle attachments
     let attachmentBuffers = [];
