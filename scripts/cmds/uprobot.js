@@ -14,7 +14,7 @@ module.exports = {
 
   onStart: async function ({ message, event, args }) {
     if (args.length < 2) {
-      return message.reply(`❌ **UPTIME MONITOR**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: upt [নাম] [URL]\n📝 উদাহরণ: upt MyBot https://example.com\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`❌ **UPTIME MONITOR**\n━━━━━━━━━━━━━━━━━━━━\n📌 ব্যবহার: uprobot [নাম] [URL]\n📝 উদাহরণ: upt MyBot https://example.com\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
 
     const name = args[0];
