@@ -1,4 +1,6 @@
 const { getStreamsFromAttachment } = global.utils;
+const fs = require("fs-extra");
+const path = require("path");
 
 module.exports = {
   config: {
@@ -22,26 +24,34 @@ module.exports = {
       return message.reply(`❌ Usage: notification <message>\nExample: notification Hello everyone!`);
     }
 
-    const noticeText = `📢 NOTIFICATION FROM BOT ADMIN\n  (Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `NOTIFICATION FROM ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // Handle attachments (convert to buffers for reuse)
-    let attachmentBuffers = [];
+    // 📁 Temporary files for attachments
+    const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
-    
+
     if (allAttachments.length) {
       try {
         const streams = await getStreamsFromAttachment(allAttachments);
-        for (const stream of streams) {
-          const chunks = [];
-          for await (const chunk of stream) chunks.push(chunk);
-          attachmentBuffers.push(Buffer.concat(chunks));
+        const cacheDir = path.join(__dirname, "cache");
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+
+        for (let i = 0; i < streams.length; i++) {
+          const filePath = path.join(cacheDir, `notification_${Date.now()}_${i}.tmp`);
+          const writer = fs.createWriteStream(filePath);
+          await new Promise((resolve, reject) => {
+            streams[i].pipe(writer);
+            writer.on("finish", resolve);
+            writer.on("error", reject);
+          });
+          tempFiles.push(filePath);
         }
       } catch (err) {
         console.error("Attachment error:", err);
       }
     }
 
-    // Get all groups where bot is member
+    // 📋 Get all groups where bot is member
     let allGroups = [];
     let cursor = null;
     let hasMore = true;
@@ -89,14 +99,9 @@ module.exports = {
 
       try {
         const formSend = { body: noticeText };
-        if (attachmentBuffers.length) {
-          const { Readable } = require("stream");
-          const streams = attachmentBuffers.map(buffer => {
-            const stream = new Readable();
-            stream.push(buffer);
-            stream.push(null);
-            return stream;
-          });
+        if (tempFiles.length) {
+          // 🔁 Create fresh read streams from saved files
+          const streams = tempFiles.map(file => fs.createReadStream(file));
           formSend.attachment = streams;
         }
 
@@ -109,7 +114,7 @@ module.exports = {
       }
       sentCount++;
 
-      // Send progress only once at interval
+      // 📊 Progress report
       if (sentCount % PROGRESS_INTERVAL === 0 && !progressSent) {
         progressSent = true;
         await message.reply(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
@@ -120,7 +125,12 @@ module.exports = {
       if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
-    // Final report
+    // 🧹 Cleanup temp files
+    for (const file of tempFiles) {
+      try { fs.unlinkSync(file); } catch(e) {}
+    }
+
+    // 📝 Final report
     let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
