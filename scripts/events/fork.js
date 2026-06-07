@@ -8,24 +8,20 @@ module.exports = {
     category: "without prefix"
   },
 
-  onEvent: async function ({ api, event, message }) {
-    const { body, senderID } = event;
+  onEvent: async function ({ api, event }) {
+    const { body, senderID, threadID, messageID } = event;
     
+    // নিজের মেসেজ ইগনোর
     if (senderID === api.getCurrentUserID()) return;
     if (!body) return;
     
     const msg = body.toLowerCase().trim();
     
-    // fake fork info
-    const replies = {
-      "fork": ["⚡ MW Legends; Latest\nhttps://mw-legends-chatbot.lovable.app/"],
-     };
-    
-    for (const [keyword, responseList] of Object.entries(replies)) {
-      if (msg === keyword || msg.includes(keyword)) {
-        const randomReply = responseList[Math.floor(Math.random() * responseList.length)];
-        return message.reply(randomReply);
-      }
+    // কীওয়ার্ড চেক
+    if (msg === "fork" || msg.includes("fork")) {
+      const replyText = "⚡ MW Legends; Latest\nhttps://mw-legends-chatbot.lovable.app/";
+      // api.sendMessage ব্যবহার করা নিরাপদ
+      return api.sendMessage(replyText, threadID, messageID);
     }
   }
 };
