@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "2.0.0",
+    version: "3.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -24,7 +24,7 @@ module.exports = {
       return message.reply(`❌ Usage: notification <message>\nExample: notification Hello everyone!`);
     }
 
-    const noticeText = `NOTIFICATION FROM ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `NOTIFICATION FROM BOT ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
     // 📁 Temporary files for attachments
     const tempFiles = [];
@@ -37,7 +37,8 @@ module.exports = {
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
         for (let i = 0; i < streams.length; i++) {
-          const filePath = path.join(cacheDir, `notification_${Date.now()}_${i}.tmp`);
+          const ext = allAttachments[i]?.type === "photo" ? "jpg" : "png";
+          const filePath = path.join(cacheDir, `notification_${Date.now()}_${i}.${ext}`);
           const writer = fs.createWriteStream(filePath);
           await new Promise((resolve, reject) => {
             streams[i].pipe(writer);
@@ -100,7 +101,6 @@ module.exports = {
       try {
         const formSend = { body: noticeText };
         if (tempFiles.length) {
-          // 🔁 Create fresh read streams from saved files
           const streams = tempFiles.map(file => fs.createReadStream(file));
           formSend.attachment = streams;
         }
@@ -114,7 +114,6 @@ module.exports = {
       }
       sentCount++;
 
-      // 📊 Progress report
       if (sentCount % PROGRESS_INTERVAL === 0 && !progressSent) {
         progressSent = true;
         await message.reply(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
@@ -130,7 +129,6 @@ module.exports = {
       try { fs.unlinkSync(file); } catch(e) {}
     }
 
-    // 📝 Final report
     let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
