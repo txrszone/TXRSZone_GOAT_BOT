@@ -1,12 +1,13 @@
 const { getStreamsFromAttachment } = global.utils;
 const fs = require("fs-extra");
 const path = require("path");
+const axios = require("axios"); // 🔥 URL ডাউনলোডের জন্য না, ফাইল পড়ার জন্য
 
 module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "2.0.0",
+    version: "3.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -24,9 +25,9 @@ module.exports = {
       return message.reply(`❌ Usage: notice <message>\nExample: notice Hello everyone!`);
     }
 
-    const noticeText = `NOTICE FROM ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `NOTICE FROM BOT ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // 📁 Temporary files for attachments
+    // 📁 অ্যাটাচমেন্টগুলো ফাইল হিসেবে সেভ করুন (একবার)
     const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
 
@@ -37,7 +38,9 @@ module.exports = {
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
         for (let i = 0; i < streams.length; i++) {
-          const filePath = path.join(cacheDir, `notice_${Date.now()}_${i}.tmp`);
+          // ফাইল সেভ করুন .jpg বা .png এক্সটেনশন সহ
+          const ext = allAttachments[i]?.type === "photo" ? "jpg" : "png";
+          const filePath = path.join(cacheDir, `notice_${Date.now()}_${i}.${ext}`);
           const writer = fs.createWriteStream(filePath);
           await new Promise((resolve, reject) => {
             streams[i].pipe(writer);
@@ -99,8 +102,9 @@ module.exports = {
 
       try {
         const formSend = { body: noticeText };
+        
+        // 🔥 সেভ করা ফাইল থেকে স্ট্রিম তৈরি করুন (বারবার ব্যবহারের জন্য)
         if (tempFiles.length) {
-          // 🔁 Create fresh read streams from saved files
           const streams = tempFiles.map(file => fs.createReadStream(file));
           formSend.attachment = streams;
         }
@@ -114,7 +118,6 @@ module.exports = {
       }
       sentCount++;
 
-      // 📊 Progress report
       if (sentCount % PROGRESS_INTERVAL === 0 && !progressSent) {
         progressSent = true;
         await message.reply(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
@@ -130,7 +133,6 @@ module.exports = {
       try { fs.unlinkSync(file); } catch(e) {}
     }
 
-    // 📝 Final report
     let report = `✅ NOTICE SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
