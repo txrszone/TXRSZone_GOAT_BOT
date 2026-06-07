@@ -22,9 +22,9 @@ module.exports = {
       return message.reply(`❌ Usage: notification <message>\nExample: notification Hello everyone!`);
     }
 
-    const noticeText = `📢 NOTIFICATION FROM ADMIN\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `📢 NOTIFICATION FROM BOT ADMIN\n  (Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // Handle attachments (convert to buffers)
+    // Handle attachments (convert to buffers for reuse)
     let attachmentBuffers = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
     
@@ -41,7 +41,7 @@ module.exports = {
       }
     }
 
-    // Get all groups where bot is member (verified)
+    // Get all groups where bot is member
     let allGroups = [];
     let cursor = null;
     let hasMore = true;
@@ -54,20 +54,14 @@ module.exports = {
         const list = await api.getThreadList(100, cursor, ["INBOX"]);
         const potentialGroups = list.filter(t => t.isGroup === true && t.threadID !== event.threadID);
         
-        // Double-check membership for each group
         for (const group of potentialGroups) {
           try {
             const info = await api.getThreadInfo(group.threadID);
             if (info.participantIDs && info.participantIDs.includes(botID)) {
               allGroups.push(group);
-            } else {
-              console.log(`⚠️ Skipping ${group.name || group.threadID} (bot not member)`);
             }
-          } catch (err) {
-            console.log(`⚠️ Could not verify membership for ${group.threadID}, skipping.`);
-          }
+          } catch (err) {}
         }
-        
         cursor = list.length === 100 ? list[list.length - 1].threadID : null;
         hasMore = list.length === 100;
       }
@@ -80,14 +74,13 @@ module.exports = {
     await api.unsendMessage(confirmMsg.messageID);
 
     if (total === 0) {
-      return message.reply(`❌ No active groups found where bot is a member.`);
+      return message.reply(`❌ No groups found where bot is a member.`);
     }
-
-    const startMsg = await message.reply(`📤 Sending notification to ${total} groups (where bot is member)...\n⏱️ Est. time: ${Math.ceil(total * DELAY / 1000)} seconds`);
 
     let success = 0;
     let failed = [];
     let sentCount = 0;
+    let progressSent = false;
 
     for (let i = 0; i < allGroups.length; i++) {
       const group = allGroups[i];
@@ -109,31 +102,31 @@ module.exports = {
 
         await api.sendMessage(formSend, tid);
         success++;
-        sentCount++;
-        console.log(`✅ [${i+1}/${total}] Sent to ${groupName} (${tid})`);
+        console.log(`✅ [${i+1}/${total}] Sent to ${groupName}`);
       } catch (err) {
         failed.push({ id: tid, name: groupName, error: err.message });
-        sentCount++;
         console.error(`❌ [${i+1}/${total}] Failed ${groupName}: ${err.message}`);
       }
+      sentCount++;
 
-      if (sentCount % PROGRESS_INTERVAL === 0 || i === total - 1) {
-        try {
-          await message.reply(`📊 Progress: ${sentCount}/${total} groups\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
-        } catch(e) {}
+      // Send progress only once at interval
+      if (sentCount % PROGRESS_INTERVAL === 0 && !progressSent) {
+        progressSent = true;
+        await message.reply(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
+        await new Promise(r => setTimeout(r, 2000));
+        progressSent = false;
       }
 
       if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
-    let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Successfully sent: ${success}/${total}\n❌ Failed: ${failed.length}`;
+    // Final report
+    let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
     } else if (failed.length > 10) {
-      report += `\n\nFirst 10 failed groups:\n${failed.slice(0,10).map(f => `• ${f.name} (${f.id})`).join("\n")}`;
+      report += `\n\nFirst 10 failed:\n${failed.slice(0,10).map(f => `• ${f.name} (${f.id})`).join("\n")}`;
     }
     await message.reply(report);
-
-    try { await api.unsendMessage(startMsg.messageID); } catch(e) {}
   }
 };
