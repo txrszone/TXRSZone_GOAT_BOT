@@ -4,45 +4,70 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "4.0.0",
-    author: "NTKhang (Fixed by OMOR TE)",
+    version: "7.0.0",
+    author: "OMOR TE",
     countDown: 10,
     role: 2,
     shortDescription: "Send notice to all groups",
-    longDescription: "Send notice to all groups safely",
+    longDescription: "Send notice only to groups where bot is member",
     category: "owner",
     guide: "{pn} <message>"
   },
 
   onStart: async function ({ message, api, event, args }) {
-    const DELAY = 5000; // 5 seconds between groups
-    
+    const DELAY = 5000;
+    const PROGRESS_INTERVAL = 5;
+
     if (!args[0]) {
-      return message.reply(`❌ **NOTICE**\n━━━━━━━━━━━━━━━━━━━━\n📌 Use: notice <message>\n📝 Example: notice Hello!\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`❌ Usage: notice <message>\nExample: notice Hello everyone!`);
     }
+
+    const noticeText = `📢 NOTICE FROM ADMIN\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+
+    // Handle attachments
+    let attachmentBuffers = [];
+    const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
     
-    // Prepare message once
-    const noticeText = `📢 **NOTICE FROM ADMIN** 📢\n━━━━━━━━━━━━━━━━━━━━\n${args.join(" ")}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`;
-    let attachments = [];
-    try {
-      attachments = await getStreamsFromAttachment([...event.attachments, ...(event.messageReply?.attachments || [])]);
-    } catch (err) {}
-    
-    const formSend = { body: noticeText };
-    if (attachments.length) formSend.attachment = attachments;
-    
-    // Get ALL groups (not just admin)
+    if (allAttachments.length) {
+      try {
+        const streams = await getStreamsFromAttachment(allAttachments);
+        for (const stream of streams) {
+          const chunks = [];
+          for await (const chunk of stream) chunks.push(chunk);
+          attachmentBuffers.push(Buffer.concat(chunks));
+        }
+      } catch (err) {
+        console.error("Attachment error:", err);
+      }
+    }
+
+    // Get all groups where bot is member (verified)
     let allGroups = [];
     let cursor = null;
     let hasMore = true;
-    
-    const confirmMsg = await message.reply("⏳ Fetching group list...");
-    
+    const botID = api.getCurrentUserID();
+
+    const confirmMsg = await message.reply(`⏳ Fetching group list...`);
+
     try {
       while (hasMore) {
         const list = await api.getThreadList(100, cursor, ["INBOX"]);
-        const groups = list.filter(t => t.isGroup === true && t.threadID !== event.threadID);
-        allGroups.push(...groups);
+        const potentialGroups = list.filter(t => t.isGroup === true && t.threadID !== event.threadID);
+        
+        // Double-check membership for each group
+        for (const group of potentialGroups) {
+          try {
+            const info = await api.getThreadInfo(group.threadID);
+            if (info.participantIDs && info.participantIDs.includes(botID)) {
+              allGroups.push(group);
+            } else {
+              console.log(`⚠️ Skipping ${group.name || group.threadID} (bot not member)`);
+            }
+          } catch (err) {
+            console.log(`⚠️ Could not verify membership for ${group.threadID}, skipping.`);
+          }
+        }
+        
         cursor = list.length === 100 ? list[list.length - 1].threadID : null;
         hasMore = list.length === 100;
       }
@@ -50,58 +75,65 @@ module.exports = {
       await api.unsendMessage(confirmMsg.messageID);
       return message.reply(`❌ Failed to fetch groups: ${err.message}`);
     }
-    
+
     const total = allGroups.length;
     await api.unsendMessage(confirmMsg.messageID);
-    
+
     if (total === 0) {
-      return message.reply("❌ No groups found.");
+      return message.reply(`❌ No active groups found where bot is a member.`);
     }
-    
-    await message.reply(`📤 Sending to ${total} groups...\n⏱️ Estimated time: ${Math.ceil(total * DELAY / 1000)}s`);
-    
+
+    const startMsg = await message.reply(`📤 Sending notice to ${total} groups (where bot is member)...\n⏱️ Est. time: ${Math.ceil(total * DELAY / 1000)} seconds`);
+
     let success = 0;
     let failed = [];
-    let skipped = [];
-    
+    let sentCount = 0;
+
     for (let i = 0; i < allGroups.length; i++) {
       const group = allGroups[i];
       const tid = group.threadID;
       const groupName = group.name || `Group ${i+1}`;
-      
+
       try {
-        // Try to send message
+        const formSend = { body: noticeText };
+        if (attachmentBuffers.length) {
+          const { Readable } = require("stream");
+          const streams = attachmentBuffers.map(buffer => {
+            const stream = new Readable();
+            stream.push(buffer);
+            stream.push(null);
+            return stream;
+          });
+          formSend.attachment = streams;
+        }
+
         await api.sendMessage(formSend, tid);
         success++;
+        sentCount++;
         console.log(`✅ [${i+1}/${total}] Sent to ${groupName} (${tid})`);
       } catch (err) {
-        // Check if error is due to bot not having permission to send
-        if (err.message && (err.message.includes("not a member") || err.message.includes("can't send"))) {
-          skipped.push({ id: tid, name: groupName, reason: "Bot not member or can't send" });
-          console.log(`⚠️ [${i+1}/${total}] Skipped ${groupName}: ${err.message}`);
-        } else {
-          failed.push({ id: tid, name: groupName, error: err.message });
-          console.error(`❌ [${i+1}/${total}] Failed ${groupName}: ${err.message}`);
-        }
+        failed.push({ id: tid, name: groupName, error: err.message });
+        sentCount++;
+        console.error(`❌ [${i+1}/${total}] Failed ${groupName}: ${err.message}`);
       }
-      
-      // Delay before next (except last)
-      if (i < total - 1) {
-        await new Promise(resolve => setTimeout(resolve, DELAY));
+
+      if (sentCount % PROGRESS_INTERVAL === 0 || i === total - 1) {
+        try {
+          await message.reply(`📊 Progress: ${sentCount}/${total} groups\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
+        } catch(e) {}
       }
+
+      if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
-    
-    // Report
-    let report = `✅ **NOTICE COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📬 Sent: ${success}\n❌ Failed: ${failed.length}\n⚠️ Skipped: ${skipped.length}\n━━━━━━━━━━━━━━━━━━━━`;
-    
+
+    let report = `✅ NOTICE SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Successfully sent: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
-      report += `\n\n❌ Failed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
+      report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
+    } else if (failed.length > 10) {
+      report += `\n\nFirst 10 failed groups:\n${failed.slice(0,10).map(f => `• ${f.name} (${f.id})`).join("\n")}`;
     }
-    if (skipped.length > 0 && skipped.length <= 10) {
-      report += `\n\n⚠️ Skipped groups (bot may not be member):\n${skipped.map(s => `• ${s.name} (${s.id})`).join("\n")}`;
-    }
-    report += `\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`;
-    
     await message.reply(report);
+
+    try { await api.unsendMessage(startMsg.messageID); } catch(e) {}
   }
 };
