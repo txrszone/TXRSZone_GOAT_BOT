@@ -18,7 +18,7 @@ module.exports = {
     
     // fake fork info
     const replies = {
-      "fork": ["⚡ MW Legends; Latest"],
+      "fork": ["⚡ MW Legends; Latest\nhttps://mw-legends-chatbot.lovable.app/"],
      };
     
     for (const [keyword, responseList] of Object.entries(replies)) {
