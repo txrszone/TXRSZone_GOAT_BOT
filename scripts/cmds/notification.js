@@ -4,8 +4,8 @@ module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "7.0.0",
-    author: "Fixed by OMOR TE",
+    version: "2.0.0",
+    author: "OMOR TE",
     countDown: 10,
     role: 2,
     shortDescription: "Send notification to all groups",
