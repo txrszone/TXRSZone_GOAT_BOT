@@ -4,32 +4,27 @@ module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "2.0.0",
-    author: "OMOR TE",
+    version: "7.0.0",
+    author: "Fixed by OMOR TE",
     countDown: 10,
     role: 2,
-    description: {
-      vi: "Gửi thông báo từ admin đến all box",
-      en: "Send notification from admin to all groups"
-    },
+    shortDescription: "Send notification to all groups",
+    longDescription: "Send notification only to groups where bot is member",
     category: "owner",
-    guide: {
-      en: "{pn} <message>"
-    }
+    guide: "{pn} <message>"
   },
 
   onStart: async function ({ message, api, event, args }) {
-    const DELAY = 5000; // 5 seconds between groups
+    const DELAY = 5000;
     const PROGRESS_INTERVAL = 5;
 
     if (!args[0]) {
       return message.reply(`❌ Usage: notification <message>\nExample: notification Hello everyone!`);
     }
 
-    // Simple message format
-    const noticeText = `📢 NOTIFICATION FROM ADMIN\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `📢 NOTIFICATION FROM ADMIN\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // Handle attachments (convert to buffers for reuse)
+    // Handle attachments (convert to buffers)
     let attachmentBuffers = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
     
@@ -46,7 +41,7 @@ module.exports = {
       }
     }
 
-    // Get all groups where bot is member
+    // Get all groups where bot is member (verified)
     let allGroups = [];
     let cursor = null;
     let hasMore = true;
