@@ -4,94 +4,101 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "3.0.0",
+    version: "4.0.0",
     author: "NTKhang (Fixed by OMOR TE)",
     countDown: 10,
     role: 2,
     shortDescription: "Send notice to all groups",
-    longDescription: "Send notice to all groups safely with sequential delay",
+    longDescription: "Send notice to all groups safely",
     category: "owner",
     guide: "{pn} <message>"
   },
 
   onStart: async function ({ message, api, event, args }) {
-    const DELAY = 5000; // 5 seconds delay between groups
+    const DELAY = 5000; // 5 seconds between groups
     
     if (!args[0]) {
-      return message.reply(`❌ **NOTICE COMMAND**\n━━━━━━━━━━━━━━━━━━━━\n📌 Use: notice <message>\n📝 Example: notice Hello everyone!\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
+      return message.reply(`❌ **NOTICE**\n━━━━━━━━━━━━━━━━━━━━\n📌 Use: notice <message>\n📝 Example: notice Hello!\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`);
     }
     
-    // Prepare the message and attachments once
+    // Prepare message once
     const noticeText = `📢 **NOTICE FROM ADMIN** 📢\n━━━━━━━━━━━━━━━━━━━━\n${args.join(" ")}\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`;
     let attachments = [];
     try {
       attachments = await getStreamsFromAttachment([...event.attachments, ...(event.messageReply?.attachments || [])]);
-    } catch (err) {
-      console.error("Attachment error:", err);
-    }
+    } catch (err) {}
     
     const formSend = { body: noticeText };
     if (attachments.length) formSend.attachment = attachments;
     
-    // Get all group threads (simpler method)
-    let allThreads = [];
-    let nextCursor = null;
+    // Get ALL groups (not just admin)
+    let allGroups = [];
+    let cursor = null;
     let hasMore = true;
     
     const confirmMsg = await message.reply("⏳ Fetching group list...");
     
     try {
       while (hasMore) {
-        const threadList = await api.getThreadList(100, nextCursor, ["INBOX"]);
-        const groups = threadList.filter(t => t.isGroup === true && t.threadID !== event.threadID);
-        allThreads.push(...groups);
-        nextCursor = threadList.length === 100 ? threadList[threadList.length - 1].threadID : null;
-        hasMore = threadList.length === 100;
+        const list = await api.getThreadList(100, cursor, ["INBOX"]);
+        const groups = list.filter(t => t.isGroup === true && t.threadID !== event.threadID);
+        allGroups.push(...groups);
+        cursor = list.length === 100 ? list[list.length - 1].threadID : null;
+        hasMore = list.length === 100;
       }
     } catch (err) {
-      console.error("Error fetching threads:", err);
       await api.unsendMessage(confirmMsg.messageID);
-      return message.reply(`❌ Failed to fetch group list: ${err.message}`);
+      return message.reply(`❌ Failed to fetch groups: ${err.message}`);
     }
     
-    const totalGroups = allThreads.length;
-    if (totalGroups === 0) {
-      await api.unsendMessage(confirmMsg.messageID);
-      return message.reply("❌ No groups found to send notice.");
-    }
-    
+    const total = allGroups.length;
     await api.unsendMessage(confirmMsg.messageID);
-    await message.reply(`📤 Sending notice to ${totalGroups} groups...\n⏱️ Estimated time: ${Math.ceil(totalGroups * DELAY / 1000)} seconds`);
+    
+    if (total === 0) {
+      return message.reply("❌ No groups found.");
+    }
+    
+    await message.reply(`📤 Sending to ${total} groups...\n⏱️ Estimated time: ${Math.ceil(total * DELAY / 1000)}s`);
     
     let success = 0;
     let failed = [];
-    let current = 0;
+    let skipped = [];
     
-    // Send sequentially
-    for (const thread of allThreads) {
-      current++;
-      const tid = thread.threadID;
+    for (let i = 0; i < allGroups.length; i++) {
+      const group = allGroups[i];
+      const tid = group.threadID;
+      const groupName = group.name || `Group ${i+1}`;
+      
       try {
+        // Try to send message
         await api.sendMessage(formSend, tid);
         success++;
-        console.log(`✅ [${current}/${totalGroups}] Sent to ${thread.name || tid}`);
+        console.log(`✅ [${i+1}/${total}] Sent to ${groupName} (${tid})`);
       } catch (err) {
-        failed.push(tid);
-        console.error(`❌ [${current}/${totalGroups}] Failed to send to ${thread.name || tid}: ${err.message}`);
+        // Check if error is due to bot not having permission to send
+        if (err.message && (err.message.includes("not a member") || err.message.includes("can't send"))) {
+          skipped.push({ id: tid, name: groupName, reason: "Bot not member or can't send" });
+          console.log(`⚠️ [${i+1}/${total}] Skipped ${groupName}: ${err.message}`);
+        } else {
+          failed.push({ id: tid, name: groupName, error: err.message });
+          console.error(`❌ [${i+1}/${total}] Failed ${groupName}: ${err.message}`);
+        }
       }
       
-      // Delay before next group (except after last)
-      if (current < totalGroups) {
+      // Delay before next (except last)
+      if (i < total - 1) {
         await new Promise(resolve => setTimeout(resolve, DELAY));
       }
     }
     
-    // Final report
-    let report = `✅ **NOTICE SENT**\n━━━━━━━━━━━━━━━━━━━━\n📬 Successful: ${success}/${totalGroups} groups\n❌ Failed: ${failed.length} groups`;
+    // Report
+    let report = `✅ **NOTICE COMPLETED**\n━━━━━━━━━━━━━━━━━━━━\n📬 Sent: ${success}\n❌ Failed: ${failed.length}\n⚠️ Skipped: ${skipped.length}\n━━━━━━━━━━━━━━━━━━━━`;
+    
     if (failed.length > 0 && failed.length <= 10) {
-      report += `\n\n⚠️ Failed IDs:\n${failed.join("\n")}`;
-    } else if (failed.length > 10) {
-      report += `\n\n⚠️ First 10 failed IDs:\n${failed.slice(0, 10).join("\n")}\n... and ${failed.length - 10} more`;
+      report += `\n\n❌ Failed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
+    }
+    if (skipped.length > 0 && skipped.length <= 10) {
+      report += `\n\n⚠️ Skipped groups (bot may not be member):\n${skipped.map(s => `• ${s.name} (${s.id})`).join("\n")}`;
     }
     report += `\n━━━━━━━━━━━━━━━━━━━━\n⚡ MW Legends Bot`;
     
