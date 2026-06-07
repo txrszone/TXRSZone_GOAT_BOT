@@ -2,13 +2,13 @@ const axios = require("axios");
 
 module.exports = {
   config: {
-    name: "uptrobot",
+    name: "uprobot",
     version: "1.0.0",
     author: "Omor TE",
     role: 0,
     shortDescription: "Create UptimeRobot monitor",
     longDescription: "Create a monitor using UptimeRobot API",
-    guide: "{p}uptrobot [name] [url]",
+    guide: "{p}uprobot [name] [url]",
     category: "system"
   },
 
