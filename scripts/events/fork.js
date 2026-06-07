@@ -1,6 +1,6 @@
 module.exports = {
   config: {
-    name: "autoreply",
+    name: "fork",
     version: "1.0.0",
     author: "OMOR TE",
     role: 0,
