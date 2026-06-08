@@ -3,7 +3,7 @@ module.exports = {
     name: "inbox",
     aliases: ["in"],
     version: "1.0",
-    author: "gok gok ",
+    author: "Omor TE",
     countDown: 10,
     role: 0,
     shortDescription: {
@@ -28,8 +28,8 @@ module.exports = {
   onStart: async function({ api, event, args, message }) {
     try {
       const query = encodeURIComponent(args.join(' '));
-      message.reply("✅ SUCCESSFULLY SEND MSG\n\n🔰তোর ইনবক্স চেক কর , গালি দিছি 🐸🤝", event.threadID);
-      api.sendMessage("✅ SUCCESSFULLY ALLOW\n🔰 কিরে বোকাচোদা ইনবক্স এ আসতে বললি কেনো ,কি বলবি বল 🙂", event.senderID);
+      message.reply("✅ SUCCESSFULLY SEND MSG\n\n🔰 Kindly check your inbox", event.threadID);
+      api.sendMessage("✅ SUCCESSFULLY ALLOW\n\n🔰 You can now use the bot", event.senderID);
     } catch (error) {
       console.error("Error bro: " + error);
     }
