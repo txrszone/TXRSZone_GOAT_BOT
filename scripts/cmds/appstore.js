@@ -13,9 +13,9 @@ module.exports = {
 			en: "Search app on appstore"
 		},
 		category: "software",
-		guide: "   {pn}: <keyword>"
+		guide: "   {p}{n}: <keyword>"
 			+ "\n   - Example:"
-			+ "\n   {pn} PUBG",
+			+ "\n   {p}{n} PUBG",
 		envConfig: {
 			limitResult: 3
 		}
