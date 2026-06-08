@@ -4,13 +4,13 @@ module.exports = {
   config: {
     name: "file",
     version: "2.0",
-    author: "ST | Sheikh Tamim",
+    author: "Omor TE",
     countDown: 2,
     role: 2, // Only bot admin
     shortDescription: "Send bot script file",
     longDescription: "Send the content of a specified bot script file",
     category: "owner",
-    guide: "{pn} <file name>\nEx: {pn} fileName"
+    guide: "{p}{n} <file name>\nEx: {p}{n} fileName"
   },
 
   onStart: async function ({ message, args, api, event, usersData }) {
