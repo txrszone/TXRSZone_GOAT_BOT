@@ -2,97 +2,132 @@ const si = require('systeminformation');
 const axios = require("axios");
 const request = require("request");
 const fs = require("fs-extra");
+const path = require("path");
+const moment = require("moment-timezone");
 
 module.exports = {
   config: {
     name: "system",
-    aliases: [],
+    aliases: ["sys", "server"],
     version: "1.0",
-    author: "Ullash ッ",
+    author: "OMOR TE",
     countDown: 5,
     role: 0,
-    shortDescription: "System",
-    longDescription: "",
-    category: "goatBot",
-    guide: "{pn}"
+    shortDescription: "System Information",
+    longDescription: "Get server/system information",
+    category: "info",
+    guide: "{p}system"
   },
 
-  onStart: async function ({ api, event }) {
-    const { cpu, cpuTemperature, currentLoad, memLayout, diskLayout, mem, osInfo } = si;
+  onStart: async function ({ message, event, api }) {
     const timeStart = Date.now();
 
     try {
-      var { manufacturer, brand, speed, physicalCores, cores } = await cpu();
-      var { main: mainTemp } = await cpuTemperature();
-      var { currentLoad: load } = await currentLoad();
-      var diskInfo = await diskLayout();
-      var memInfo = await memLayout();
-      var { total: totalMem, available: availableMem } = await mem();
-      var { platform: OSPlatform, build: OSBuild } = await osInfo();
+      const cpuData = await si.cpu();
+      const tempData = await si.cpuTemperature();
+      const loadData = await si.currentLoad();
+      const diskData = await si.diskLayout();
+      const memData = await si.memLayout();
+      const memStats = await si.mem();
+      const osData = await si.osInfo();
 
-      var time = process.uptime();
-      var hours = Math.floor(time / (60 * 60));
-      var minutes = Math.floor((time % (60 * 60)) / 60);
-      var seconds = Math.floor(time % 60);
-      if (hours < 10) hours = "0" + hours;
-      if (minutes < 10) minutes = "0" + minutes;
-      if (seconds < 10) seconds = "0" + seconds;
+      const { manufacturer, brand, speed, physicalCores, cores } = cpuData;
+      const mainTemp = tempData.main;
+      const load = loadData.currentLoad;
+      const diskInfo = diskData[0];
+      const memInfo = memData[0];
+      const { total: totalMem, available: availableMem } = memStats;
+      const { platform: OSPlatform, build: OSBuild } = osData;
 
-      var ZiaRein = `
-𝗦𝘆𝘀𝘁𝗲𝗺 𝗜𝗻𝗳𝗼𝗿𝗺𝗮𝘁𝗶𝗼𝗻 Ullash ッ
-────────────────────────────────────
-𝗠𝗼𝗱𝗲𝗹: ${manufacturer} ${brand}
-𝗦𝗽𝗲𝗲𝗱: ${speed}GHz
-𝗖𝗼𝗿𝗲𝘀: ${physicalCores}
-𝗛𝗬𝗣𝗘𝗥: ${cores}
-𝗧𝗲𝗺𝗽𝗲𝗿𝗮𝘁𝗿𝗲: ${mainTemp ? mainTemp : 'N/A'}°C
-𝗟𝗼𝗮𝗱: ${load.toFixed(1)}%
+      // ✅ বাংলাদেশের সময় (বাংলাদেশ সময় অঞ্চল)
+      const bangladeshTime = moment().tz("Asia/Dhaka");
+      const currentTime = bangladeshTime.format("hh:mm:ss A");
+      const currentDate = bangladeshTime.format("DD/MM/YYYY");
+      const currentDay = bangladeshTime.format("dddd");
 
-𝗠𝗲𝗺𝗼𝗿𝘆 𝗜𝗻𝗳𝗼
-────────────────────────────────────
-𝗧𝗼𝘁𝗮𝗹 𝗠𝗲𝗺𝗼𝗿𝘆: ${this.byte2mb(totalMem)}
-𝗠𝗲𝗺𝗼𝗿𝘆 𝗧𝘆𝗽𝗲: ${memInfo[0].type}
-𝗔𝘃𝗮𝗶𝗹𝗮𝗯𝗹𝗲 𝗠𝗲𝗺𝗼𝗿𝘆: ${this.byte2mb(availableMem)}
+      const botUptime = process.uptime();
+      const botHours = Math.floor(botUptime / 3600).toString().padStart(2, '0');
+      const botMinutes = Math.floor((botUptime % 3600) / 60).toString().padStart(2, '0');
+      const botSeconds = Math.floor(botUptime % 60).toString().padStart(2, '0');
 
-𝗗𝗶𝘀𝗸 𝗜𝗻𝗳𝗼
-────────────────────────────────────
-𝗗𝗶𝘀𝗸 𝗡𝗮𝗺𝗲: ${diskInfo[0].name}
-𝗗𝗶𝘀𝗸 𝗦𝗶𝘇𝗲: ${this.byte2mb(diskInfo[0].size)}
-𝗗𝗶𝘀𝗸 𝗧𝘆𝗽𝗲: ${diskInfo[0].type}
-𝗗𝗶𝘀𝗸 𝗧𝗲𝗺𝗽𝗲𝗿𝗮𝘁𝗿𝗲: ${diskInfo[0].temperature ? diskInfo[0].temperature : 'N/A'}°C
+      const byte2mb = (bytes) => (bytes / 1024 / 1024).toFixed(2) + ' MB';
 
-𝗢𝗦 𝗜𝗻𝗳𝗼
-────────────────────────────────────
-𝗢𝗦 𝗣𝗹𝗮𝘁𝗳𝗼𝗿𝗺: ${OSPlatform}
-𝗢𝗦 𝗕𝘂𝗶𝗹𝗱: ${OSBuild}
-𝗨𝗽𝘁𝗶𝗺𝗲: ${hours}:${minutes}:${seconds}
-𝗥𝗲𝘀𝗽𝗼𝗻𝘀𝗲 𝗧𝗶𝗺𝗲: ${(Date.now() - timeStart)}ms
-`;
+      const systemInfo = `
+╭─────────────────────╮
+│   📊 SYSTEM INFO    │
+╰─────────────────────╯
 
-      const link = [
+🕐 **BANGLADESH TIME**
+├ 📅 Date: ${currentDate}
+├ 📆 Day: ${currentDay}
+└ 🕒 Time: ${currentTime}
+
+🖥️ **CPU INFO**
+├ 🔹 Model: ${manufacturer || 'N/A'} ${brand || ''}
+├ ⚡ Speed: ${speed || 'N/A'} GHz
+├ 🧠 Cores: ${physicalCores || 'N/A'} (${cores || 'N/A'} threads)
+├ 🌡️ Temp: ${mainTemp ? mainTemp + '°C' : 'N/A'}
+└ 📈 Load: ${load ? load.toFixed(1) + '%' : 'N/A'}
+
+💾 **MEMORY INFO**
+├ 📦 Total: ${byte2mb(totalMem)}
+├ 📀 Type: ${memInfo?.type || 'N/A'}
+└ 🟢 Available: ${byte2mb(availableMem)}
+
+💿 **DISK INFO**
+├ 🏷️ Name: ${diskInfo?.name || 'N/A'}
+├ 📏 Size: ${diskInfo?.size ? byte2mb(diskInfo.size) : 'N/A'}
+├ 🔧 Type: ${diskInfo?.type || 'N/A'}
+└ 🌡️ Temp: ${diskInfo?.temperature ? diskInfo.temperature + '°C' : 'N/A'}
+
+🖧 **OS INFO**
+├ 🔹 Platform: ${OSPlatform || 'N/A'}
+├ 🔨 Build: ${OSBuild || 'N/A'}
+└ 🤖 Bot Uptime: ${botHours}:${botMinutes}:${botSeconds}
+
+━━━━━━━━━━━━━━━━━━━━
+⏱️ Response: ${Date.now() - timeStart}ms
+━━━━━━━━━━━━━━━━━━━━
+⚡ MW Legends Bot`;
+
+      // Random images array
+      const images = [
         "https://i.imgur.com/YY14Wdl.jpeg",
         "https://i.imgur.com/IetbODK.jpeg",
-        "https://i.imgur.com/YY14Wdl.jpeg",
         "https://i.imgur.com/H1B8VZ4.jpeg",
         "https://i.imgur.com/on9p0FK.jpg",
         "https://i.imgur.com/mriBW5m.jpg",
         "https://i.imgur.com/ZwEP7z6.jpeg",
-        "https://i.imgur.com/ZwEP7z6.jpeg",
-        "https://i.imgur.com/ZwEP7z6.jpeg", "https://i.imgur.com/ZwEP7z6.jpeg",
-        "https://i.imgur.com/BsJ7otS.jpeg",
+        "https://i.imgur.com/BsJ7otS.jpeg"
       ];
+      
+      const randomImg = images[Math.floor(Math.random() * images.length)];
+      const cacheDir = path.join(__dirname, "cache");
+      const filePath = path.join(cacheDir, "system.jpg");
+      
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
 
-      var callback = () => api.sendMessage({ body: ZiaRein, attachment: fs.createReadStream(__dirname + "/cache/5.jpg") }, event.threadID, () => fs.unlinkSync(__dirname + "/cache/5.jpg"), event.messageID);
+      // Download image
+      request(encodeURI(randomImg))
+        .pipe(fs.createWriteStream(filePath))
+        .on("close", () => {
+          api.sendMessage({
+            body: systemInfo,
+            attachment: fs.createReadStream(filePath)
+          }, event.threadID, () => {
+            try { fs.unlinkSync(filePath); } catch(e) {}
+          }, event.messageID);
+        })
+        .on("error", (err) => {
+          console.error("Image download error:", err);
+          api.sendMessage(systemInfo, event.threadID, event.messageID);
+        });
 
-      request(encodeURI(link[Math.floor(Math.random() * link.length)])).pipe(fs.createWriteStream(__dirname + "/cache/5.jpg")).on("close", () => callback());
+    } catch (err) {
+      console.error("System info error:", err);
+      message.reply(`❌ Failed to fetch system information.\n💡 ${err.message}`);
     }
-    catch (e) {
-      console.log(e);
-    }
-  },
-
-  // Method to convert bytes to megabytes (if needed for usage)
-  byte2mb: function(bytes) {
-    return (bytes / 1024 / 1024).toFixed(2) + 'MB';
   }
 };
