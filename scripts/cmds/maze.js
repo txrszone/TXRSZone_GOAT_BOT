@@ -14,7 +14,7 @@ module.exports = {
     category: "game",
   },
 
-  onStart: async function ({ message, event, args, usersData, role }) {
+  onStart: async function ({ message, event, args, usersData, role, api }) {
     const { threadID, messageID, senderID } = event;
 
     // Initialize global storage
@@ -24,15 +24,21 @@ module.exports = {
     const threadKey = `thread_${threadID}`;
     const existingGame = global.mazeGames.get(threadKey);
 
-    // Handle "off" command
+    // Handle "off" command - everyone with permission can off
     if (args[0] && args[0].toLowerCase() === 'off') {
       if (!existingGame) {
         return message.reply("❌ No active maze game in this thread to end.");
       }
+      
+      // ✅ Check permissions: game starter OR group admin OR bot admin
+      let isGroupAdmin = false;
+      try {
+        const threadInfo = await api.getThreadInfo(threadID);
+        isGroupAdmin = threadInfo.adminIDs?.some(admin => admin.id == senderID) || false;
+      } catch(e) {}
+      
+      const isBotAdmin = global.config.ADMINBOT?.includes(senderID) || false;
       const isGameOwner = existingGame.senderID === senderID;
-      const isGroupAdmin = role === 'admin' || role === 'moderator';
-      // FIXED: GoatBot V2 এর জন্য সঠিক admin check
-      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
       
       if (isGameOwner || isGroupAdmin || isBotAdmin) {
         global.mazeGames.delete(threadKey);
@@ -44,7 +50,8 @@ module.exports = {
 
     // If there's already an active game in this thread
     if (existingGame) {
-      return message.reply(`⚠️ A maze game is already in progress in this thread! Only ${existingGame.playerName || "the player who started it"} can play.\nType \`{p}maze off\` to end it.`);
+      const starterName = existingGame.playerName || "the player who started it";
+      return message.reply(`⚠️ A maze game is already in progress in this thread! Only ${starterName} can play.\nType \`maze off\` to end it.`);
     }
 
     // Parse difficulty
@@ -89,7 +96,7 @@ module.exports = {
     await new Promise((resolve) => writeStream.on('finish', resolve));
 
     const reply = await message.reply({
-      body: `🧩 **Maze Game Started!**\n👤 Player: ${playerName}\n🎚️ Difficulty: ${difficultyMessage}\n\n• Send your path in one message (e.g., ➡️➡️⬇️...)\n• A is the start, B is the end.\n• You have 3 attempts for wrong moves.\n• Type \`{p}maze off\` to end the game.`,
+      body: `🧩 **Maze Game Started!**\n👤 Player: ${playerName}\n🎚️ Difficulty: ${difficultyMessage}\n\n• Send your path in one message (e.g., ➡️➡️⬇️...)\n• A is the start, B is the end.\n• You have 3 attempts for wrong moves.\n• Type \`maze off\` to end the game.`,
       attachment: fs.createReadStream(imagePath)
     });
     fs.unlinkSync(imagePath);
@@ -111,7 +118,7 @@ module.exports = {
     });
   },
 
-  onReply: async function ({ message, event, usersData, role }) {
+  onReply: async function ({ message, event, usersData, role, api }) {
     const { threadID, senderID, messageID, body } = event;
 
     if (!global.mazeGames) global.mazeGames = new Map();
@@ -122,21 +129,26 @@ module.exports = {
 
     // Only the player who started can play
     if (senderID !== gameData.senderID) {
-      return message.reply(`❌ Only ${gameData.playerName || "the player who started this game"} can play. Type \`{p}maze off\` to end the game.`);
+      return message.reply(`❌ Only ${gameData.playerName || "the player who started this game"} can play. Type \`maze off\` to end the game.`);
     }
 
     // Handle "off" inside reply as well
     if (body.trim().toLowerCase() === 'off') {
+      // ✅ Check permissions: game starter OR group admin OR bot admin
+      let isGroupAdmin = false;
+      try {
+        const threadInfo = await api.getThreadInfo(threadID);
+        isGroupAdmin = threadInfo.adminIDs?.some(admin => admin.id == senderID) || false;
+      } catch(e) {}
+      
+      const isBotAdmin = global.config.ADMINBOT?.includes(senderID) || false;
       const isGameOwner = gameData.senderID === senderID;
-      const isGroupAdmin = role === 'admin' || role === 'moderator';
-      // FIXED: GoatBot V2 এর জন্য সঠিক admin check
-      const isBotAdmin = global.GoatBot?.config?.adminBot?.includes(senderID) || false;
       
       if (isGameOwner || isGroupAdmin || isBotAdmin) {
         global.mazeGames.delete(threadKey);
         return message.reply("🏁 Maze game ended.");
       } else {
-        return message.reply("❌ You don't have permission to end this game.");
+        return message.reply("❌ You don't have permission to end this game. Only the player who started it, a group admin, or a bot admin can end it.");
       }
     }
 
@@ -209,11 +221,11 @@ module.exports = {
 
       // Unsend previous board message (optional, to keep chat clean)
       if (gameData.lastMessageID) {
-        try { await message.unsend(gameData.lastMessageID); } catch(e) {}
+        try { await api.unsendMessage(gameData.lastMessageID); } catch(e) {}
       }
 
       const newReply = await message.reply({
-        body: `✅ **Correct path!** Continue from your position.\n📍 Progress: ${fullCode.length}/${gameData.solution.length} moves\n🎯 Keep going to reach point B!\nType \`{p}maze off\` to end the game.`,
+        body: `✅ **Correct path!** Continue from your position.\n📍 Progress: ${fullCode.length}/${gameData.solution.length} moves\n🎯 Keep going to reach point B!\nType \`maze off\` to end the game.`,
         attachment: fs.createReadStream(imagePath)
       });
       fs.unlinkSync(imagePath);
@@ -236,7 +248,7 @@ module.exports = {
       await new Promise((resolve) => writeStream.on('finish', resolve));
 
       if (gameData.lastMessageID) {
-        try { await message.unsend(gameData.lastMessageID); } catch(e) {}
+        try { await api.unsendMessage(gameData.lastMessageID); } catch(e) {}
       }
 
       await message.reply({
@@ -252,7 +264,7 @@ module.exports = {
   }
 };
 
-// ========== HELPER FUNCTIONS ==========
+// ========== HELPER FUNCTIONS (unchanged) ==========
 function generateMazeImage(difficulty = 15, grid = null, cols = null, highlightPath = null, wrongPath = null, currentPosition = null, progressPath = null) {
   difficulty = Math.max(1, Math.min(difficulty, 15));
 
