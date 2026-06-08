@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "4.0.0",
+    version: "3.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
