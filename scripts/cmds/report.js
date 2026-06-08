@@ -3,7 +3,7 @@ const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
 
 module.exports = {
 	config: {
-		name: "callad",
+		name: "report",
 		version: "1.7",
 		author: "NTKhang",
 		countDown: 5,
@@ -14,8 +14,8 @@ module.exports = {
 		},
 		category: "contacts admin",
 		guide: {
-			vi: "   {pn} <tin nhắn>",
-			en: "   {pn} <message>"
+			vi: "   {p}{n} <tin nhắn>",
+			en: "   {p}{n} <message>"
 		}
 	},
 
