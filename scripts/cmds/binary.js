@@ -5,7 +5,7 @@ module.exports = {
 		name: "binary",
 		aliases: ["bin"],
 		version: "1.0",
-		author: "Samir",
+		author: "Omor TE",
 		countDown: 0,
 		role: 0,
 		shortDescription: {
@@ -16,7 +16,7 @@ module.exports = {
 		},
 		category: "study",
 		guide: {
-			en: "{pn} [encode/decode] [text]"
+			en: "{p}{n} [encode/decode] [text]"
 		}
 	},
 
