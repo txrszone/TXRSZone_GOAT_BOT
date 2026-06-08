@@ -7,7 +7,7 @@ module.exports = {
     role: 0,
     shortDescription: "Send bot's repository info",
     longDescription: "Send bot's repository info",
-    category: "without prefix"
+    category: "noprefix"
   },
 
   onChat: async function ({ api, event }) {
