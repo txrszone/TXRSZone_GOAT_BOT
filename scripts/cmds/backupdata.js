@@ -13,7 +13,7 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			en: "   {pn}"
+			en: "   {p}{n}"
 		}
 	},
 
