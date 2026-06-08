@@ -22,14 +22,14 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			vi: "{pn} load <tên file lệnh>"
-				+ "\n{pn} loadAll"
-				+ "\n{pn} install <url> <tên file lệnh>: Tải về và load command event, url là đường dẫn tới file lệnh (raw)"
-				+ "\n{pn} install <code> <tên file lệnh>: Tải về và load command event, code là mã của file lệnh (raw)",
-			en: "{pn} load <command file name>"
-				+ "\n{pn} loadAll"
-				+ "\n{pn} install <url> <command file name>: Download and load event command, url is the path to the command file (raw)"
-				+ "\n{pn} install <code> <command file name>: Download and load event command, code is the code of the command file (raw)"
+			vi: "{p}{n} load <tên file lệnh>"
+				+ "\n{p}{n} loadAll"
+				+ "\n{p}{n} install <url> <tên file lệnh>: Tải về và load command event, url là đường dẫn tới file lệnh (raw)"
+				+ "\n{p}{n} install <code> <tên file lệnh>: Tải về và load command event, code là mã của file lệnh (raw)",
+			en: "{p}{n} load <command file name>"
+				+ "\n{p}{n} loadAll"
+				+ "\n{p}{n} install <url> <command file name>: Download and load event command, url is the path to the command file (raw)"
+				+ "\n{p}{n} install <code> <command file name>: Download and load event command, code is the code of the command file (raw)"
 		}
 	},
 
