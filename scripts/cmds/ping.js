@@ -2,31 +2,26 @@ module.exports = {
   config: {
     name: "ping",
     aliases: ["ms"],
-    version: "2.0",
+    version: "3.0",
     author: "Omor TE",
     countDown: 3,
     role: 0,
     shortDescription: { en: "Check bot ping" },
     longDescription: { en: "Shows bot latency and response time" },
     category: "info",
-    guide: { en: "{p}ping" }
+    guide: { en: "{p}{n}" }
   },
 
-  onStart: async function ({ api, event, message }) {
-    const { threadID, messageID } = event;
+  onStart: async function ({ api, event }) {
+    const { threadID } = event;
     
-    // প্রথম মেসেজ পাঠানো
-    const loadingMsg = await api.sendMessage("🏓 Calculating ping...", threadID);
-    
-    // পিং গণনা
     const startTime = Date.now();
     
-    // সামান্য সময় অপেক্ষা (রিয়েলিস্টিক পিং দেখানোর জন্য)
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // প্রথম মেসেজ পাঠানো
+    const loadingMsg = await api.sendMessage("🏓", threadID);
     
     const ping = Date.now() - startTime;
     
-    // স্ট্যাটাস ডিটারমিন
     let emoji = "";
     let status = "";
     let color = "";
@@ -49,7 +44,6 @@ module.exports = {
       color = "🔴";
     }
     
-    // এডিট করে রেজাল্ট দেখানো
     const response = `╭────────────────╮
 │            🏓 PONG!               │
 ╰────────────────╯
@@ -65,6 +59,13 @@ module.exports = {
 │     ⚓ MW Legends ☸️        │
 ╰─────────────────╯`;
     
-    await api.editMessage(response, loadingMsg.messageID);
+    // এডিট করার চেষ্টা
+    try {
+      await api.editMessage(response, loadingMsg.messageID);
+    } catch(e) {
+      // এডিট না কাজ করলে নতুন মেসেজ
+      await api.sendMessage(response, threadID);
+      try { api.unsendMessage(loadingMsg.messageID); } catch(e) {}
+    }
   }
 };
