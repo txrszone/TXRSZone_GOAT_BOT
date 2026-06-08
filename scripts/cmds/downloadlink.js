@@ -11,7 +11,7 @@ module.exports = {
     shortDescription: "Get the direct link of replied video/audio/photo",
     longDescription: "Replies to a message containing media and gives its direct URL download link.",
     category: "tools",
-    guide: "{pn}"
+    guide: "{p}{n}"
   },
 
   onStart: async function ({ api, event }) {
