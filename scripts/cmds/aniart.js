@@ -12,7 +12,7 @@ module.exports = {
     version: "1.0.0",
     countDown: 10,
     description: "Generate anime art image from a prompt",
-    guide: "{pn} <prompt>",
+    guide: "{p}{n} <prompt>",
     category: "Ai"
   },
 
