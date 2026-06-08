@@ -12,7 +12,7 @@ module.exports = {
     shortDescription: "Get Random Modern Warships Meme",
     longDescription: "Send random Modern Warships meme image or video",
     guide: "{p}mwmeme",
-    category: "fun"
+    category: "Modern Warships"
   },
 
   onStart: async function ({ message, event, args, api }) {
