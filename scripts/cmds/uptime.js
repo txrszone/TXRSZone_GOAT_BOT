@@ -16,7 +16,7 @@ module.exports = {
     role: 0,
     credits: "•Omor TE•",
     description: "Shows bot uptime with text on custom secured image",
-    category: "info",
+    category: "system",
     guide: "{p}upt or {p}uptime"
   },
 
