@@ -15,8 +15,8 @@ module.exports = {
         longDescription: "",
         category: "image",
         guide: {
-			vi: "{pn} [@tag",
-			en: "{pn} [@tag]"
+			vi: "{p}{n} [@tag",
+			en: "{p}{n} [@tag]"
 		}
     },
 
