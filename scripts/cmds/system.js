@@ -88,7 +88,7 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━
 ⏱️ Response: ${Date.now() - timeStart}ms
 ━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`;
+⚡ MW Legends Bot | OWNER: OMOR TE`;
 
       // Random images array
       const images = [
