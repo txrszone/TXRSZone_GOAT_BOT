@@ -7,7 +7,7 @@ module.exports = {
 	config: {
 		name: "update",
 		version: "2.4.67",
-		author: "ST | Sheikh Tamim",
+		author: "MW Legends",
 		role: 2,
 		description: {
 			en: "Check for and install updates for the chatbot.",
@@ -15,8 +15,8 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			en: "   {pn}\n   {pn} refuse - Temporarily refuse update and allow bot to work normally for 2 hours",
-			vi: "   {pn}\n   {pn} refuse - Từ chối cập nhật tạm thời và cho phép bot hoạt động bình thường trong 2 giờ"
+			en: "   {p}{n}\n   {p}{n} refuse - Temporarily refuse update and allow bot to work normally for 2 hours",
+			vi: "   {p}{n}\n   {p}{n} refuse - Từ chối cập nhật tạm thời và cho phép bot hoạt động bình thường trong 2 giờ"
 		}
 	},
 
@@ -37,7 +37,7 @@ module.exports = {
 			mediaLoadError: "⚠️ | Không thể tải một số tệp media từ bản cập nhật"
 		},
 		en: {
-			noUpdates: "✅ | You are using the latest version of ST | BOT (v%1).",
+			noUpdates: "✅ | You are using the latest version of ⚡ MW Legends (v%1).",
 			refuseSuccess: "✅ | Update requirement temporarily disabled for 2 hours. Bot will work normally.",
 			noUpdateToRefuse: "⚠️ | No pending update to refuse.",
 			updatePrompt: "💫 | You are using version %1. There is a new version %2. Do you want to update the chatbot to the latest version?"
