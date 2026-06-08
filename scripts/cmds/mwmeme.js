@@ -25,6 +25,7 @@ module.exports = {
       "https://i.postimg.cc/6ppzKtgc/FB-IMG-1748855776596.jpg",
       "https://i.postimg.cc/L5M5k4jM/FB-IMG-1748861829020.jpg",
       "https://i.postimg.cc/zvtbhNK0/Messenger-creation-1710651866781333.jpg",
+      "https://i.postimg.cc/y6MWwLnz/FB-IMG-1778943706453.jpg",
       "https://i.postimg.cc/WznmfxrM/FB-IMG-1780483950849.jpg",
       "https://i.postimg.cc/VNrRLGyX/received-2866206723711571.jpg",
       "https://i.postimg.cc/44SxpBjB/Messenger-creation-958566923750210.jpg",
