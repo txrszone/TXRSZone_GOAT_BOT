@@ -4,7 +4,7 @@ module.exports = {
 		aliases: ["un","uns","unsef"],
     version: "1.1",
 		author: "NTKhang",
-		countDown: 5,
+		countDown: 2,
 		role: 1,
 		shortDescription: {
 			vi: "Gỡ tin nhắn của bot",
