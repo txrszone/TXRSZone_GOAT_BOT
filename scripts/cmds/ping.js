@@ -6,27 +6,65 @@ module.exports = {
     author: "Omor TE",
     countDown: 3,
     role: 0,
-    shortDescription: "Check bot ping",
-    longDescription: "Displays bot ping",
+    shortDescription: { en: "Check bot ping" },
+    longDescription: { en: "Shows bot latency and response time" },
     category: "info",
-    guide: "{p}{n}"
+    guide: { en: "{p}ping" }
   },
 
-  onStart: async function ({ message }) {
-    const start = Date.now();
+  onStart: async function ({ api, event, message }) {
+    const { threadID, messageID } = event;
     
-    // মেসেজ পাঠানো
-    await message.reply("🏓");
+    // প্রথম মেসেজ পাঠানো
+    const loadingMsg = await api.sendMessage("🏓 Calculating ping...", threadID);
     
-    const ping = Date.now() - start;
+    // পিং গণনা
+    const startTime = Date.now();
     
+    // সামান্য সময় অপেক্ষা (রিয়েলিস্টিক পিং দেখানোর জন্য)
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    const ping = Date.now() - startTime;
+    
+    // স্ট্যাটাস ডিটারমিন
     let emoji = "";
-    if (ping < 100) emoji = "🚀 Excellent";
-    else if (ping < 200) emoji = "💚 Good";
-    else if (ping < 300) emoji = "⚠️ Slow";
-    else emoji = "🐌 Very Slow";
+    let status = "";
+    let color = "";
     
-    // আলাদা মেসেজ হিসেবে পিং দেখানো
-    await message.reply(`🏓 **Pong!**\n━━━━━━━━━━━━━━\n📡 Ping: ${ping}ms\n⚡ Status: ${emoji}`);
+    if (ping < 100) { 
+      emoji = "🚀"; 
+      status = "Excellent";
+      color = "🟢";
+    } else if (ping < 200) { 
+      emoji = "💚"; 
+      status = "Good";
+      color = "🟡";
+    } else if (ping < 300) { 
+      emoji = "⚠️"; 
+      status = "Slow";
+      color = "🟠";
+    } else { 
+      emoji = "🐌"; 
+      status = "Very Slow";
+      color = "🔴";
+    }
+    
+    // এডিট করে রেজাল্ট দেখানো
+    const response = `╭────────────────╮
+│     🏓 PONG!        │
+╰────────────────╯
+
+📡 **Ping:** ${ping}ms ${emoji}
+⚡ **Status:** ${color} ${status}
+
+⏱️ **Response Time:** ${ping}ms
+━━━━━━━━━━━━━━━━━━━━
+🤖 Bot is ${ping < 200 ? "running smoothly ✅" : "experiencing delay ⚠️"}
+
+╭─────────────────╮
+│   ⚓ MW Legends ☸️   │
+╰─────────────────╯`;
+    
+    await api.editMessage(response, loadingMsg.messageID);
   }
 };
