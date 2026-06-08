@@ -17,20 +17,20 @@ module.exports = {
 		},
 		category: "box chat",
 		guide: {
-			vi: '   {pn} set <nickname>: dùng để cài đặt cấu hình để tự đổi biệt danh, với các shortcut có sẵn:'
+			vi: '   {p}{n} set <nickname>: dùng để cài đặt cấu hình để tự đổi biệt danh, với các shortcut có sẵn:'
 				+ '\n   + {userName}: tên thành viên vào nhóm'
 				+ '\n   + {userID}: id thành viên'
 				+ '\n   Ví dụ:'
-				+ '\n    {pn} set {userName} 🚀'
-				+ '\n\n   {pn} [on | off]: dùng để bật/tắt tính năng này'
-				+ '\n\n   {pn} [view | info]: hiển thị cấu hình hiện tại',
-			en: '   {pn} set <nickname>: use to set config to auto change nickname, with some shortcuts:'
+				+ '\n    {p}{n} set {userName} 🚀'
+				+ '\n\n   {p}{n} [on | off]: dùng để bật/tắt tính năng này'
+				+ '\n\n   {p}{n} [view | info]: hiển thị cấu hình hiện tại',
+			en: '   {p}{n} set <nickname>: use to set config to auto change nickname, with some shortcuts:'
 				+ '\n   + {userName}: name of new member'
 				+ '\n   + {userID}: member id'
 				+ '\n   Example:'
-				+ '\n    {pn} set {userName} 🚀'
-				+ '\n\n   {pn} [on | off]: use to turn on/off this feature'
-				+ '\n\n   {pn} [view | info]: show current config'
+				+ '\n    {p}{n} set {userName} 🚀'
+				+ '\n\n   {p}{n} [on | off]: use to turn on/off this feature'
+				+ '\n\n   {p}{n} [view | info]: show current config'
 		}
 	},
 
