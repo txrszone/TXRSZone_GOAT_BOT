@@ -51,7 +51,7 @@ module.exports = {
     
     // এডিট করে রেজাল্ট দেখানো
     const response = `╭────────────────╮
-│     🏓 PONG!        │
+│            🏓 PONG!               │
 ╰────────────────╯
 
 📡 **Ping:** ${ping}ms ${emoji}
@@ -62,7 +62,7 @@ module.exports = {
 🤖 Bot is ${ping < 200 ? "running smoothly ✅" : "experiencing delay ⚠️"}
 
 ╭─────────────────╮
-│   ⚓ MW Legends ☸️   │
+│     ⚓ MW Legends ☸️        │
 ╰─────────────────╯`;
     
     await api.editMessage(response, loadingMsg.messageID);
