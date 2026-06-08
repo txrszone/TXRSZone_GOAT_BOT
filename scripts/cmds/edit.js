@@ -13,7 +13,7 @@ module.exports = {
     shortDescription: "Edit image using NanoBanana API",
     category: "AI",
     guide: {
-      en: "{pn} <text> (reply to an image)",
+      en: "{p}{n} <text> (reply to an image)",
     },
   },
 
