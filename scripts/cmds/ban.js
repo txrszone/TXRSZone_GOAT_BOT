@@ -14,14 +14,14 @@ module.exports = {
 		},
 		category: "box chat",
 		guide: {
-			vi: "   {pn} [@tag|uid|link fb|reply] [<lý do cấm>|để trống nếu không có lý do]: Cấm thành viên khỏi box chat"
-				+ "\n   {pn} check: Kiểm tra thành viên bị cấm và kick thành viên đó ra khỏi box chat"
-				+ "\n   {pn} unban [@tag|uid|link fb|reply]: Bỏ cấm thành viên khỏi box chat"
-				+ "\n   {pn} list: Xem danh sách thành viên bị cấm",
+			vi: "   {p}{n} [@tag|uid|link fb|reply] [<lý do cấm>|để trống nếu không có lý do]: Cấm thành viên khỏi box chat"
+				+ "\n   {p}{n} check: Kiểm tra thành viên bị cấm và kick thành viên đó ra khỏi box chat"
+				+ "\n   {p}{n} unban [@tag|uid|link fb|reply]: Bỏ cấm thành viên khỏi box chat"
+				+ "\n   {p}{n} list: Xem danh sách thành viên bị cấm",
 			en: "   {pn} [@tag|uid|fb link|reply] [<reason>|leave blank if no reason]: Ban user from box chat"
-				+ "\n   {pn} check: Check banned members and kick them out of the box chat"
-				+ "\n   {pn} unban [@tag|uid|fb link|reply]: Unban user from box chat"
-				+ "\n   {pn} list: View the list of banned members"
+				+ "\n   {p}{n} check: Check banned members and kick them out of the box chat"
+				+ "\n   {p}{n} unban [@tag|uid|fb link|reply]: Unban user from box chat"
+				+ "\n   {p}{n} list: View the list of banned members"
 		}
 	},
 
