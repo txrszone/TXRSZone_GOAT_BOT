@@ -6,7 +6,7 @@ module.exports = {
 		name: "botlog",
 		aliases: ["blogconfig"],
 		version: "2.3.5",
-		author: "ST | Sheikh Tamim",
+		author: "Omor TE",
 		countDown: 5,
 		role: 2,
 		description: {
@@ -16,15 +16,15 @@ module.exports = {
 		category: "owner",
 		guide: {
 			en: "   {pn} on/off: Enable/disable bot logging"
-				+ "\n   {pn} thread on/off: Enable/disable thread-based logging"
-				+ "\n   {pn} thread add <threadID>: Add thread to log list"
-				+ "\n   {pn} thread remove <threadID>: Remove thread from log list"
-				+ "\n   {pn} thread list: Show current thread list"
-				+ "\n   {pn} admin on/off: Enable/disable admin logging"
-				+ "\n   {pn} silent on/off: Enable/disable silent mode for disabled threads"
-				+ "\n   {pn} added on/off: Enable/disable bot added event logging"
-				+ "\n   {pn} kicked on/off: Enable/disable bot kicked event logging"
-				+ "\n   {pn} info: Show current configuration"
+				+ "\n   {p}{n} thread on/off: Enable/disable thread-based logging"
+				+ "\n   {p}{n} thread add <threadID>: Add thread to log list"
+				+ "\n   {p}{n} thread remove <threadID>: Remove thread from log list"
+				+ "\n   {p}{n} thread list: Show current thread list"
+				+ "\n   {p}{n} admin on/off: Enable/disable admin logging"
+				+ "\n   {p}{n} silent on/off: Enable/disable silent mode for disabled threads"
+				+ "\n   {p}{n} added on/off: Enable/disable bot added event logging"
+				+ "\n   {p}{n} kicked on/off: Enable/disable bot kicked event logging"
+				+ "\n   {p}{n} info: Show current configuration"
 		}
 	},
 
