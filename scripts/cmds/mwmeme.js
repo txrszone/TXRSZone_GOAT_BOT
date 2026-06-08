@@ -93,6 +93,9 @@ module.exports = {
 
     const videoLinks = [
       "https://github.com/user-attachments/assets/3ef93d9d-ccde-4203-aba0-884416cb5711",
+      "https://github.com/user-attachments/assets/a438480b-a456-4719-929a-8221c4b2d68b",
+      "https://github.com/user-attachments/assets/a4efad6c-500e-484f-a79e-a4ee4dad08a9",
+      "https://github.com/user-attachments/assets/bcec2c49-3ed9-4f11-87ca-363f4f63fd98",
       "https://github.com/user-attachments/assets/a7ce7c9c-c672-45b4-8f01-93bd91e6531e",
       "https://github.com/user-attachments/assets/3d2e6202-8a69-4617-88ba-a7251c238ab2",
       "https://github.com/user-attachments/assets/b8f8a86f-74e3-4931-9073-a6ea110e79d6",
