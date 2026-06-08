@@ -5,14 +5,14 @@ module.exports = {
     name: "profile",
     aliases: ["pp", "pfp"],
     version: "1.2",
-    author: "NIB (fixed by Mahbub Ullash)",
+    author: "Omor TE",
     countDown: 5,
     role: 0,
     shortDescription: "Facebook profile picture",
     longDescription: "See anyone's Facebook profile picture (self/reply/mention/link).",
     category: "image",
     guide: {
-      en: "{pn} [reply/@mention/link]"
+      en: "{p}{n} [reply/@mention/link]"
     }
   },
 
