@@ -11,12 +11,12 @@ module.exports = {
 		},
 		category: "box chat",
 		guide: {
-			vi: "   {pn}: dùng để xem số lượng tin nhắn của bạn"
-				+ "\n   {pn} @tag: dùng để xem số lượng tin nhắn của những người được tag"
-				+ "\n   {pn} all: dùng để xem số lượng tin nhắn của tất cả thành viên",
-			en: "   {pn}: used to view the number of messages of you"
-				+ "\n   {pn} @tag: used to view the number of messages of those tagged"
-				+ "\n   {pn} all: used to view the number of messages of all members"
+			vi: "   {p}{n}: dùng để xem số lượng tin nhắn của bạn"
+				+ "\n   {p}{n} @tag: dùng để xem số lượng tin nhắn của những người được tag"
+				+ "\n   {p}{n} all: dùng để xem số lượng tin nhắn của tất cả thành viên",
+			en: "   {p}{n}: used to view the number of messages of you"
+				+ "\n   {p}{n} @tag: used to view the number of messages of those tagged"
+				+ "\n   {p}{n} all: used to view the number of messages of all members"
 		}
 	},
 
