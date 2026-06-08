@@ -100,6 +100,8 @@ module.exports = {
       "https://github.com/user-attachments/assets/70a2be53-5b7b-47b8-9838-bcbcee1f9e2b",
       "https://github.com/user-attachments/assets/5b02c324-e13e-41b2-84f8-566eb31f4628",
       "https://github.com/user-attachments/assets/494ea0be-b48e-4227-879a-530d13e92f7f",
+      "https://github.com/user-attachments/assets/f0dec463-7e49-4a67-abaf-e0b30ab4f5e8",
+      "https://github.com/user-attachments/assets/72a45522-3eb9-4d07-8ffa-3e476fcc63a1",
       "https://github.com/user-attachments/assets/a20d1b34-9650-43db-a747-d517b31b581a",
       "https://github.com/user-attachments/assets/20f45d08-1cba-4813-b847-efad05c644f5",
       "https://github.com/user-attachments/assets/c79182a6-08a2-4071-ba5f-b72182778d83",
