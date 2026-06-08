@@ -12,7 +12,7 @@ module.exports = {
     shortDescription: "",
     longDescription: "Convert media from a link (supports jpeg, jpg, png, mp4, gif, wav)",
     category: "media",
-    guide: "{p}{n}Convert [link]"
+    guide: "{p}{n} [link]"
   },
   onStart: async function ({ api, event, args }) {
     const url = args[0];
