@@ -12,7 +12,7 @@ module.exports = {
     shortDescription: "Mix emoji",
     longDescription: "Mix two emojis together to create a new emoji",
     guide: "{p}mixemoji 😊 😢",
-    category: "image"
+    category: "fun"
   },
 
   onStart: async function ({ message, event, args, api }) {
