@@ -13,10 +13,10 @@ module.exports = {
 		},
 		category: "config",
 		guide: {
-			en: "   {pn} - View current main thread ID"
-				+ "\n   {pn} add - Set current thread as main thread ID"
-				+ "\n   {pn} add <threadID> - Set specific thread as main thread ID"
-				+ "\n   {pn} remove - Remove main thread ID configuration"
+			en: "   {p}{n} - View current main thread ID"
+				+ "\n   {p}{n} add - Set current thread as main thread ID"
+				+ "\n   {p}{n} add <threadID> - Set specific thread as main thread ID"
+				+ "\n   {p}{n} remove - Remove main thread ID configuration"
 		}
 	},
 
