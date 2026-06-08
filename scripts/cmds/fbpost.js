@@ -17,7 +17,7 @@ module.exports = {
     },
     category: "Social",
     guide: {
-      en: "{pn}: post"
+      en: "{p}{n}: post"
     }
   },
 
