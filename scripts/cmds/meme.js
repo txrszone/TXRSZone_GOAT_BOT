@@ -31,6 +31,12 @@ module.exports = {
       "https://i.postimg.cc/xjHDxQCQ/received-1228619902538925.jpg",
       "https://i.postimg.cc/zXZ58BML/FB-IMG-1780515532989.jpg",
       "https://i.postimg.cc/MGPqSY2H/FB-IMG-1780579839034.jpg",
+      "https://i.postimg.cc/HxD3jqgd/FB-IMG-1780327233991.jpg",
+      "https://i.postimg.cc/fb0Bzw1K/FB-IMG-1780459789419.jpg",
+      "https://i.postimg.cc/8zYZgFXc/FB-IMG-1780463496475.jpg",
+      "https://i.postimg.cc/L6NyvQz1/received-1526853475599627.jpg",
+      "https://i.postimg.cc/qBcD6vqn/Messenger-creation-2110929899824947.jpg",
+      
     ];
 
     // ✅ ভিডিও লিংক (আপনার দেওয়া সব ভিডিও)
