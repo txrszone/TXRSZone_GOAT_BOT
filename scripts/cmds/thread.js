@@ -13,26 +13,26 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			vi: "   {pn} [find | -f | search | -s] <tên cần tìm>: tìm kiếm nhóm chat trong dữ liệu bot bằng tên"
-				+ "\n   {pn} [find | -f | search | -s] [-j | joined] <tên cần tìm>: tìm kiếm nhóm chat trong dữ liệu mà bot còn tham gia bằng tên"
-				+ "\n   {pn} [ban | -b] [<tid> | để trống] <reason>: dùng để cấm nhóm mang id <tid> hoặc nhóm hiện tại sử dụng bot"
+			vi: "   {p}{n} [find | -f | search | -s] <tên cần tìm>: tìm kiếm nhóm chat trong dữ liệu bot bằng tên"
+				+ "\n   {p}{n} [find | -f | search | -s] [-j | joined] <tên cần tìm>: tìm kiếm nhóm chat trong dữ liệu mà bot còn tham gia bằng tên"
+				+ "\n   {p}{n} [ban | -b] [<tid> | để trống] <reason>: dùng để cấm nhóm mang id <tid> hoặc nhóm hiện tại sử dụng bot"
 				+ "\n   Ví dụ:"
-				+ "\n    {pn} ban 3950898668362484 spam bot"
-				+ "\n    {pn} ban spam quá nhiều"
-				+ "\n\n   {pn} unban [<tid> | để trống] để bỏ cấm nhóm mang id <tid> hoặc nhóm hiện tại"
+				+ "\n    {p}{n} ban 3950898668362484 spam bot"
+				+ "\n    {p}{n} ban spam quá nhiều"
+				+ "\n\n   {p}{n} unban [<tid> | để trống] để bỏ cấm nhóm mang id <tid> hoặc nhóm hiện tại"
 				+ "\n   Ví dụ:"
-				+ "\n    {pn} unban 3950898668362484"
-				+ "\n    {pn} unban",
-			en: "   {pn} [find | -f | search | -s] <name to find>: search group chat in bot data by name"
-				+ "\n   {pn} [find | -f | search | -s] [-j | joined] <name to find>: search group chat in bot data that bot still joined by name"
-				+ "\n   {pn} [ban | -b] [<tid> | leave blank] <reason>: use to ban group with id <tid> or current group using bot"
+				+ "\n    {p}{n} unban 3950898668362484"
+				+ "\n    {p}{n} unban",
+			en: "   {p}{n} [find | -f | search | -s] <name to find>: search group chat in bot data by name"
+				+ "\n   {p}{n} [find | -f | search | -s] [-j | joined] <name to find>: search group chat in bot data that bot still joined by name"
+				+ "\n   {p}{n} [ban | -b] [<tid> | leave blank] <reason>: use to ban group with id <tid> or current group using bot"
 				+ "\n   Example:"
-				+ "\n    {pn} ban 3950898668362484 spam bot"
-				+ "\n    {pn} ban spam too much"
-				+ "\n\n   {pn} unban [<tid> | leave blank] to unban group with id <tid> or current group"
+				+ "\n    {p}{n} ban 3950898668362484 spam bot"
+				+ "\n    {p}{n} ban spam too much"
+				+ "\n\n   {p}{n} unban [<tid> | leave blank] to unban group with id <tid> or current group"
 				+ "\n   Example:"
-				+ "\n    {pn} unban 3950898668362484"
-				+ "\n    {pn} unban"
+				+ "\n    {p}{n} unban 3950898668362484"
+				+ "\n    {p}{n} unban"
 		}
 	},
 
