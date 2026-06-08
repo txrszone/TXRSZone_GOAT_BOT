@@ -2,7 +2,7 @@ module.exports = {
   config: {
     name: "pending",
     version: "1.0",
-    author: "S A I M",
+    author: "OMOR TE",
     countDown: 5,
     role: 2,
     shortDescription: {
@@ -64,13 +64,13 @@ module.exports = {
 ┃ ⏰ 𝙹𝚘𝚒𝚗𝚎𝚍: ${time}
 ┃
 ╠══✦〘 𝙾𝚆𝙽𝙴𝚁 𝙸𝙽𝙵𝙾 〙✦══╣
-┃ 🧑‍💻 𝙽𝚊𝚖𝚎: MAHBUB ULLASH 
-┃ 🌐 𝙵𝙰𝙲𝙴𝙱𝙾𝙾𝙺: Ullash Adnan 󰢏
+┃ 🧑‍💻 𝙽𝚊𝚖𝚎: ★ Omor TE ★ 
+┃ 🌐 𝙵𝙰𝙲𝙴𝙱𝙾𝙾𝙺: Omor TE
 ┃ 🗺️ 𝙲𝚘𝚞𝚗𝚝𝚛𝚢: Bangladesh
 ┃ ✅ 𝚂𝚝𝚊𝚝𝚞𝚜: Active
-┃ 📞 𝚆𝚑𝚊𝚝𝚜𝙰𝚙𝚙: 01631813286
-┃ ✉️ 𝙴𝚖𝚊𝚒𝚕: ullash264@gmail.com
-┃ 🧵 𝚃𝚎𝚕𝚎𝚐𝚛𝚊𝚖: https://t.me/The_morning_star71
+┃ 📞 𝚆𝚑𝚊𝚝𝚜𝙰𝚙𝚙: ....
+┃ ✉️ 𝙴𝚖𝚊𝚒𝚕: ....
+┃ 🧵 𝚃𝚎𝚕𝚎𝚐𝚛𝚊𝚖: .....
 ┃ 💡 𝚃𝚒𝚙: Type /help to see all commands!
 ╚════════════════════╝`, targetThread);
 
