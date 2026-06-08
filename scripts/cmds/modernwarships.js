@@ -31,6 +31,8 @@ module.exports = {
       "https://i.postimg.cc/zGdsyLYq/1752831883518.jpg",
       "https://i.postimg.cc/X7GCkpr5/Image-Download-02-06-2025-01-04-37.jpg",
       "https://i.postimg.cc/Kv69WXZV/1755869112643.jpg",
+      "https://i.postimg.cc/15KPJBdR/received-1462720048483788.jpg",
+      "https://i.postimg.cc/pVzPnRYW/received-1307589414036979.jpg",
       "https://i.postimg.cc/4NQZf1mW/IMG-20250825-WA0000.jpg",
       "https://i.postimg.cc/pr9pC6Lv/Image-Download-02-06-2025-01-05-03.jpg",
       "https://i.postimg.cc/nr6MPGXD/Image-Download-02-06-2025-01-05-14.jpg",
