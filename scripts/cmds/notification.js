@@ -24,9 +24,9 @@ module.exports = {
       return message.reply(`❌ Usage: notification <message>\nExample: notification Hello everyone!`);
     }
 
-    const noticeText = `NOTIFICATION FROM BOT ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `Notification from bot admin ‼️\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // 📁 Temporary files for attachments
+    // 📁 Temporary files for attachments (ছবি, ভিডিও, ফাইল সব)
     const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
 
@@ -37,7 +37,19 @@ module.exports = {
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
         for (let i = 0; i < streams.length; i++) {
-          const ext = allAttachments[i]?.type === "photo" ? "jpg" : "png";
+          const attach = allAttachments[i];
+          let ext = "file";
+          
+          // ফাইলের এক্সটেনশন নির্ধারণ
+          if (attach.type === "photo") ext = "jpg";
+          else if (attach.type === "video") ext = "mp4";
+          else if (attach.type === "audio") ext = "mp3";
+          else if (attach.type === "file") {
+            const fileName = attach.filename || attach.name || `file_${i}`;
+            const fileExt = fileName.split('.').pop();
+            ext = fileExt || "file";
+          }
+          
           const filePath = path.join(cacheDir, `notification_${Date.now()}_${i}.${ext}`);
           const writer = fs.createWriteStream(filePath);
           await new Promise((resolve, reject) => {
@@ -45,7 +57,7 @@ module.exports = {
             writer.on("finish", resolve);
             writer.on("error", reject);
           });
-          tempFiles.push(filePath);
+          tempFiles.push({ path: filePath, type: attach.type, name: attach.filename || attach.name });
         }
       } catch (err) {
         console.error("Attachment error:", err);
@@ -100,8 +112,9 @@ module.exports = {
 
       try {
         const formSend = { body: noticeText };
+        
         if (tempFiles.length) {
-          const streams = tempFiles.map(file => fs.createReadStream(file));
+          const streams = tempFiles.map(file => fs.createReadStream(file.path));
           formSend.attachment = streams;
         }
 
@@ -126,7 +139,7 @@ module.exports = {
 
     // 🧹 Cleanup temp files
     for (const file of tempFiles) {
-      try { fs.unlinkSync(file); } catch(e) {}
+      try { fs.unlinkSync(file.path); } catch(e) {}
     }
 
     let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
