@@ -1,13 +1,12 @@
 const { getStreamsFromAttachment } = global.utils;
 const fs = require("fs-extra");
 const path = require("path");
-const axios = require("axios"); // 🔥 URL ডাউনলোডের জন্য না, ফাইল পড়ার জন্য
 
 module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "3.0.0",
+    version: "4.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -25,9 +24,9 @@ module.exports = {
       return message.reply(`❌ Usage: notice <message>\nExample: notice Hello everyone!`);
     }
 
-    const noticeText = `NOTICE FROM BOT ADMIN 🔉\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
+    const noticeText = `Notice from bot admin ‼️\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // 📁 অ্যাটাচমেন্টগুলো ফাইল হিসেবে সেভ করুন (একবার)
+    // 📁 Temporary files for attachments (ছবি, ভিডিও, ফাইল সব)
     const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
 
@@ -38,8 +37,20 @@ module.exports = {
         if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
         for (let i = 0; i < streams.length; i++) {
-          // ফাইল সেভ করুন .jpg বা .png এক্সটেনশন সহ
-          const ext = allAttachments[i]?.type === "photo" ? "jpg" : "png";
+          const attach = allAttachments[i];
+          let ext = "file";
+          
+          // ফাইলের এক্সটেনশন নির্ধারণ
+          if (attach.type === "photo") ext = "jpg";
+          else if (attach.type === "video") ext = "mp4";
+          else if (attach.type === "audio") ext = "mp3";
+          else if (attach.type === "file") {
+            // ফাইলের নাম থেকে এক্সটেনশন বের করা
+            const fileName = attach.filename || attach.name || `file_${i}`;
+            const fileExt = fileName.split('.').pop();
+            ext = fileExt || "file";
+          }
+          
           const filePath = path.join(cacheDir, `notice_${Date.now()}_${i}.${ext}`);
           const writer = fs.createWriteStream(filePath);
           await new Promise((resolve, reject) => {
@@ -47,7 +58,7 @@ module.exports = {
             writer.on("finish", resolve);
             writer.on("error", reject);
           });
-          tempFiles.push(filePath);
+          tempFiles.push({ path: filePath, type: attach.type, name: attach.filename || attach.name });
         }
       } catch (err) {
         console.error("Attachment error:", err);
@@ -103,9 +114,8 @@ module.exports = {
       try {
         const formSend = { body: noticeText };
         
-        // 🔥 সেভ করা ফাইল থেকে স্ট্রিম তৈরি করুন (বারবার ব্যবহারের জন্য)
         if (tempFiles.length) {
-          const streams = tempFiles.map(file => fs.createReadStream(file));
+          const streams = tempFiles.map(file => fs.createReadStream(file.path));
           formSend.attachment = streams;
         }
 
@@ -130,7 +140,7 @@ module.exports = {
 
     // 🧹 Cleanup temp files
     for (const file of tempFiles) {
-      try { fs.unlinkSync(file); } catch(e) {}
+      try { fs.unlinkSync(file.path); } catch(e) {}
     }
 
     let report = `✅ NOTICE SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
