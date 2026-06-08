@@ -45,10 +45,10 @@ module.exports = {
     ];
 
     // ✅ ভিডিও লিংক (আপনার দেওয়া সব ভিডিও)
-    const localVideoLinks = [
-      "https://github.com/user-attachments/assets/42a209cd-319e-4c3d-a544-a45c887317c9",
-      "https://github.com/user-attachments/assets/17ae0a26-6f97-483a-9628-295c2bdede3b",
-      "https://github.com/user-attachments/assets/7ebb80ab-69bf-40cf-aaca-ed4371dcc908",
+    const localVideoLinks = [ 
+"https://github.com/user-attachments/assets/42a209cd-319e-4c3d-a544-a45c887317c9",
+  "https://github.com/user-attachments/assets/17ae0a26-6f97-483a-9628-295c2bdede3b",
+    "https://github.com/user-attachments/assets/7ebb80ab-69bf-40cf-aaca-ed4371dcc908",
       "https://github.com/user-attachments/assets/2c0822d4-c7ec-412c-8f31-ddf03c26bbcb",
       "https://github.com/user-attachments/assets/51b69096-f407-4155-a3fb-82fbe02eb98d",
       "https://github.com/user-attachments/assets/bfd06a2d-0f36-4e8c-8ab5-f0457fb5bdaf",
@@ -70,7 +70,27 @@ module.exports = {
       "https://github.com/user-attachments/assets/67d56817-cdd1-4bde-88c9-64eb13343906",
       "https://github.com/user-attachments/assets/8a2feb83-7430-40b5-b2d9-73e2d473367c",
       "https://github.com/user-attachments/assets/97f6faa3-a7c9-4deb-beb9-aef01f19e5a1",
-      "https://github.com/user-attachments/assets/86378c39-eed9-499f-81da-197820c96795"
+      "https://github.com/user-attachments/assets/86378c39-eed9-499f-81da-197820c96795",
+      "https://github.com/user-attachments/assets/e57d483d-0973-4e60-873c-82b5a73aafcf",
+    "https://github.com/user-attachments/assets/5f75f255-d259-4aab-ab88-02523ecd2400",
+  "https://github.com/user-attachments/assets/c30d96a1-e024-4be7-a3e3-24c1395bc1bc",
+"https://github.com/user-attachments/assets/a859e9c4-0820-403c-bd47-f962cdee6ec3",
+"https://github.com/user-attachments/assets/602c9f34-d4f7-4234-af0c-a9062c2bac93",
+"https://github.com/user-attachments/assets/46a5d545-4db9-47d9-aef8-5385b97c2df7",
+"https://github.com/user-attachments/assets/a8cd7ead-2f13-4d5b-b1e0-456593bde764",
+"https://github.com/user-attachments/assets/a8e206be-4180-4b79-bf64-977d364029b1",
+"https://github.com/user-attachments/assets/7ee2a7a9-d846-44e0-ac39-bd5890f96b11",
+"https://github.com/user-attachments/assets/281a1409-78cb-4db3-b194-a1449f648c7d",
+"https://github.com/user-attachments/assets/7bf8ad0a-1aea-43a4-8e66-cfa7ccb5ff9d",
+"https://github.com/user-attachments/assets/13f0fb0e-771b-47ee-9da9-b2c8e3a178a2",
+"https://github.com/user-attachments/assets/b7a19c6d-9ad2-4bff-916e-0fe3a4fce589",
+"https://github.com/user-attachments/assets/1150f586-e9ce-4c73-a520-cca7a6c7ef26",
+"https://github.com/user-attachments/assets/65655530-8f0a-4e7e-afd8-9155b24d91bf",
+"https://github.com/user-attachments/assets/5137ae4f-5a97-4e2c-b5f7-4ee03bd429b3",
+"https://github.com/user-attachments/assets/3ec3188a-8137-4fa1-96c8-d51d16845194",
+"https://github.com/user-attachments/assets/368afb40-46c5-4e99-b0e5-23984e0047d8",
+"https://github.com/user-attachments/assets/bbb60718-6867-416d-addb-9957e6ea1215",
+"https://github.com/user-attachments/assets/b990e704-30dd-4772-9ca4-b199b3766f39",
     ];
 
     // ✅ র‍্যান্ডমলি সোর্স সিলেক্ট (33% API, 33% লোকাল ইমেজ, 34% লোকাল ভিডিও)
