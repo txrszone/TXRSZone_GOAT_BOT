@@ -14,16 +14,16 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			vi: "   {pn} [<image url> | <phản hồi tin nhắn có ảnh>] [<caption> | để trống] [<expirationAfter (seconds)> | để trống]"
+			vi: "   {p}{n} [<image url> | <phản hồi tin nhắn có ảnh>] [<caption> | để trống] [<expirationAfter (seconds)> | để trống]"
 				+ "\nPhản hồi 1 tin nhắn có chứa ảnh với nội dung: {pn}"
 				+ "\nGửi kèm 1 tin nhắn có chứa ảnh với nội dung: {pn}"
 				+ "\n\nGhi chú:"
 				+ "\n  + caption: caption sẽ đăng kèm khi đổi avatar"
 				+ "\n  + expirationAfter: đặt chế độ ảnh đại diện tạm thời (hết hạn sau expirationAfter(seconds))"
 				+ "\nVí dụ:"
-				+ "\n   {pn} https://example.com/image.jpg: (đổi ảnh đại diện không caption, không hết hạn)"
-				+ "\n   {pn} https://example.com/image.jpg Hello: (đổi ảnh đại diện với caption là \"Hello\", không hết hạn)"
-				+ "\n   {pn} https://example.com/image.jpg Hello 3600: (đổi ảnh đại diện với caption là \"Hello\", đặt tạm thời 1h)"
+				+ "\n   {p}{n} https://example.com/image.jpg: (đổi ảnh đại diện không caption, không hết hạn)"
+				+ "\n   {p}{n} https://example.com/image.jpg Hello: (đổi ảnh đại diện với caption là \"Hello\", không hết hạn)"
+				+ "\n   {p}{n} https://example.com/image.jpg Hello 3600: (đổi ảnh đại diện với caption là \"Hello\", đặt tạm thời 1h)"
 		}
 	},
 
