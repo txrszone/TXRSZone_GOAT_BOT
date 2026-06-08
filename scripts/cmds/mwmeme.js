@@ -31,6 +31,7 @@ module.exports = {
       "https://i.postimg.cc/VNrRLGyX/received-2866206723711571.jpg",
       "https://i.postimg.cc/44SxpBjB/Messenger-creation-958566923750210.jpg",
       "https://i.postimg.cc/bJn3L63L/IMG-20260606-180640-757.jpg",
+      "https://i.postimg.cc/fLY1kTnT/received-3214523385554646.jpg",
       "https://i.postimg.cc/nLCd9VmD/Screenshot-20260605-175611-Telegram.jpg",
       "https://i.postimg.cc/76JJMQcS/FB-IMG-1748861812682.jpg",
       "https://i.postimg.cc/BnZ80ySR/Screenshot-2024-05-30-21-39-36-899-com-Shooter-Modern-Warships.jpg",
