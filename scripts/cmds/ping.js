@@ -15,7 +15,9 @@ module.exports = {
   onStart: async function ({ message }) {
     const start = Date.now();
     
-    // পিং ক্যালকুলেট করার পর সরাসরি মেসেজ
+    // ✅ একটি API কল বা মেসেজ সেন্ড করার চেষ্টা
+    const msg = await message.reply("🏓");
+    
     const ping = Date.now() - start;
     
     let emoji = "";
@@ -24,6 +26,6 @@ module.exports = {
     else if (ping < 300) emoji = "⚠️ Slow";
     else emoji = "🐌 Very Slow";
     
-    await message.reply(`🏓 **Pong!**\n━━━━━━━━━━━━━━\n📡 Ping: ${ping}ms\n⚡ Status: ${emoji}`);
+    await msg.edit(`🏓 **Pong!**\n━━━━━━━━━━━━━━\n📡 Ping: ${ping}ms\n⚡ Status: ${emoji}`);
   }
 };
