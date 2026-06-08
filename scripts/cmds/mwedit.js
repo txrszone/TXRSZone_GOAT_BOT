@@ -32,6 +32,7 @@ module.exports = {
       "https://github.com/user-attachments/assets/de108605-eca0-4d52-9126-b2cb2eafc29a",
       "https://github.com/user-attachments/assets/4748c9cd-907d-4d82-ad60-32be1ad5be13",
       "https://github.com/user-attachments/assets/f2d33c8c-e202-4a9e-8986-7eccaf423e22",
+      "https://github.com/user-attachments/assets/65366358-076a-4ca3-9cc0-cae768bd2a6e",
       "https://github.com/user-attachments/assets/ea8d535d-871c-46dd-b4e6-9e60f1217c8e",
       "https://github.com/user-attachments/assets/2ada5e50-ef71-4091-a3a3-78b41fe4b03f",
       "https://github.com/user-attachments/assets/8fd8bd35-6014-41d0-b2d6-33682e68719c",
