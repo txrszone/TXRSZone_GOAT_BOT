@@ -1,7 +1,7 @@
 const fs = require("fs");
 const axios = require("axios");
 
-const destinationTID = "100071151280531"; // এখানে তোমার নির্দিষ্ট গ্রুপের Thread ID বসাও
+const destinationTID = "5871842136277019"; // এখানে তোমার নির্দিষ্ট গ্রুপের Thread ID বসাও
 
 module.exports = {
   config: {
