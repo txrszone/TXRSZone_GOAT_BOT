@@ -1,15 +1,15 @@
 const fs = require("fs");
 const axios = require("axios");
 
-const destinationTID = "9322675214482986"; // এখানে তোমার নির্দিষ্ট গ্রুপের Thread ID বসাও
+const destinationTID = "100071151280531"; // এখানে তোমার নির্দিষ্ট গ্রুপের Thread ID বসাও
 
 module.exports = {
   config: {
     name: "resend",
     version: "1.2",
-    author: "yamada | loufi | kshitiz | modified by Ullash",
+    author: "Omor TE",
     countDown: 5,
-    role: 0, // ইচ্ছা করলে 2 করে শুধু admin এর জন্য রাখতে পারো
+    role: 2, // ইচ্ছা করলে 2 করে শুধু admin এর জন্য
     shortDescription: "unsend ট্র্যাক করে গ্রুপে পাঠায়",
     longDescription: "কেউ মেসেজ unsend করলে, তার লেখা + attachment নির্দিষ্ট গ্রুপে পাঠিয়ে দেয়",
     category: "group",
