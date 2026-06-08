@@ -12,7 +12,7 @@ module.exports = {
 		description: "Manage thread approvals - list, approve, reject, or cancel threads",
 		category: "Admin",
 		guide: {
-			en: "{pn} - Show pending threads with interactive menu\n{pn} list - Show all threads with approval status\n{pn} approved - Show only approved threads\n{pn} pending - Show only pending threads\n{pn} p <page> - Navigate pages\n{pn} a <numbers> - Approve specific threads\n{pn} r <numbers> - Reject specific threads\n{pn} c <numbers> - Cancel approval (move to pending)\n{pn} auto - Auto approve all pending threads"
+			en: "{p}{n} - Show pending threads with interactive menu\n{p}{n} list - Show all threads with approval status\n{p}{n} approved - Show only approved threads\n{p}{n} pending - Show only pending threads\n{pn} p <page> - Navigate pages\n{p}{n} a <numbers> - Approve specific threads\n{p}{n} r <numbers> - Reject specific threads\n{p}{n} c <numbers> - Cancel approval (move to pending)\n{p}{n} auto - Auto approve all pending threads"
 		}
 	},
 
