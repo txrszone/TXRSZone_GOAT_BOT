@@ -19,7 +19,7 @@ module.exports.config = {
   description: "Generate Facebook fake chat",
   category: "Tools",
   guide: {
-    en: "{prefix}fakechat @mention text U1/U2/U3\nExample:\n!fakechat @John Doe hello world U1"
+    en: "{p}{n}fakechat @mention text U1/U2/U3\nExample:\n{p}{n} @John Doe hello world U1"
   },
   coolDowns: 5,
 };
