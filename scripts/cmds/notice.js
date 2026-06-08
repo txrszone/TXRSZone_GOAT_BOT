@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "3.0.0",
+    version: "4.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -26,7 +26,7 @@ module.exports = {
 
     const noticeText = `Notice from bot admin ‼️\n(Don't reply to this message)\n━━━━━━━━━━━━━━━━━━━━\n\n\n${args.join(" ")}`;
 
-    // 📁 Temporary files for attachments (ছবি, ভিডিও, ফাইল সব)
+    // 📁 Temporary files for attachments (GIF, Video, Image, Audio, File সব)
     const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
 
@@ -40,12 +40,19 @@ module.exports = {
           const attach = allAttachments[i];
           let ext = "file";
           
-          // ফাইলের এক্সটেনশন নির্ধারণ
-          if (attach.type === "photo") ext = "jpg";
+          // ফাইলের এক্সটেনশন নির্ধারণ (GIF সাপোর্ট সহ)
+          if (attach.type === "photo") {
+            // GIF চেক করা
+            if (attach.url && attach.url.toLowerCase().includes('.gif')) {
+              ext = "gif";
+            } else {
+              ext = "jpg";
+            }
+          }
           else if (attach.type === "video") ext = "mp4";
           else if (attach.type === "audio") ext = "mp3";
+          else if (attach.type === "animated_image") ext = "gif";
           else if (attach.type === "file") {
-            // ফাইলের নাম থেকে এক্সটেনশন বের করা
             const fileName = attach.filename || attach.name || `file_${i}`;
             const fileExt = fileName.split('.').pop();
             ext = fileExt || "file";
