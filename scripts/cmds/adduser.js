@@ -14,7 +14,7 @@ module.exports = {
 		},
 		category: "box chat",
 		guide: {
-			en: "   {pn} [link profile | uid]"
+			en: "   {p}{n} [link profile | uid]"
 		}
 	},
 
