@@ -53,9 +53,9 @@ module.exports = {
       const byte2mb = (bytes) => (bytes / 1024 / 1024).toFixed(2) + ' MB';
 
       const systemInfo = `
-╭───────────────────╮
-│   📊 SYSTEM INFO     │
-╰───────────────────╯
+╭──────────────────╮
+│        📊 SYSTEM INFO            │
+╰──────────────────╯
 
 🕐 **BANGLADESH TIME**
 ├ 📅 Date: ${currentDate}
