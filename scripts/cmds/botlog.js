@@ -15,7 +15,7 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			en: "   {pn} on/off: Enable/disable bot logging"
+			en: "   {p}{n} on/off: Enable/disable bot logging"
 				+ "\n   {p}{n} thread on/off: Enable/disable thread-based logging"
 				+ "\n   {p}{n} thread add <threadID>: Add thread to log list"
 				+ "\n   {p}{n} thread remove <threadID>: Remove thread from log list"
