@@ -6,7 +6,7 @@ module.exports = {
     name: "status",
     aliases: ["health", "ping"],
     version: "2.4.60",
-    author: "ST | Sheikh Tamim",
+    author: "MW LEGENDS | OMOR TE",
     role: 0,
     shortDescription: { en: "Bot health info and ping" },
     longDescription: { en: "Shows latency, uptime, and system resource usage with enhanced animations" },
@@ -118,9 +118,9 @@ module.exports = {
           return "🔴 High";
         };
 
-        const response = `╭─────────────────────────────────╮
-│           🤖 ST BOT STATUS           │
-╰─────────────────────────────────╯
+        const response = `╭────────────────╮
+│      🤖 BOT STATUS          │
+╰────────────────╯
 
 📡 Network Performance
 ├─ API Ping: ${apiPing}ms ${getStatusIndicator(apiPing)}
@@ -148,9 +148,9 @@ module.exports = {
 ├─ Total Users: ${totalUsers.toLocaleString()}
 └─ Active Sessions: ${Object.keys(global.GoatBot?.onReply || {}).length}
 
-╭─────────────────────────────────╮
-│     Powered by ST | Sheikh Tamim     │
-╰─────────────────────────────────╯`;
+╭─────────────────╮
+│     ⚓ MW Legends ☸️        │
+╰─────────────────╯`;
 
         await api.editMessage(response, loadingMessage.messageID);
       } catch (error) {
