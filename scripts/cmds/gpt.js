@@ -5,7 +5,7 @@ module.exports = {
     name: 'gpt',
     aliases: [],
     version: '2.4.70',
-    author: 'ST',
+    author: 'OM',
     countDown: 0,
     role: 0,
     shortDescription: 'Chat with GPT',
@@ -15,7 +15,7 @@ module.exports = {
     },
     category: 'AI',
     guide: {
-      en: '{pn} <your message>\nReply to bot message to continue conversation'
+      en: '{p}{n} <your message>\nReply to bot message to continue conversation'
     }
   },
 
