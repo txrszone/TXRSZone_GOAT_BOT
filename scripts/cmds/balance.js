@@ -12,8 +12,8 @@ module.exports = {
     },
     category: "economy",
     guide: {
-      vi: "   {pn}: xem số tiền của bạn\n   {pn} <@tag>: xem số tiền của người được tag",
-      en: "   {pn}: view your money\n   {pn} <@tag>: view the money of the tagged person"
+      vi: "   {p}{n}: xem số tiền của bạn\n   {pn} <@tag>: xem số tiền của người được tag",
+      en: "   {p}{n}: view your money\n   {pn} <@tag>: view the money of the tagged person"
     }
   },
 
