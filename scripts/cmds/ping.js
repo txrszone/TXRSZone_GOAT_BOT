@@ -9,14 +9,14 @@ module.exports = {
     shortDescription: "Check bot ping",
     longDescription: "Displays bot ping",
     category: "info",
-    guide: "{p}ping"
+    guide: "{p}{n}"
   },
 
   onStart: async function ({ message }) {
     const start = Date.now();
     
-    // ✅ একটি API কল বা মেসেজ সেন্ড করার চেষ্টা
-    const msg = await message.reply("🏓");
+    // মেসেজ পাঠানো
+    await message.reply("🏓");
     
     const ping = Date.now() - start;
     
@@ -26,6 +26,7 @@ module.exports = {
     else if (ping < 300) emoji = "⚠️ Slow";
     else emoji = "🐌 Very Slow";
     
-    await msg.edit(`🏓 **Pong!**\n━━━━━━━━━━━━━━\n📡 Ping: ${ping}ms\n⚡ Status: ${emoji}`);
+    // আলাদা মেসেজ হিসেবে পিং দেখানো
+    await message.reply(`🏓 **Pong!**\n━━━━━━━━━━━━━━\n📡 Ping: ${ping}ms\n⚡ Status: ${emoji}`);
   }
 };
