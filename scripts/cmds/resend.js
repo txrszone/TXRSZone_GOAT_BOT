@@ -9,7 +9,7 @@ module.exports = {
     version: "1.2",
     author: "Omor TE",
     countDown: 5,
-    role: 2, // ইচ্ছা করলে 2 করে শুধু admin এর জন্য
+    role: 2, // ইচ্ছা করলে 2 করে শুধু bot admin এর জন্য
     shortDescription: "unsend ট্র্যাক করে গ্রুপে পাঠায়",
     longDescription: "কেউ মেসেজ unsend করলে, তার লেখা + attachment নির্দিষ্ট গ্রুপে পাঠিয়ে দেয়",
     category: "group",
