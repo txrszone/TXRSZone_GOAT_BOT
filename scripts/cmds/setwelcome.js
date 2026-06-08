@@ -15,35 +15,35 @@ module.exports = {
 		category: "custom",
 		guide: {
 			vi: {
-				body: "   {pn} text [<nội dung> | reset]: chỉnh sửa nội dung văn bản hoặc reset về mặc định, với những shortcut có sẵn:"
+				body: "   {p}{n} text [<nội dung> | reset]: chỉnh sửa nội dung văn bản hoặc reset về mặc định, với những shortcut có sẵn:"
 					+ "\n  + {userName}: tên của thành viên mới"
 					+ "\n  + {userNameTag}: tên của thành viên mới (tag)"
 					+ "\n  + {boxName}:  tên của nhóm chat"
 					+ "\n  + {multiple}: bạn || các bạn"
 					+ "\n  + {session}:  buổi trong ngày"
 					+ "\n\n   Ví dụ:"
-					+ "\n    {pn} text Hello {userName}, welcome to {boxName}, chúc {multiple} một ngày mới vui vẻ"
+					+ "\n    {p}{n} text Hello {userName}, welcome to {boxName}, chúc {multiple} một ngày mới vui vẻ"
 					+ "\n"
 					+ "\n   Reply (phản hồi) hoặc gửi kèm một tin nhắn có file với nội dung {pn} file: để thêm tệp đính kèm vào tin nhắn chào mừng (ảnh, video, audio)"
 					+ "\n\n   Ví dụ:"
-					+ "\n    {pn} file reset: xóa gửi file",
+					+ "\n    {p}{n} file reset: xóa gửi file",
 				attachment: {
 					[`${__dirname}/assets/guide/setwelcome/setwelcome_vi_1.png`]: "https://i.ibb.co/vd6bQrW/setwelcome-vi-1.png"
 				}
 			},
 			en: {
-				body: "   {pn} text [<content> | reset]: edit text content or reset to default, with some shortcuts:"
+				body: "   {p}{n} text [<content> | reset]: edit text content or reset to default, with some shortcuts:"
 					+ "\n  + {userName}: new member name"
 					+ "\n  + {userNameTag}: new member name (tag)"
 					+ "\n  + {boxName}:  group chat name"
 					+ "\n  + {multiple}: you || you guys"
 					+ "\n  + {session}:  session in day"
 					+ "\n\n   Example:"
-					+ "\n    {pn} text Hello {userName}, welcome to {boxName}, have a nice day {multiple}"
+					+ "\n    {p}{n} text Hello {userName}, welcome to {boxName}, have a nice day {multiple}"
 					+ "\n"
 					+ "\n   Reply (phản hồi) or send a message with file with content {pn} file: to add file attachments to welcome message (image, video, audio)"
 					+ "\n\n   Example:"
-					+ "\n    {pn} file reset: delete file attachments",
+					+ "\n    {p}{n} file reset: delete file attachments",
 				attachment: {
 					[`${__dirname}/assets/guide/setwelcome/setwelcome_en_1.png`]: "https://i.ibb.co/vsCz0ks/setwelcome-en-1.png"
 				}
