@@ -6,10 +6,10 @@ config: {
 name: "notice",
 aliases: ["notify", "noti"],
 version: "15.0.0",
-author: "OMOR TE",
+author: "Omor TE",
 countDown: 10,
 role: 2,
-shortDescription: "Send notification to all groups with attachments feature",
+shortDescription: "Send notification to all groups with attachments (gif, photos, videos, files) feature",
 longDescription: "Send notification only to groups where bot is member",
 category: "owner",
 guide: "{p}{n} <message> \nreply to a attachment, {p}{n} <message,optional> for attachments sending"
