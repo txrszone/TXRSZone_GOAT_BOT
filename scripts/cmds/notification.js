@@ -1,13 +1,12 @@
 const { getStreamsFromAttachment } = global.utils;
 const fs = require("fs-extra");
 const path = require("path");
-const moment = require("moment-timezone");
 
 module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "7.0.0",
+    version: "8.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -25,19 +24,18 @@ module.exports = {
       return message.reply(`❌ Usage: notification <message>\nExample: notification Hello everyone!\nOr reply to a message with attachments`);
     }
 
-    const fullTime = moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY");
-    
     let userText = args.join(" ");
     if (!userText && event.messageReply?.body) {
       userText = event.messageReply.body;
     }
     
+    const adminName = (await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin";
+    
     const notificationMessage = `𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
 ━━━━━━━━━━━━━━━━━━━━
-👤 𝗔𝗱𝗺𝗶𝗻: ${(await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin"}
+👤 𝗔𝗱𝗺𝗶𝗻: ${adminName}
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${userText || "Only file attached"}
 
-⏰ 𝗧𝗶𝗺𝗲: ${fullTime}
 ━━━━━━━━━━━━━━━━━━━━
 ⚓ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡
 ━━━━━━━━━━━━━━━━━━━━
@@ -192,13 +190,19 @@ module.exports = {
       const userInfo = await Users.getNameUser(senderID);
       const groupInfo = groupName || (await Threads.getData(threadID)).threadInfo?.threadName || "Unknown Group";
       
+      let contentText = "No text";
+      if (body && body.trim()) {
+        contentText = body.trim();
+      } else if (attachments.length) {
+        contentText = "Sent an attachment (photo/video/file)";
+      }
+      
       const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗨𝘀𝗲𝗿: ${userInfo}
 🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupInfo}
-⏰ 𝗧𝗶𝗺𝗲: ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
 
-📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${contentText}
 
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to user`;
@@ -224,19 +228,27 @@ module.exports = {
         type: "adminReply"
       });
       
-      api.sendMessage(`✅ Reply sent to admin successfully!`, threadID);
+      api.sendMessage(`✅ Reply sent to admin!`, threadID);
       
     } else if (type === "adminReply") {
       const { userThread, userId, userName, groupName } = replyData;
       
+      let contentText = "No text";
+      if (body && body.trim()) {
+        contentText = body.trim();
+      } else if (attachments.length) {
+        contentText = "Sent an attachment (photo/video/file)";
+      }
+      
+      const adminName = (await Users.getNameUser(senderID));
+      
       const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻 📩
 ━━━━━━━━━━━━━━━━━━━━
-👤 𝗔𝗱𝗺𝗶𝗻: ${(await Users.getNameUser(senderID))}
+👤 𝗔𝗱𝗺𝗶𝗻: ${adminName}
 👥 𝗥𝗲𝗽𝗹𝘆𝗶𝗻𝗴 𝘁𝗼: ${userName}
 🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
-⏰ 𝗧𝗶𝗺𝗲: ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
 
-📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${contentText}
 
 ━━━━━━━━━━━━━━━━━━━━
 ⚓ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡`;
@@ -261,7 +273,7 @@ module.exports = {
         type: "userReply"
       });
       
-      api.sendMessage(`✅ Reply sent to user successfully!`, threadID);
+      api.sendMessage(`✅ Reply sent to user!`, threadID);
     }
   }
 };
