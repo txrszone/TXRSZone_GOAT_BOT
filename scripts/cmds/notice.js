@@ -5,7 +5,7 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notify", "noti"],
-    version: "15.0.0",
+    version: "16.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -15,7 +15,7 @@ module.exports = {
     guide: "{p}{n} <message>"
   },
 
-  onStart: async function ({ api, event, args, usersData, threadsData, commandName }) {
+  onStart: async function ({ api, event, args, usersData }) {
     const DELAY = 5000;
     const PROGRESS_INTERVAL = 5;
 
@@ -31,7 +31,7 @@ module.exports = {
     const adminName = await usersData.getName(event.senderID) || "Admin";
     const contentText = !userText ? "Only file attached" : userText;
     
-    const notificationMessage = `𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
+    const notificationMessage = `𝗡𝗢𝗧𝗜𝗖𝗘 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗔𝗱𝗺𝗶𝗻: ${adminName}
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${contentText}
@@ -77,34 +77,32 @@ module.exports = {
                   id: thread.threadID,
                   name: thread.name || `Group ${allGroups.length + 1}`
                 });
-                console.log(`📋 Found group: ${thread.name} (${thread.threadID})`);
+                console.log(`✅ Found: ${thread.name}`);
               }
             } catch (err) {
-              console.log(`⚠️ Error checking group ${thread.threadID}: ${err.message}`);
+              console.log(`❌ Error: ${thread.threadID}`);
             }
           }
         }
-        
         nextCursor = threadList.length === 100 ? threadList[threadList.length - 1].threadID : null;
         hasMore = threadList.length === 100;
       }
     } catch (err) {
       try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
-      return api.sendMessage(`❌ Failed to fetch groups: ${err.message}`, event.threadID, event.messageID);
+      return api.sendMessage(`❌ Failed to fetch groups: ${err.message}`, event.threadID);
     }
 
     const total = allGroups.length;
     try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
 
     if (total === 0) {
-      return api.sendMessage(`❌ No groups found where bot is a member.`, event.threadID, event.messageID);
+      return api.sendMessage(`❌ No groups found where bot is a member.`, event.threadID);
     }
 
-    await api.sendMessage(`📤 Sending notification to ${total} groups...`, event.threadID);
+    await api.sendMessage(`📤 Sending to ${total} groups...`, event.threadID);
 
     let success = 0;
     let failed = [];
-    let sentCount = 0;
 
     for (let i = 0; i < allGroups.length; i++) {
       const group = allGroups[i];
@@ -112,57 +110,50 @@ module.exports = {
       const groupName = group.name;
 
       try {
-        const messageSend = await api.sendMessage(formMessage, tid);
+        const sentMsg = await api.sendMessage(formMessage, tid);
         
-        global.GoatBot.onReply.set(messageSend.messageID, {
-          commandName: commandName,
+        global.GoatBot.onReply.set(sentMsg.messageID, {
+          name: "notice",
           adminThread: event.threadID,
           groupName: groupName,
           groupId: tid,
-          adminId: event.senderID,
-          messageIDSender: messageSend.messageID,  // ✅ রিপ্লাই আইডি সংরক্ষণ
-          type: "userCallAdmin"
+          adminId: event.senderID
         });
         
         success++;
-        console.log(`✅ [${i+1}/${total}] Sent to ${groupName} (${tid})`);
+        console.log(`✅ [${i+1}/${total}] ${groupName}`);
       } catch (err) {
-        failed.push({ id: tid, name: groupName, error: err.message });
-        console.error(`❌ [${i+1}/${total}] Failed ${groupName}: ${err.message}`);
+        failed.push(groupName);
+        console.error(`❌ [${i+1}/${total}] ${groupName}: ${err.message}`);
       }
-      sentCount++;
-
-      if (sentCount % PROGRESS_INTERVAL === 0 || i === total - 1) {
+      
+      if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
+      
+      if ((i + 1) % PROGRESS_INTERVAL === 0 || i === total - 1) {
         try {
-          await api.sendMessage(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`, event.threadID);
+          await api.sendMessage(`📊 ${i+1}/${total}\n✅ ${success}\n❌ ${failed.length}`, event.threadID);
         } catch(e) {}
       }
-
-      if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
-    let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
-    if (failed.length > 0 && failed.length <= 10) {
-      report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
-    } else if (failed.length > 10) {
-      report += `\n\nFirst 10 failed:\n${failed.slice(0,10).map(f => `• ${f.name} (${f.id})`).join("\n")}`;
+    let report = `✅ NOTICE SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
+    if (failed.length > 0) {
+      report += `\n\nFailed:\n${failed.slice(0,10).join("\n")}`;
     }
     await api.sendMessage(report, event.threadID);
   },
 
-  onReply: async ({ args, event, api, message, Reply, usersData, commandName }) => {
-    const { type, adminThread, groupId, groupName, adminId, userThread, userId, userName, messageIDSender } = Reply;
+  onReply: async ({ args, event, api, message, Reply, usersData }) => {
     const senderName = await usersData.getName(event.senderID);
     const attachmentStreams = await getStreamsFromAttachment(event.attachments.filter(item => mediaTypes.includes(item.type)));
 
-    if (type === "userCallAdmin") {
-      // ইউজার রিপ্লাই করছে - অ্যাডমিনের কাছে যাবে (রিপ্লাই হিসেবে)
-      const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿:
+    // ✅ report.js এর মতো: ইউজার রিপ্লাই দিলে অ্যাডমিনের কাছে যাবে
+    if (!Reply.userThread) {
+      const userReplyMsg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿:
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗡𝗮𝗺𝗲: ${senderName}
 🆔 𝗜𝗗: ${event.senderID}
-🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
-🆔 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗: ${groupId}
+🏘️ 𝗚𝗿𝗼𝘂𝗽: ${Reply.groupName}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
@@ -170,73 +161,47 @@ ${args.join(" ")}
 ━━━━━━━━━━━━━━━━━━━━
 📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐮𝐬𝐞𝐫`;
 
-      const formMessage = {
-        body: msg,
+      const userForm = {
+        body: userReplyMsg,
         attachment: attachmentStreams,
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      // ✅ এখানে messageIDSender ব্যবহার করে রিপ্লাই হিসেবে পাঠানো হচ্ছে
-      api.sendMessage(formMessage, adminThread, (err, info) => {
-        if (err) {
-          console.error("Error sending to admin:", err);
-          return message.reply("❌ Failed to send reply to admin!");
-        }
-        
-        message.reply("✅ Your reply has been sent to admin!");
-        
-        global.GoatBot.onReply.set(info.messageID, {
-          commandName: commandName,
-          userThread: event.threadID,
-          groupId: groupId,
-          groupName: groupName,
-          userId: event.senderID,
-          userName: senderName,
-          adminId: adminId,
-          messageIDSender: info.messageID,
-          type: "adminReply"
-        });
-      }, messageIDSender);  // ✅ এই প্যারামিটারটি রিপ্লাই হিসেবে চিহ্নিত করে
+      const sentMsg = await api.sendMessage(userForm, Reply.adminThread);
       
-    } else if (type === "adminReply") {
-      // অ্যাডমিন রিপ্লাই করছে - সেই নির্দিষ্ট ইউজারের মেসেজের রিপ্লাই হিসেবে যাবে
-      const { userThread, userId, userName, messageIDSender } = Reply;
+      global.GoatBot.onReply.set(sentMsg.messageID, {
+        name: "notice",
+        adminThread: Reply.adminThread,
+        userThread: event.threadID,
+        groupId: Reply.groupId,
+        groupName: Reply.groupName,
+        userId: event.senderID,
+        userName: senderName,
+        adminId: Reply.adminId
+      });
       
-      const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
+      message.reply("✅ Your reply has been sent to admin!");
+      
+    } else {
+      // ✅ অ্যাডমিন রিপ্লাই করছে - report.js এর মতো রিপ্লাই হিসেবে যাবে (ইউজারের "helo" মেসেজের রিপ্লাই হিসেবে)
+      const adminReplyMsg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗔𝗱𝗺𝗶𝗻: ${senderName}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
-
 ━━━━━━━━━━━━━━━━━━━━
-📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝗺𝗶𝗻`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢𝐧`;
 
-      const formMessage = {
-        body: msg,
+      const adminForm = {
+        body: adminReplyMsg,
         attachment: attachmentStreams,
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      // ✅ এখানেও messageIDSender ব্যবহার করে ইউজারের মেসেজের রিপ্লাই হিসেবে পাঠানো হচ্ছে
-      api.sendMessage(formMessage, userThread, (err, info) => {
-        if (err) {
-          console.error("Error sending to user:", err);
-          return message.reply("❌ Failed to send reply to user!");
-        }
-        
-        message.reply(`✅ Reply sent to user ${userName || userId}`);
-        
-        global.GoatBot.onReply.set(info.messageID, {
-          commandName: commandName,
-          adminThread: event.threadID,
-          groupName: groupName,
-          groupId: groupId,
-          adminId: adminId,
-          messageIDSender: info.messageID,
-          type: "userCallAdmin"
-        });
-      }, messageIDSender);  // ✅ এই প্যারামিটারটি রিপ্লাই হিসেবে চিহ্নিত করে
+      // 🔥 রিপ্লাই হিসেবে পাঠানো (ইউজারের আসল মেসেজের রিপ্লাই হিসেবে)
+      await api.sendMessage(adminForm, Reply.userThread, event.messageReply?.messageID);
+      message.reply(`✅ Reply sent to user in group: ${Reply.groupName}`);
     }
   }
 };
