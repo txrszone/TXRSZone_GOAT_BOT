@@ -11,7 +11,6 @@ module.exports = {
     shortDescription: "Accept/Delete friend requests",
     longDescription: "Accept/Delete friend requests",
     category: "Utility",
-    guide: "{p}{n}",
   },
 
   onReply: async function ({ message, Reply, event, api, commandName }) {
