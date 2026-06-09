@@ -90,10 +90,10 @@ module.exports = {
         fs.removeSync(pathAvt1);
         fs.removeSync(pathAvt2);
 
-        // Send message with your kawaii styled message below
+        // Fixed mention format 
         const kawaiiMessage = `
 🌸💞 *Cᴏɴɢʀᴀᴛs* 💞🌸  
-@${name1}  ＆ @${name2} ✨
+@${name1} ＆ @${name2} ✨
 
 💖 *Mᴀᴛᴄʜ Rᴀᴛᴇ:* ${matchRate}% 💖
 
@@ -107,8 +107,8 @@ module.exports = {
             {
                 body: kawaiiMessage,
                 mentions: [
-                    { tag: name1, id: id1 },
-                    { tag: name2, id: id2 }
+                    { tag: `@${name1}`, id: id1 },
+                    { tag: `@${name2}`, id: id2 }
                 ],
                 attachment: fs.createReadStream(pathImg),
             },
