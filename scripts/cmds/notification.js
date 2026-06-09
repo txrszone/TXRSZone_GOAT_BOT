@@ -7,7 +7,7 @@ module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "5.0.0",
+    version: "6.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -39,27 +39,47 @@ module.exports = {
 
 ⏰ 𝗧𝗶𝗺𝗲: ${fullTime}
 ━━━━━━━━━━━━━━━━━━━━
- ⚓ MW Legends Bot ⚡
+⚓ 𝗠𝗪 𝗟𝗲𝗴𝗲𝗻𝗱𝘀 𝗕𝗼𝘁 ⚡
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to admin`;
 
-    // 📁 Handle attachments
+    // 📁 Handle attachments (save to temp files for reuse)
+    const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
-    let messageData;
-    
+
     if (allAttachments.length) {
       try {
         const streams = await getStreamsFromAttachment(allAttachments);
-        messageData = {
-          body: notificationMessage,
-          attachment: streams
-        };
+        const cacheDir = path.join(__dirname, "cache");
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+
+        for (let i = 0; i < streams.length; i++) {
+          const attach = allAttachments[i];
+          let ext = "file";
+          
+          if (attach.type === "photo") {
+            ext = attach.url?.toLowerCase().includes('.gif') ? "gif" : "jpg";
+          } else if (attach.type === "video") ext = "mp4";
+          else if (attach.type === "audio") ext = "mp3";
+          else if (attach.type === "animated_image") ext = "gif";
+          else if (attach.type === "file") {
+            const fileName = attach.filename || attach.name || `file_${i}`;
+            const fileExt = fileName.split('.').pop();
+            ext = fileExt || "file";
+          }
+          
+          const filePath = path.join(cacheDir, `notification_${Date.now()}_${i}.${ext}`);
+          const writer = fs.createWriteStream(filePath);
+          await new Promise((resolve, reject) => {
+            streams[i].pipe(writer);
+            writer.on("finish", resolve);
+            writer.on("error", reject);
+          });
+          tempFiles.push(filePath);
+        }
       } catch (err) {
         console.error("Attachment error:", err);
-        messageData = notificationMessage;
       }
-    } else {
-      messageData = notificationMessage;
     }
 
     // 📋 Get all groups where bot is member
@@ -68,7 +88,7 @@ module.exports = {
     let hasMore = true;
     const botID = api.getCurrentUserID();
 
-    const confirmMsg = await message.reply(`⏳ Sending notification to all groups...`);
+    const confirmMsg = await message.reply(`⏳ Fetching group list...`);
 
     try {
       while (hasMore) {
@@ -110,11 +130,15 @@ module.exports = {
       const groupName = group.name || `Group ${i+1}`;
 
       try {
-        const formSend = typeof messageData === 'string' ? { body: messageData } : messageData;
+        const formSend = { body: notificationMessage };
         
+        if (tempFiles.length) {
+          const streams = tempFiles.map(file => fs.createReadStream(file));
+          formSend.attachment = streams;
+        }
+
         const sentMsg = await api.sendMessage(formSend, tid);
         
-        // ✅ রিপ্লাই হ্যান্ডলিং এর জন্য অনরিপ্লাই সেট করা
         global.GoatBot.onReply.set(sentMsg.messageID, {
           commandName: "notification",
           author: event.senderID,
@@ -140,6 +164,11 @@ module.exports = {
       if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
+    // 🧹 Cleanup temp files
+    for (const file of tempFiles) {
+      try { fs.unlinkSync(file); } catch(e) {}
+    }
+
     let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
@@ -149,87 +178,40 @@ module.exports = {
     await message.reply(report);
   },
 
-  onReply: async function ({ api, event, Users, Threads }) {
+  onReply: async function ({ api, event, Users, role }) {
     const { threadID, messageID, senderID, body, attachments } = event;
     
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { author, adminThread, type } = replyData;
+    // ✅ শুধুমাত্র বট এডমিন বা যিনি নোটিশ পাঠিয়েছেন তারা রিপ্লাই করতে পারবেন
+    const isAuthorized = (role === 2) || (senderID === replyData.author);
     
-    if (type === "userReply") {
-      const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗙𝗿𝗼𝗺 𝗨𝘀𝗲𝗿 📩
+    if (!isAuthorized) {
+      return api.sendMessage(`❌ Only bot admin can reply to this notification!`, threadID, messageID);
+    }
+    
+    const { adminThread } = replyData;
+    
+    const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻 📩
 ━━━━━━━━━━━━━━━━━━━━
-👤 𝗨𝘀𝗲𝗿: ${(await Users.getNameUser(senderID))}
-🏘️ 𝗚𝗿𝗼𝘂𝗽: ${(await Threads.getData(threadID)).threadInfo?.threadName || "Unknown"}
+👤 𝗔𝗱𝗺𝗶𝗻: ${(await Users.getNameUser(senderID))}
 ⏰ 𝗧𝗶𝗺𝗲: ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 Reply to this message to respond to user`;
-      
-      let messageData;
-      if (attachments.length) {
-        try {
-          const streams = await getStreamsFromAttachment(attachments);
-          messageData = { body: msg, attachment: streams };
-        } catch(e) {
-          messageData = msg;
-        }
-      } else {
-        messageData = msg;
-      }
-      
-      const sentMsg = await api.sendMessage(messageData, adminThread);
-      
-      global.GoatBot.onReply.set(sentMsg.messageID, {
-        commandName: "notification",
-        author: author,
-        userThread: threadID,
-        userMessageID: messageID,
-        userId: senderID,
-        type: "adminReply"
-      });
-      
-      api.sendMessage(`✅ Reply sent to admin successfully!`, threadID);
-      
-    } else if (type === "adminReply") {
-      const { userThread, userId } = replyData;
-      
-      const msg = `📩 **Reply from Admin** 📩
-━━━━━━━━━━━━━━━━━━━━
-👤 **Admin:** ${(await Users.getNameUser(senderID))}
-⏰ **Time:** ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
-
-📝 **Content:** ${attachments.length ? "Only file attached" : body || "No text"}
-
-━━━━━━━━━━━━━━━━━━━━
-📌 Reply to this message to respond to admin`;
-      
-      let messageData;
-      if (attachments.length) {
-        try {
-          const streams = await getStreamsFromAttachment(attachments);
-          messageData = { body: msg, attachment: streams };
-        } catch(e) {
-          messageData = msg;
-        }
-      } else {
-        messageData = msg;
-      }
-      
-      const sentMsg = await api.sendMessage(messageData, userThread);
-      
-      global.GoatBot.onReply.set(sentMsg.messageID, {
-        commandName: "notification",
-        author: author,
-        adminThread: adminThread,
-        userId: userId,
-        type: "userReply"
-      });
-      
-      api.sendMessage(`✅ Reply sent to user successfully!`, threadID);
+⚓ 𝗠𝗪 𝗟𝗲𝗴𝗲𝗻𝗱𝘀 𝗕𝗼𝘁 ⚡`;
+    
+    let messageData = { body: msg };
+    if (attachments.length) {
+      try {
+        const streams = await getStreamsFromAttachment(attachments);
+        messageData.attachment = streams;
+      } catch(e) {}
     }
+    
+    await api.sendMessage(messageData, adminThread);
+    api.sendMessage(`✅ Reply sent to admin's notification!`, threadID);
   }
 };
