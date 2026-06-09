@@ -3,6 +3,7 @@ const axios = require('axios');
 module.exports = {
   config: {
     name: "youtube",
+    aliases: ["yt", "ytsearch"],
     version: "1.0",
     author: "Omor TE",
     countDown: 5,
@@ -10,7 +11,7 @@ module.exports = {
     shortDescription: "Search videos on YouTube",
     longDescription: "Search for YouTube videos with keywords",
     category: "search",
-    guide: "{p}{n} [search query]"
+    guide: "{pn} [search query]"
   },
 
   onStart: async function ({ api, event, args }) {
@@ -19,7 +20,6 @@ module.exports = {
       return api.sendMessage("❌ Please provide a search query.\nExample: /youtube BTS songs", event.threadID, event.messageID);
     }
 
-    // Note: This API key might expire. Better to use your own or alternative API
     const apiKey = "AIzaSyDtkiIIDpdjVA8ZbsLrkxEzW12lucdAKSQ";
     const url = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&part=snippet&type=video&maxResults=5&q=${encodeURIComponent(query)}`;
 
@@ -33,14 +33,15 @@ module.exports = {
       const searchResults = response.data.items;
       let message = "🎬 YOUTUBE SEARCH RESULTS 🎬\n━━━━━━━━━━━━━━━━━━━━\n";
       
-      searchResults.forEach((result, index) => {
+      for (let i = 0; i < searchResults.length; i++) {
+        const result = searchResults[i];
         const title = result.snippet.title;
         const videoId = result.id.videoId;
         const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         const channelName = result.snippet.channelTitle;
         
-        message += `\n📌 Result ${index + 1}:\n📹 Title: ${title}\n📢 Channel: ${channelName}\n🔗 Link: ${videoUrl}\n━━━━━━━━━━━━━━━━━━━━\n`;
-      });
+        message += `\n📌 Result ${i + 1}:\n📹 Title: ${title}\n📢 Channel: ${channelName}\n🔗 Link: ${videoUrl}\n━━━━━━━━━━━━━━━━━━━━\n`;
+      }
       
       api.sendMessage(message, event.threadID, event.messageID);
       
