@@ -31,13 +31,13 @@ module.exports = {
     const adminName = await usersData.getName(event.senderID) || "Admin";
     const contentText = !userText ? "Only file attached" : userText;
     
-    const notificationMessage = `NOTIFICATION FROM BOT ADMIN ‼️
+    const notificationMessage = `𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
 ━━━━━━━━━━━━━━━━━━━━
-👤 Admin: ${adminName}
-📝 Content: ${contentText}
+👤 𝗔𝗱𝗺𝗶𝗻: ${adminName}
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${contentText}
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 Reply to this message to respond to admin`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢𝐧`;
 
     // 📁 Handle attachments
     let attachmentStreams = [];
@@ -155,18 +155,18 @@ module.exports = {
     const attachmentStreams = await getStreamsFromAttachment(event.attachments.filter(item => mediaTypes.includes(item.type)));
 
     if (type === "userCallAdmin") {
-      const msg = `📝 Reply from User:
+      const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿:
 ━━━━━━━━━━━━━━━━━━━━
-👤 Name: ${senderName}
-🆔 ID: ${event.senderID}
-🏘️ Group: ${groupName}
-🆔 Group ID: ${groupId}
+👤 𝗡𝗮𝗺𝗲: ${senderName}
+🆔 𝗜𝗗: ${event.senderID}
+🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
+🆔 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗: ${groupId}
 
-📝 Content:
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 Reply to this message to respond to user`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐮𝐬𝐞𝐫`;
 
       const formMessage = {
         body: msg,
@@ -192,15 +192,15 @@ ${args.join(" ")}
     } else if (type === "adminReply") {
       const { userThread, userId, userName } = Reply;
       
-      const msg = `📝 Reply from Admin:
+      const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
 ━━━━━━━━━━━━━━━━━━━━
-👤 Admin: ${senderName}
+👤 𝗔𝗱𝗺𝗶𝗻: ${senderName}
 
-📝 Content:
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 Reply to this message to respond to admin`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢𝐧`;
 
       const formMessage = {
         body: msg,
