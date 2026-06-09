@@ -40,7 +40,7 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to admin`;
 
-    // 📁 Handle attachments (save to temp files for reuse)
+    // 📁 Handle attachments
     const tempFiles = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
 
@@ -137,7 +137,7 @@ module.exports = {
         api.sendMessage(formSend, tid, (err, info) => {
           if (!err && info) {
             global.GoatBot.onReply.set(info.messageID, {
-              name: "notification",
+              commandName: "notification",
               adminThread: event.threadID,
               groupName: groupName,
               groupId: tid,
@@ -163,7 +163,6 @@ module.exports = {
       if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
-    // 🧹 Cleanup temp files
     for (const file of tempFiles) {
       try { fs.unlinkSync(file); } catch(e) {}
     }
@@ -198,7 +197,6 @@ module.exports = {
     const isAdmin = senderID === authorId;
     
     if (isAdmin) {
-      // ✅ অ্যাডমিন ইউজারকে রিপ্লাই দিচ্ছে
       const adminReplyMsg = `📩 Reply from Admin 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 Admin: ${userInfo}
@@ -216,9 +214,9 @@ module.exports = {
       
       await api.sendMessage(messageData, groupId);
       api.sendMessage(`✅ Reply sent to user in group: ${groupInfo}`, threadID);
+      global.GoatBot.onReply.delete(messageID);
       
     } else {
-      // ✅ ইউজার অ্যাডমিনকে রিপ্লাই দিচ্ছে
       const userReplyMsg = `📩 Reply from User 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 User: ${userInfo}
@@ -240,17 +238,17 @@ module.exports = {
       const sentMsg = await api.sendMessage(messageData, adminThread);
       
       global.GoatBot.onReply.set(sentMsg.messageID, {
-        name: "notification",
+        commandName: "notification",
         adminThread: threadID,
         groupId: groupId,
         groupName: groupInfo,
         userId: senderID,
         userName: userInfo,
-        authorId: authorId,
-        isAdminReply: true
+        authorId: authorId
       });
       
       api.sendMessage(`✅ Your reply has been sent to admin!`, threadID);
+      global.GoatBot.onReply.delete(messageID);
     }
   }
 };
