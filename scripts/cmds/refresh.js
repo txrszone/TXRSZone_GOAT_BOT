@@ -11,14 +11,14 @@ module.exports = {
 		},
 		category: "box chat",
 		guide: {
-			vi: "   {pn} [thread | group]: làm mới thông tin nhóm chat của bạn"
-				+ "\n   {pn} group <threadID>: làm mới thông tin nhóm chat theo ID"
-				+ "\n\n   {pn} user: làm mới thông tin người dùng của bạn"
-				+ "\n   {pn} user [<userID> | @tag]: làm mới thông tin người dùng theo ID",
-			en: "   {pn} [thread | group]: refresh information of your group chat"
-				+ "\n   {pn} group <threadID>: refresh information of group chat by ID"
-				+ "\n\n   {pn} user: refresh information of your user"
-				+ "\n   {pn} user [<userID> | @tag]: refresh information of user by ID"
+			vi: "   {p}{n} [thread | group]: làm mới thông tin nhóm chat của bạn"
+				+ "\n   {p}{n} group <threadID>: làm mới thông tin nhóm chat theo ID"
+				+ "\n\n   {p}{n} user: làm mới thông tin người dùng của bạn"
+				+ "\n   {p}{n} user [<userID> | @tag]: làm mới thông tin người dùng theo ID",
+			en: "   {p}{n} [thread | group]: refresh information of your group chat"
+				+ "\n   {p}{n} group <threadID>: refresh information of group chat by ID"
+				+ "\n\n   {p}{n} user: refresh information of your user"
+				+ "\n   {p}{n} user [<userID> | @tag]: refresh information of user by ID"
 		}
 	},
 
