@@ -1,6 +1,7 @@
 const { loadImage, createCanvas } = require("canvas");
 const axios = require("axios");
 const fs = require("fs-extra");
+const path = require("path");
 
 module.exports = {
     config: {
@@ -10,9 +11,12 @@ module.exports = {
         category: "fun",
     },
     onStart: async function ({ api, event }) {
-        let pathImg = __dirname + "/cache/background.png";
-        let pathAvt1 = __dirname + "/cache/Avtmot.png";
-        let pathAvt2 = __dirname + "/cache/Avthai.png";
+        const cacheDir = path.join(__dirname, "cache");
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+        
+        let pathImg = path.join(cacheDir, "background.png");
+        let pathAvt1 = path.join(cacheDir, "Avtmot.png");
+        let pathAvt2 = path.join(cacheDir, "Avthai.png");
 
         var id1 = event.senderID;
         var name1 = (await api.getUserInfo(id1))[id1].name;
@@ -75,22 +79,16 @@ module.exports = {
         let canvas = createCanvas(baseImage.width, baseImage.height);
         let ctx = canvas.getContext("2d");
 
-        // Draw background
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-
-        // Draw square avatars only, no shapes or text
         ctx.drawImage(imgAvt1, 120, 170, 300, 300);
         ctx.drawImage(imgAvt2, canvas.width - 420, 170, 300, 300);
 
-        // Save the image buffer
         const imageBuffer = canvas.toBuffer();
         fs.writeFileSync(pathImg, imageBuffer);
-
-        // Clean up avatar images
         fs.removeSync(pathAvt1);
         fs.removeSync(pathAvt2);
 
-        // Send message with your kawaii styled message below
+        // ✅ মেনশন ঠিক করা হয়েছে (আগের সব টেক্সট রাখা হয়েছে)
         const kawaiiMessage = `
 🌸💞 *Cᴏɴɢʀᴀᴛs* 💞🌸  
 @${name1}  ＆ @${name2} ✨
@@ -101,14 +99,16 @@ module.exports = {
 ❝ ${lovelyNote}❞
 
 💫 𝒀𝒐𝒖 𝒂𝒓𝒆 𝒎𝒚 𝒔𝒖𝒏𝒔𝒉𝒊𝒏𝒆! 💫
+━━━━━━━━━━━━━━━━━━
+   ⚓ MW Legends ☸️
 `;
 
         return api.sendMessage(
             {
                 body: kawaiiMessage,
                 mentions: [
-                    { tag: name1, id: id1 },
-                    { tag: name2, id: id2 }
+                    { tag: `@${name1}`, id: id1 },
+                    { tag: `@${name2}`, id: id2 }
                 ],
                 attachment: fs.createReadStream(pathImg),
             },
