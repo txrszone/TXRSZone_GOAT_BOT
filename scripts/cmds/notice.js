@@ -1,13 +1,12 @@
 const { getStreamsFromAttachment } = global.utils;
 const fs = require("fs-extra");
 const path = require("path");
-const moment = require("moment-timezone");
 
 module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "8.0.0",
+    version: "10.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -17,7 +16,7 @@ module.exports = {
     guide: "{p}{n} <message>"
   },
 
-  onStart: async function ({ api, event, args, Users }) {
+  onStart: async function ({ api, event, args, usersData }) {
     const DELAY = 5000;
     const PROGRESS_INTERVAL = 5;
 
@@ -30,7 +29,7 @@ module.exports = {
       userText = event.messageReply.body;
     }
     
-    const adminName = (await Users.getData(event.senderID)).name || "Admin";
+    const adminName = await usersData.getName(event.senderID) || "Admin";
     const contentText = !userText ? "Only file attached" : userText;
     
     const notificationMessage = `📢 NOTICE FROM BOT ADMIN 📢
@@ -86,7 +85,7 @@ module.exports = {
     let hasMore = true;
     const botID = api.getCurrentUserID();
 
-    const confirmMsg = await api.sendMessage(`⏳ Sending notice to all groups...`, event.threadID);
+    const confirmMsg = await api.sendMessage(`⏳ Fetching group list...`, event.threadID);
 
     try {
       while (hasMore) {
@@ -122,6 +121,9 @@ module.exports = {
     let failed = [];
     let sentCount = 0;
 
+    // Store user reply data for admin replies
+    const userReplyStore = {};
+
     for (let i = 0; i < allGroups.length; i++) {
       const group = allGroups[i];
       const tid = group.threadID;
@@ -135,17 +137,22 @@ module.exports = {
           formSend.attachment = streams;
         }
 
-        // ✅ মেসেজ পাঠানো এবং রিপ্লাই হ্যান্ডলিং
         api.sendMessage(formSend, tid, (err, info) => {
           if (!err && info) {
-            // ✅ GoatBot-এর জন্য অনরিপ্লাই সেট করা
+            // Store the group info for admin reply
+            userReplyStore[info.messageID] = {
+              groupId: tid,
+              groupName: groupName,
+              adminThread: event.threadID
+            };
+            
             global.GoatBot.onReply.set(info.messageID, {
-              commandName: "notice",
-              author: event.senderID,
+              name: "notice",
               adminThread: event.threadID,
               groupName: groupName,
               groupId: tid,
-              type: "userReply"
+              authorId: event.senderID,
+              messageID: info.messageID
             });
           }
         });
@@ -181,27 +188,35 @@ module.exports = {
     await api.sendMessage(report, event.threadID);
   },
 
-  onReply: async function ({ api, event, Users, Threads }) {
+  onReply: async function ({ api, event, usersData, threadsData }) {
     const { threadID, messageID, senderID, body, attachments } = event;
     
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { adminThread, type, groupName, author } = replyData;
+    const { adminThread, groupName, authorId, groupId } = replyData;
     
-    if (type === "userReply") {
-      // ✅ সবাই রিপ্লাই করতে পারবে - কোন role চেক নেই
-      const userInfo = await Users.getNameUser(senderID);
-      const groupInfo = groupName || (await Threads.getData(threadID)).threadInfo?.threadName || "Unknown Group";
-      
-      let contentText = "No text";
-      if (body && body.trim()) {
-        contentText = body.trim();
-      } else if (attachments.length) {
-        contentText = "Sent an attachment (photo/video/file)";
-      }
-      
-      const msg = `📩 Reply from User 📩
+    const userInfo = await usersData.getName(senderID);
+    const groupInfo = groupName || (await threadsData.get(threadID))?.threadInfo?.threadName || "Unknown Group";
+    
+    let contentText = "No text";
+    if (body && body.trim()) {
+      contentText = body.trim();
+    } else if (attachments.length) {
+      contentText = "Sent an attachment (photo/video/file)";
+    }
+    
+    // Check if the replier is the admin
+    const isAdmin = senderID === authorId;
+    
+    if (isAdmin) {
+      // 🔥 ADMIN REPLYING TO USER - Need to find which user replied
+      // This is complex in GoatBot, so we'll send a message to the group
+      api.sendMessage(`📩 Reply from Admin:\n━━━━━━━━━━━━━━━━━━━━\n📝 ${contentText}\n━━━━━━━━━━━━━━━━━━━━\n☸️ MW Legends Bot ⚡`, groupId);
+      api.sendMessage(`✅ Reply sent to group: ${groupInfo}`, threadID);
+    } else {
+      // 🔥 USER REPLYING TO ADMIN
+      const userReplyMsg = `📩 Reply from User 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 User: ${userInfo}
 🏘️ Group: ${groupInfo}
@@ -211,7 +226,7 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to user`;
       
-      let messageData = { body: msg };
+      let messageData = { body: userReplyMsg };
       if (attachments.length) {
         try {
           const streams = await getStreamsFromAttachment(attachments);
@@ -221,52 +236,18 @@ module.exports = {
       
       const sentMsg = await api.sendMessage(messageData, adminThread);
       
+      // Store admin reply info
       global.GoatBot.onReply.set(sentMsg.messageID, {
-        commandName: "notice",
-        author: author,
-        userThread: threadID,
+        name: "notice",
+        adminThread: threadID,
+        userGroupId: groupId,
+        userGroupName: groupInfo,
         userId: senderID,
         userName: userInfo,
-        groupName: groupInfo,
-        type: "adminReply"
+        isAdminReply: true
       });
       
-      api.sendMessage(`✅ Reply sent to admin!`, threadID);
-      
-    } else if (type === "adminReply") {
-      // ✅ অ্যাডমিন ইউজারকে রিপ্লাই করছে
-      const { userThread, userId, userName, groupName } = replyData;
-      
-      let contentText = "No text";
-      if (body && body.trim()) {
-        contentText = body.trim();
-      } else if (attachments.length) {
-        contentText = "Sent an attachment (photo/video/file)";
-      }
-      
-      const adminName = await Users.getNameUser(senderID);
-      
-      const msg = `📩 Reply from Admin 📩
-━━━━━━━━━━━━━━━━━━━━
-👤 Admin: ${adminName}
-👥 Replying to: ${userName}
-🏘️ Group: ${groupName}
-
-📝 Content: ${contentText}
-
-`;
-      
-      let messageData = { body: msg };
-      if (attachments.length) {
-        try {
-          const streams = await getStreamsFromAttachment(attachments);
-          messageData.attachment = streams;
-        } catch(e) {}
-      }
-      
-      await api.sendMessage(messageData, userThread);
-      
-      api.sendMessage(`✅ Reply sent to user!`, threadID);
+      api.sendMessage(`✅ Your reply has been sent to admin!`, threadID);
     }
   }
 };
