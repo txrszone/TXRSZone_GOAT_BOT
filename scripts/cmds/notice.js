@@ -113,7 +113,23 @@ for (let i = 0; i < allGroups.length; i++) {
   const groupName = group.name;  
 
   try {  
-    const messageSend = await api.sendMessage(formMessage, tid);  
+    // Make a fresh copy of attachments for each group to avoid stream issues
+    let freshAttachmentStreams = [];
+    if (attachmentStreams.length > 0) {
+      try {
+        // Re-fetch attachments for each group to ensure they work
+        freshAttachmentStreams = await getStreamsFromAttachment(allAttachments);
+      } catch (err) {
+        console.error(`Failed to get attachments for ${groupName}:`, err);
+      }
+    }
+    
+    const freshFormMessage = {  
+      body: notificationMessage,  
+      attachment: freshAttachmentStreams  
+    };
+    
+    const messageSend = await api.sendMessage(freshFormMessage, tid);  
       
     global.GoatBot.onReply.set(messageSend.messageID, {  
       commandName: commandName,  
@@ -121,6 +137,7 @@ for (let i = 0; i < allGroups.length; i++) {
       groupName: groupName,  
       groupId: tid,  
       adminId: event.senderID,  
+      mainMessageId: messageSend.messageID,
       type: "userCallAdmin"  
     });  
       
@@ -161,7 +178,7 @@ const {
   userThread,
   userId,
   userName,
-  messageIDSender
+  mainMessageId
 } = Reply;
 
 const senderName = await usersData.getName(event.senderID);
@@ -198,14 +215,15 @@ const formMessage = {
     userId: event.senderID,  
     userName: senderName,  
     adminId: adminId,  
-    messageIDSender: event.messageID,
+    adminMessageId: messageSend.messageID,
+    userMessageId: event.messageID,
     type: "adminReply"  
   });  
     
   message.reply("✅ Your reply has been sent to admin!");  
     
 } else if (type === "adminReply") {  
-  const { userThread, userId, userName } = Reply;  
+  const { userThread, userId, userName, userMessageId } = Reply;  
     
   const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
 
@@ -216,7 +234,7 @@ const formMessage = {
 ${args.join(" ")}
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢ɴ`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐜𝐨𝐧𝐭𝐢𝐧𝐮𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧`;
 
 const formMessage = {  
     body: msg,  
@@ -224,12 +242,27 @@ const formMessage = {
     mentions: [{ id: event.senderID, tag: senderName }]  
   };  
 
-  await api.sendMessage(
+  // Send as reply to user's original message
+  const sentMessage = await api.sendMessage(
     formMessage,
     userThread,
-    null,
-    messageIDSender
+    userMessageId // This makes it a reply to user's message
   );
+  
+  // Store this admin message for future replies from user
+  global.GoatBot.onReply.set(sentMessage.messageID, {
+    commandName: commandName,
+    adminThread: adminThread,
+    groupId: groupId,
+    groupName: groupName,
+    adminId: adminId,
+    userThread: userThread,
+    userId: userId,
+    userName: userName,
+    adminMessageId: sentMessage.messageID,
+    userMessageId: userMessageId,
+    type: "userCallAdmin" // This allows user to reply again
+  });
     
   message.reply(`✅ Reply sent to user ${userName || userId}`);  
 }
