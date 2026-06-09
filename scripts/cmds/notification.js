@@ -4,13 +4,13 @@ const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
 module.exports = {
   config: {
     name: "notification",
-    aliases: ["notif"],
-    version: "15.0.0",
+    aliases: ["notify", "noti"],
+    version: "16.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
-    shortDescription: "Send notice to all groups",
-    longDescription: "Send notice only to groups where bot is member",
+    shortDescription: "Send notification to all groups",
+    longDescription: "Send notification only to groups where bot is member",
     category: "owner",
     guide: "{p}{n} <message>"
   },
@@ -20,7 +20,7 @@ module.exports = {
     const PROGRESS_INTERVAL = 5;
 
     if (!args[0] && !event.messageReply?.attachments?.length && !event.attachments?.length) {
-      return api.sendMessage(`❌ Usage: notice <message>\nExample: notice Hello everyone!\nOr reply to a message with attachments`, event.threadID, event.messageID);
+      return api.sendMessage(`❌ Usage: notification <message>\nExample: notification Hello everyone!\nOr reply to a message with attachments`, event.threadID, event.messageID);
     }
 
     let userText = args.join(" ");
@@ -56,7 +56,7 @@ module.exports = {
       attachment: attachmentStreams
     };
 
-    // 📋 Get all groups where bot is member - একদম সিম্পল পদ্ধতি
+    // 📋 Get all groups where bot is member
     let allGroups = [];
     let nextCursor = null;
     let hasMore = true;
@@ -100,7 +100,7 @@ module.exports = {
       return api.sendMessage(`❌ No groups found where bot is a member.`, event.threadID, event.messageID);
     }
 
-    await api.sendMessage(`📤 Sending notice to ${total} groups...`, event.threadID);
+    await api.sendMessage(`📤 Sending notification to ${total} groups...`, event.threadID);
 
     let success = 0;
     let failed = [];
@@ -114,7 +114,6 @@ module.exports = {
       try {
         const messageSend = await api.sendMessage(formMessage, tid);
         
-        // ✅ report.js-এর মতো করে সংরক্ষণ
         global.GoatBot.onReply.set(messageSend.messageID, {
           commandName: commandName,
           adminThread: event.threadID,
@@ -141,7 +140,7 @@ module.exports = {
       if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
-    let report = `✅ NOTICE SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
+    let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
     } else if (failed.length > 10) {
@@ -151,19 +150,16 @@ module.exports = {
   },
 
   onReply: async ({ args, event, api, message, Reply, usersData, commandName }) => {
-    const { type, adminThread, groupId, groupName, adminId, userThread, userId, userName } = Reply;
+    const { type, adminThread, groupId, groupName, adminId, userThread, userId, userName, userMessageID } = Reply;
     const senderName = await usersData.getName(event.senderID);
     const attachmentStreams = await getStreamsFromAttachment(event.attachments.filter(item => mediaTypes.includes(item.type)));
 
-    // ✅ রিপ্লাই সিস্টেম (report.js-এর মতো)
     if (type === "userCallAdmin") {
-      // ইউজার রিপ্লাই করছে - অ্যাডমিনের কাছে যাবে
       const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿:
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗡𝗮𝗺𝗲: ${senderName}
 🆔 𝗜𝗗: ${event.senderID}
 🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
-🆔 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗: ${groupId}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
@@ -179,23 +175,22 @@ ${args.join(" ")}
 
       const messageSend = await api.sendMessage(formMessage, adminThread);
       
-      // ✅ অ্যাডমিন রিপ্লাইয়ের জন্য সংরক্ষণ (ইউজারের তথ্য সহ)
       global.GoatBot.onReply.set(messageSend.messageID, {
         commandName: commandName,
-        userThread: event.threadID,
+        userThread: userThread,
         groupId: groupId,
         groupName: groupName,
-        userId: event.senderID,
-        userName: senderName,
+        userId: userId,
+        userName: userName,
         adminId: adminId,
+        userMessageID: event.messageReply?.messageID,
         type: "adminReply"
       });
       
       message.reply("✅ Your reply has been sent to admin!");
       
     } else if (type === "adminReply") {
-      // অ্যাডমিন রিপ্লাই করছে - সেই নির্দিষ্ট ইউজারের কাছে যাবে
-      const { userThread, userId, userName } = Reply;
+      const { userThread, userId, userName, userMessageID } = Reply;
       
       const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
 ━━━━━━━━━━━━━━━━━━━━
@@ -213,10 +208,14 @@ ${args.join(" ")}
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      // ✅ সরাসরি সেই গ্রুপে পাঠানো (যেখানে ইউজার ছিল)
-      await api.sendMessage(formMessage, userThread);
+      // ✅ রিপ্লাই হিসেবে পাঠানো
+      if (userMessageID) {
+        await api.sendMessage(formMessage, userThread, userMessageID);
+      } else {
+        await api.sendMessage(formMessage, userThread);
+      }
       
-      message.reply(`✅ Reply sent to user ${userName || userId}`);
+      message.reply(`✅ Reply sent to user ${userName || userId} as a reply to their message`);
     }
   }
 };
