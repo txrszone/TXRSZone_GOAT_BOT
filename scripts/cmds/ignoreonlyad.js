@@ -15,12 +15,12 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			vi: "   {pn} add <commandName>: Thêm lệnh vào danh sách bỏ qua"
-				+ "\n   {pn} del <commandName>: Xóa lệnh khỏi danh sách bỏ qua"
-				+ "\n   {pn} list: Xem danh sách lệnh bỏ qua",
-			en: "   {pn} add <commandName>: Add command to ignore list"
-				+ "\n   {pn} del <commandName>: Remove command from ignore list"
-				+ "\n   {pn} list: View ignore list"
+			vi: "   {p}{n} add <commandName>: Thêm lệnh vào danh sách bỏ qua"
+				+ "\n   {p}{n} del <commandName>: Xóa lệnh khỏi danh sách bỏ qua"
+				+ "\n   {p}{n} list: Xem danh sách lệnh bỏ qua",
+			en: "   {p}{n} add <commandName>: Add command to ignore list"
+				+ "\n   {p}{n} del <commandName>: Remove command from ignore list"
+				+ "\n   {p}{n} list: View ignore list"
 		}
 	},
 
