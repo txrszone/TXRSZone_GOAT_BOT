@@ -56,6 +56,7 @@ module.exports = {
       "https://github.com/user-attachments/assets/885a3d0b-87a0-4fc3-a12a-c6a4b08f0889",
       "https://github.com/user-attachments/assets/2770cf2d-60e4-412a-b672-9c11c8f66595",
       "https://github.com/user-attachments/assets/56ff509f-5248-4d38-82fa-cd8bc7df43d6",
+      "https://github.com/user-attachments/assets/5a15d397-8c3a-485a-83ef-3daee498af84",
       "https://github.com/user-attachments/assets/44d51f08-44fb-4429-bf51-8af75b21a410",
       "https://github.com/user-attachments/assets/92f63239-1783-4ed4-8464-25481fbc800e",
       "https://github.com/user-attachments/assets/0bee0f4f-ada7-4b8b-b12e-780e56c431ba",
