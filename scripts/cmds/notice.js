@@ -39,6 +39,7 @@ module.exports = {
 ━━━━━━━━━━━━━━━━━━━━
 📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢𝐧`;
 
+    // 📁 Handle attachments
     let attachmentStreams = [];
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])].filter(item => mediaTypes.includes(item.type));
 
@@ -55,6 +56,7 @@ module.exports = {
       attachment: attachmentStreams
     };
 
+    // 📋 Get all groups where bot is member
     let allGroups = [];
     let nextCursor = null;
     let hasMore = true;
@@ -118,8 +120,7 @@ module.exports = {
           groupName: groupName,
           groupId: tid,
           adminId: event.senderID,
-          type: "userCallAdmin",
-          messageIDSender: messageSend.messageID
+          type: "userCallAdmin"
         });
         
         success++;
@@ -149,7 +150,7 @@ module.exports = {
   },
 
   onReply: async ({ args, event, api, message, Reply, usersData, commandName }) => {
-    const { type, adminThread, groupId, groupName, adminId, userThread, userId, userName, messageIDSender } = Reply;
+    const { type, adminThread, groupId, groupName, adminId, userThread, userId, userName } = Reply;
     const senderName = await usersData.getName(event.senderID);
     const attachmentStreams = await getStreamsFromAttachment(event.attachments.filter(item => mediaTypes.includes(item.type)));
 
@@ -173,29 +174,23 @@ ${args.join(" ")}
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      api.sendMessage(formMessage, adminThread, (err, info) => {
-        if (err) {
-          console.error("Error sending to admin:", err);
-          return message.reply("❌ Failed to send reply to admin!");
-        }
-        
-        global.GoatBot.onReply.set(info.messageID, {
-          commandName: commandName,
-          userThread: event.threadID,
-          groupId: groupId,
-          groupName: groupName,
-          userId: event.senderID,
-          userName: senderName,
-          adminId: adminId,
-          type: "adminReply",
-          messageIDSender: info.messageID
-        });
-        
-        message.reply("✅ Your reply has been sent to admin!");
-      }, messageIDSender);
+      const messageSend = await api.sendMessage(formMessage, adminThread);
+      
+      global.GoatBot.onReply.set(messageSend.messageID, {
+        commandName: commandName,
+        userThread: event.threadID,
+        groupId: groupId,
+        groupName: groupName,
+        userId: event.senderID,
+        userName: senderName,
+        adminId: adminId,
+        type: "adminReply"
+      });
+      
+      message.reply("✅ Your reply has been sent to admin!");
       
     } else if (type === "adminReply") {
-      const { userThread, userId, userName, messageIDSender: userMessageId } = Reply;
+      const { userThread, userId, userName } = Reply;
       
       const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
 ━━━━━━━━━━━━━━━━━━━━
@@ -205,7 +200,7 @@ ${args.join(" ")}
 ${args.join(" ")}
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝗺𝗶𝗻`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢𝐧`;
 
       const formMessage = {
         body: msg,
@@ -213,24 +208,9 @@ ${args.join(" ")}
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      api.sendMessage(formMessage, userThread, (err, info) => {
-        if (err) {
-          console.error("Error sending to user:", err);
-          return message.reply("❌ Failed to send reply to user!");
-        }
-        
-        global.GoatBot.onReply.set(info.messageID, {
-          commandName: commandName,
-          adminThread: adminThread,
-          groupId: groupId,
-          groupName: groupName,
-          adminId: adminId,
-          type: "userCallAdmin",
-          messageIDSender: info.messageID
-        });
-        
-        message.reply(`✅ Reply sent to user ${userName || userId}`);
-      }, userMessageId);
+      await api.sendMessage(formMessage, userThread);
+      
+      message.reply(`✅ Reply sent to user ${userName || userId}`);
     }
   }
 };
