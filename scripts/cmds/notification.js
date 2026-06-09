@@ -39,7 +39,7 @@ module.exports = {
 
 ⏰ 𝗧𝗶𝗺𝗲: ${fullTime}
 ━━━━━━━━━━━━━━━━━━━━
-⚓ 𝗠𝗪 𝗟𝗲𝗴𝗲𝗻𝗱𝘀 𝗕𝗼𝘁 ⚡
+⚓ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to admin`;
 
@@ -201,7 +201,7 @@ module.exports = {
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
 
 ━━━━━━━━━━━━━━━━━━━━
-⚓ 𝗠𝗪 𝗟𝗲𝗴𝗲𝗻𝗱𝘀 𝗕𝗼𝘁 ⚡`;
+⚓ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡`;
     
     let messageData = { body: msg };
     if (attachments.length) {
