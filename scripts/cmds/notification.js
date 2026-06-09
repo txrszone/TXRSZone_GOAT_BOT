@@ -141,8 +141,7 @@ module.exports = {
               adminThread: event.threadID,
               groupName: groupName,
               groupId: tid,
-              authorId: event.senderID,
-              messageID: info.messageID
+              authorId: event.senderID
             });
           }
         });
@@ -199,11 +198,27 @@ module.exports = {
     const isAdmin = senderID === authorId;
     
     if (isAdmin) {
-      // Admin replying to user
-      api.sendMessage(`📩 Reply from Admin:\n━━━━━━━━━━━━━━━━━━━━\n📝 ${contentText}\n━━━━━━━━━━━━━━━━━━━━\n⚓ MW Legends Bot ⚡`, groupId);
-      api.sendMessage(`✅ Reply sent to group: ${groupInfo}`, threadID);
+      // ✅ অ্যাডমিন ইউজারকে রিপ্লাই দিচ্ছে
+      const adminReplyMsg = `📩 Reply from Admin 📩
+━━━━━━━━━━━━━━━━━━━━
+👤 Admin: ${userInfo}
+📝 Content: ${contentText}
+
+`;
+      
+      let messageData = { body: adminReplyMsg };
+      if (attachments.length) {
+        try {
+          const streams = await getStreamsFromAttachment(attachments);
+          messageData.attachment = streams;
+        } catch(e) {}
+      }
+      
+      await api.sendMessage(messageData, groupId);
+      api.sendMessage(`✅ Reply sent to user in group: ${groupInfo}`, threadID);
+      
     } else {
-      // User replying to admin
+      // ✅ ইউজার অ্যাডমিনকে রিপ্লাই দিচ্ছে
       const userReplyMsg = `📩 Reply from User 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 User: ${userInfo}
@@ -227,10 +242,11 @@ module.exports = {
       global.GoatBot.onReply.set(sentMsg.messageID, {
         name: "notification",
         adminThread: threadID,
-        userGroupId: groupId,
-        userGroupName: groupInfo,
+        groupId: groupId,
+        groupName: groupInfo,
         userId: senderID,
         userName: userInfo,
+        authorId: authorId,
         isAdminReply: true
       });
       
