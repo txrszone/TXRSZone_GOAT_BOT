@@ -3,7 +3,7 @@ const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
 
 module.exports = {
   config: {
-    name: "notification",
+    name: "notice",
     aliases: ["notify", "noti"],
     version: "15.0.0",
     author: "OMOR TE",
