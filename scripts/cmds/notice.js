@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "10.0.0",
+    version: "11.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -136,14 +136,12 @@ module.exports = {
 
         api.sendMessage(formSend, tid, (err, info) => {
           if (!err && info) {
-            // ✅ সঠিকভাবে onReply সেট করা
             global.GoatBot.onReply.set(info.messageID, {
-              commandName: "notice",
+              name: "notice",
               adminThread: event.threadID,
               groupName: groupName,
               groupId: tid,
-              authorId: event.senderID,
-              userName: adminName
+              authorId: event.senderID
             });
           }
         });
@@ -185,7 +183,7 @@ module.exports = {
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { adminThread, groupName, authorId, groupId, commandName } = replyData;
+    const { adminThread, groupName, groupId, authorId } = replyData;
     
     const userInfo = await usersData.getName(senderID);
     const groupInfo = groupName || (await threadsData.get(threadID))?.threadInfo?.threadName || "Unknown Group";
@@ -200,7 +198,7 @@ module.exports = {
     const isAdmin = senderID === authorId;
     
     if (isAdmin) {
-      // ✅ অ্যাডমিন ইউজারকে রিপ্লাই দিচ্ছে
+      // ✅ অ্যাডমিন রিপ্লাই (গ্রুপে যাবে)
       const adminReplyMsg = `📩 Reply from Admin 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 Admin: ${userInfo}
@@ -221,7 +219,7 @@ module.exports = {
       global.GoatBot.onReply.delete(messageID);
       
     } else {
-      // ✅ ইউজার অ্যাডমিনকে রিপ্লাই দিচ্ছে
+      // ✅ ইউজার রিপ্লাই (অ্যাডমিনের কাছে যাবে) - সবাই পারবে
       const userReplyMsg = `📩 Reply from User 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 User: ${userInfo}
@@ -243,7 +241,7 @@ module.exports = {
       const sentMsg = await api.sendMessage(messageData, adminThread);
       
       global.GoatBot.onReply.set(sentMsg.messageID, {
-        commandName: "notice",
+        name: "notice",
         adminThread: threadID,
         groupId: groupId,
         groupName: groupInfo,
