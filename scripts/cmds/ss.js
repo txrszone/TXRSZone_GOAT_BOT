@@ -1,8 +1,10 @@
 const axios = require("axios");
+const fs = require("fs-extra");
 
 module.exports = {
   config: {
     name: "ss",
+    aliases: ["url", "check", "website", "link"],
     version: "1.0",
     author: "Omor TE",
     countDown: 5,
@@ -10,19 +12,17 @@ module.exports = {
     shortDescription: "Take a screenshot of a website",
     longDescription: "Capture screenshot of any website URL",
     category: "utility",
-    guide: "{p}{n} [URL]",
-    aliases: ["url", "check", "website", "link"]
+    guide: "{pn} [URL]"
   },
 
   onStart: async function ({ api, event, args }) {
     const url = args.join(" ");
     if (!url) {
-      return api.sendMessage("❌ Please provide a URL.\nExample: /ss https://facebook.com\n\n💡 You can also use: /url, /check, /website, /link", event.threadID, event.messageID);
+      return api.sendMessage("❌ Please provide a URL.\nExample: /ss https://facebook.com", event.threadID, event.messageID);
     }
     
     try {
-      // Alternative screenshot API (working)
-      const screenshotApi = `https://image.thum.io/get/width/1920/crop/800/maxAge/1/${url}`;
+      const screenshotApi = `https://image.thum.io/get/width/1920/crop/800/maxAge/1/${encodeURIComponent(url)}`;
       
       const res = await axios.get(screenshotApi, {
         responseType: "stream"
