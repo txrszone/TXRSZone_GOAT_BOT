@@ -32,14 +32,14 @@ module.exports = {
       userText = event.messageReply.body;
     }
     
-    const notificationMessage = `📢 𝗡𝗢𝗧𝗜𝗖𝗘 𝗙𝗥𝗢𝗠 𝗔𝗗𝗠𝗜𝗡 📢
+    const notificationMessage = `📢 𝗡𝗢𝗧𝗜𝗖𝗘 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗔𝗱𝗺𝗶𝗻: ${(await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin"}
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${userText || "Only file attached"}
 
 ⏰ 𝗧𝗶𝗺𝗲: ${fullTime}
 ━━━━━━━━━━━━━━━━━━━━
-☸️ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡
+ ☸️ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to admin`  ;
 
