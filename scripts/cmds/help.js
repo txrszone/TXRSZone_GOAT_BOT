@@ -65,7 +65,7 @@ if (args.length === 0) {
   const totalCommands = commands.size;  
   msg += `╭─────────────────✰\n`;  
   msg += `│ 📊 𝐓𝐎𝐓𝐀𝐋 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒: ${totalCommands}\n`;  
-  msg += `│ 💡 𝐓𝐘𝐏𝐄: ${prefix}help <command>\n`;  
+  msg += `│ 💡 𝐓𝐘𝐏𝐄: ${prefix}help <CmdName>\n`;  
   msg += `│ 🔍 𝐄𝐗𝐀𝐌𝐏𝐋𝐄: ${prefix}help rank\n`;  
   msg += `╰─────────────────✰\n\n`;  
   msg += `╭─────────────────✰\n`;  
