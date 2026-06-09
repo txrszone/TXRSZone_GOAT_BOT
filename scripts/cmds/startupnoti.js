@@ -6,7 +6,7 @@ module.exports = {
 		name: "startupnoti",
 		aliases: [],
 		version: "1.0",
-		author: "ST | Sheikh Tamim",
+		author: "Omor TE",
 		countDown: 5,
 		role: 2,
 		description: {
@@ -15,15 +15,15 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			en: "   {pn} on/off: Enable/disable startup notifications"
-				+ "\n   {pn} thread on/off: Enable/disable thread notifications"
-				+ "\n   {pn} thread add <threadID>: Add thread to notification list"
-				+ "\n   {pn} thread remove <threadID>: Remove thread from notification list"
-				+ "\n   {pn} thread list: Show current thread list"
-				+ "\n   {pn} admin on/off: Enable/disable admin notifications"
-				+ "\n   {pn} admin set <adminID>: Set admin for notifications"
-				+ "\n   {pn} message <message>: Set startup message"
-				+ "\n   {pn} info: Show current configuration"
+			en: "   {p}{n} on/off: Enable/disable startup notifications"
+				+ "\n   {p}{n} thread on/off: Enable/disable thread notifications"
+				+ "\n   {p}{n} thread add <threadID>: Add thread to notification list"
+				+ "\n   {p}{n} thread remove <threadID>: Remove thread from notification list"
+				+ "\n   {p}{n} thread list: Show current thread list"
+				+ "\n   {p}{n} admin on/off: Enable/disable admin notifications"
+				+ "\n   {p}{n} admin set <adminID>: Set admin for notifications"
+				+ "\n   {p}{n} message <message>: Set startup message"
+				+ "\n   {p}{n} info: Show current configuration"
 		}
 	},
 
