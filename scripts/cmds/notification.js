@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "11.0.0",
+    version: "12.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -134,16 +134,14 @@ module.exports = {
           formSend.attachment = streams;
         }
 
-        api.sendMessage(formSend, tid, (err, info) => {
-          if (!err && info) {
-            global.GoatBot.onReply.set(info.messageID, {
-              name: "notification",
-              adminThread: event.threadID,
-              groupName: groupName,
-              groupId: tid,
-              authorId: event.senderID
-            });
-          }
+        const sentMsg = await api.sendMessage(formSend, tid);
+        
+        global.GoatBot.onReply.set(sentMsg.messageID, {
+          commandName: "notification",
+          authorId: event.senderID,
+          adminThread: event.threadID,
+          groupName: groupName,
+          groupId: tid
         });
         
         success++;
@@ -176,27 +174,25 @@ module.exports = {
     await api.sendMessage(report, event.threadID);
   },
 
-  onReply: async function ({ api, event, usersData, threadsData }) {
+  onReply: async function ({ api, event, usersData }) {
     const { threadID, messageID, senderID, body, attachments } = event;
     
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { adminThread, groupName, groupId, authorId } = replyData;
+    const { adminThread, groupId, groupName, authorId } = replyData;
     
     const userInfo = await usersData.getName(senderID);
-    const groupInfo = groupName || (await threadsData.get(threadID))?.threadInfo?.threadName || "Unknown Group";
+    const groupInfo = groupName || "Unknown Group";
     
     let contentText = "No text";
     if (body && body.trim()) {
       contentText = body.trim();
     } else if (attachments.length) {
-      contentText = "Sent an attachment (photo/video/file)";
+      contentText = "Sent an attachment";
     }
     
-    const isAdmin = senderID === authorId;
-    
-    if (isAdmin) {
+    if (senderID === authorId) {
       const adminReplyMsg = `📩 Reply from Admin 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 Admin: ${userInfo}
@@ -213,7 +209,7 @@ module.exports = {
       }
       
       await api.sendMessage(messageData, groupId);
-      api.sendMessage(`✅ Reply sent to user in group: ${groupInfo}`, threadID);
+      api.sendMessage(`✅ Reply sent to group: ${groupInfo}`, threadID);
       global.GoatBot.onReply.delete(messageID);
       
     } else {
@@ -238,13 +234,13 @@ module.exports = {
       const sentMsg = await api.sendMessage(messageData, adminThread);
       
       global.GoatBot.onReply.set(sentMsg.messageID, {
-        name: "notification",
+        commandName: "notification",
+        authorId: authorId,
         adminThread: threadID,
         groupId: groupId,
         groupName: groupInfo,
         userId: senderID,
-        userName: userInfo,
-        authorId: authorId
+        userName: userInfo
       });
       
       api.sendMessage(`✅ Your reply has been sent to admin!`, threadID);
