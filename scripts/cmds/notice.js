@@ -9,10 +9,10 @@ version: "15.0.0",
 author: "OMOR TE",
 countDown: 10,
 role: 2,
-shortDescription: "Send notification to all groups",
+shortDescription: "Send notification to all groups with attachments feature",
 longDescription: "Send notification only to groups where bot is member",
 category: "owner",
-guide: "{p}{n} <message>"
+guide: "{p}{n} <message> \nreply to a attachment, {p}{n} <message,optional> for attachments sending"
 },
 
 onStart: async function ({ api, event, args, usersData, threadsData, commandName }) {
