@@ -1,6 +1,7 @@
 const { getStreamsFromAttachment } = global.utils;
 const fs = require("fs-extra");
 const path = require("path");
+const moment = require("moment-timezone");
 
 module.exports = {
   config: {
@@ -16,12 +17,12 @@ module.exports = {
     guide: "{p}{n} <message>"
   },
 
-  onStart: async function ({ message, api, event, args }) {
+  onStart: async function ({ api, event, args, Users }) {
     const DELAY = 5000;
     const PROGRESS_INTERVAL = 5;
 
     if (!args[0] && !event.messageReply?.attachments?.length && !event.attachments?.length) {
-      return message.reply(`❌ Usage: notice <message>\nExample: notice Hello everyone!\nOr reply to a message with attachments`);
+      return api.sendMessage(`❌ Usage: notice <message>\nExample: notice Hello everyone!\nOr reply to a message with attachments`, event.threadID, event.messageID);
     }
 
     let userText = args.join(" ");
@@ -29,15 +30,14 @@ module.exports = {
       userText = event.messageReply.body;
     }
     
-    const adminName = (await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin";
+    const adminName = (await Users.getData(event.senderID)).name || "Admin";
+    const contentText = !userText ? "Only file attached" : userText;
     
-    const notificationMessage = `𝗡𝗢𝗧𝗜𝗖𝗘 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
+    const notificationMessage = `📢 NOTICE FROM BOT ADMIN 📢
 ━━━━━━━━━━━━━━━━━━━━
-👤 𝗔𝗱𝗺𝗶𝗻: ${adminName}
-📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${userText || "Only file attached"}
+👤 Admin: ${adminName}
+📝 Content: ${contentText}
 
-━━━━━━━━━━━━━━━━━━━━
-☸️ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to admin`;
 
@@ -86,7 +86,7 @@ module.exports = {
     let hasMore = true;
     const botID = api.getCurrentUserID();
 
-    const confirmMsg = await message.reply(`⏳ Fetching group list...`);
+    const confirmMsg = await api.sendMessage(`⏳ Sending notice to all groups...`, event.threadID);
 
     try {
       while (hasMore) {
@@ -105,18 +105,18 @@ module.exports = {
         hasMore = list.length === 100;
       }
     } catch (err) {
-      await api.unsendMessage(confirmMsg.messageID);
-      return message.reply(`❌ Failed to fetch groups: ${err.message}`);
+      try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
+      return api.sendMessage(`❌ Failed to fetch groups: ${err.message}`, event.threadID, event.messageID);
     }
 
     const total = allGroups.length;
-    await api.unsendMessage(confirmMsg.messageID);
+    try { await api.unsendMessage(confirmMsg.messageID); } catch(e) {}
 
     if (total === 0) {
-      return message.reply(`❌ No groups found where bot is a member.`);
+      return api.sendMessage(`❌ No groups found where bot is a member.`, event.threadID, event.messageID);
     }
 
-    await message.reply(`📤 Sending notice to ${total} groups...`);
+    await api.sendMessage(`📤 Sending notice to ${total} groups...`, event.threadID);
 
     let success = 0;
     let failed = [];
@@ -135,17 +135,19 @@ module.exports = {
           formSend.attachment = streams;
         }
 
-        const sentMsg = await api.sendMessage(formSend, tid);
-        
-        // ✅ সবাই রিপ্লাই করতে পারবে - অনরিপ্লাই সেট করা
-        global.GoatBot.onReply.set(sentMsg.messageID, {
-          commandName: "notice",
-          author: event.senderID,
-          adminThread: event.threadID,
-          type: "userReply",
-          messageID: sentMsg.messageID,
-          groupName: groupName,
-          groupId: tid
+        // ✅ মেসেজ পাঠানো এবং রিপ্লাই হ্যান্ডলিং
+        api.sendMessage(formSend, tid, (err, info) => {
+          if (!err && info) {
+            // ✅ GoatBot-এর জন্য অনরিপ্লাই সেট করা
+            global.GoatBot.onReply.set(info.messageID, {
+              commandName: "notice",
+              author: event.senderID,
+              adminThread: event.threadID,
+              groupName: groupName,
+              groupId: tid,
+              type: "userReply"
+            });
+          }
         });
         
         success++;
@@ -158,7 +160,7 @@ module.exports = {
 
       if (sentCount % PROGRESS_INTERVAL === 0 || i === total - 1) {
         try {
-          await message.reply(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`);
+          await api.sendMessage(`📊 Progress: ${sentCount}/${total}\n✅ Sent: ${success}\n❌ Failed: ${failed.length}`, event.threadID);
         } catch(e) {}
       }
 
@@ -176,7 +178,7 @@ module.exports = {
     } else if (failed.length > 10) {
       report += `\n\nFirst 10 failed:\n${failed.slice(0,10).map(f => `• ${f.name} (${f.id})`).join("\n")}`;
     }
-    await message.reply(report);
+    await api.sendMessage(report, event.threadID);
   },
 
   onReply: async function ({ api, event, Users, Threads }) {
@@ -185,11 +187,10 @@ module.exports = {
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { author, adminThread, type, groupName, groupId } = replyData;
+    const { adminThread, type, groupName, author } = replyData;
     
-    // ✅ শুধুমাত্র যিনি নোটিশ পাঠিয়েছেন এবং অ্যাডমিন রিপ্লাই পাবেন - কিন্তু সবাই রিপ্লাই করতে পারবে
     if (type === "userReply") {
-      // ✅ যে কেউ রিপ্লাই করতে পারবে (ইউজার টু অ্যাডমিন)
+      // ✅ সবাই রিপ্লাই করতে পারবে - কোন role চেক নেই
       const userInfo = await Users.getNameUser(senderID);
       const groupInfo = groupName || (await Threads.getData(threadID)).threadInfo?.threadName || "Unknown Group";
       
@@ -200,12 +201,12 @@ module.exports = {
         contentText = "Sent an attachment (photo/video/file)";
       }
       
-      const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿 📩
+      const msg = `📩 Reply from User 📩
 ━━━━━━━━━━━━━━━━━━━━
-👤 𝗨𝘀𝗲𝗿: ${userInfo}
-🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupInfo}
+👤 User: ${userInfo}
+🏘️ Group: ${groupInfo}
 
-📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${contentText}
+📝 Content: ${contentText}
 
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to user`;
@@ -224,7 +225,6 @@ module.exports = {
         commandName: "notice",
         author: author,
         userThread: threadID,
-        userMessageID: messageID,
         userId: senderID,
         userName: userInfo,
         groupName: groupInfo,
@@ -244,18 +244,17 @@ module.exports = {
         contentText = "Sent an attachment (photo/video/file)";
       }
       
-      const adminName = (await Users.getNameUser(senderID));
+      const adminName = await Users.getNameUser(senderID);
       
-      const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻 📩
+      const msg = `📩 Reply from Admin 📩
 ━━━━━━━━━━━━━━━━━━━━
-👤 𝗔𝗱𝗺𝗶𝗻: ${adminName}
-👥 𝗥𝗲𝗽𝗹𝘆𝗶𝗻𝗴 𝘁𝗼: ${userName}
-🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
+👤 Admin: ${adminName}
+👥 Replying to: ${userName}
+🏘️ Group: ${groupName}
 
-📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${contentText}
+📝 Content: ${contentText}
 
-━━━━━━━━━━━━━━━━━━━━
-☸️ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡`;
+`;
       
       let messageData = { body: msg };
       if (attachments.length) {
@@ -265,17 +264,7 @@ module.exports = {
         } catch(e) {}
       }
       
-      const sentMsg = await api.sendMessage(messageData, userThread);
-      
-      global.GoatBot.onReply.set(sentMsg.messageID, {
-        commandName: "notice",
-        author: author,
-        adminThread: adminThread,
-        userId: userId,
-        userName: userName,
-        groupName: groupName,
-        type: "userReply"
-      });
+      await api.sendMessage(messageData, userThread);
       
       api.sendMessage(`✅ Reply sent to user!`, threadID);
     }
