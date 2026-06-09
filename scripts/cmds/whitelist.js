@@ -20,10 +20,10 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			vi: "   {pn} [on | off]: bật/tắt chế độ chỉ whitelistIds mới có thể sử dụng bot"
-				+ "\n   {pn} noti [on | off]: bật/tắt thông báo khi người dùng không phải là whitelistIds sử dụng bot",
-			en: "   {pn} [on | off]: turn on/off the mode only whitelistIds can use bot"
-				+ "\n   {pn} noti [on | off]: turn on/off the notification when user is not whitelistIds use bot"
+			vi: "   {p}{n} [on | off]: bật/tắt chế độ chỉ whitelistIds mới có thể sử dụng bot"
+				+ "\n   {p}{n} noti [on | off]: bật/tắt thông báo khi người dùng không phải là whitelistIds sử dụng bot",
+			en: "   {p}{n} [on | off]: turn on/off the mode only whitelistIds can use bot"
+				+ "\n   {p}{n} noti [on | off]: turn on/off the notification when user is not whitelistIds use bot"
 		}
 	},
 
