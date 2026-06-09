@@ -14,7 +14,7 @@ module.exports = {
     shortDescription: "Send notification to all groups",
     longDescription: "Send notification only to groups where bot is member",
     category: "owner",
-    guide: "{pn} <message>"
+    guide: "{p}{n} <message>"
   },
 
   onStart: async function ({ message, api, event, args }) {
