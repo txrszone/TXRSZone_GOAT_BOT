@@ -9,13 +9,13 @@ module.exports = {
     author: "OMOR TE",
     countDown: 10,
     role: 2,
-    shortDescription: "Send notice to all groups",
-    longDescription: "Send notice only to groups where bot is member",
+    shortDescription: "Send notification to all groups",
+    longDescription: "Send notification only to groups where bot is member",
     category: "owner",
     guide: "{p}{n} <message>"
   },
 
-  onStart: async function ({ api, event, args, usersData }) {
+  onStart: async function ({ api, event, args, usersData, threadsData, commandName }) {
     const DELAY = 5000;
     const PROGRESS_INTERVAL = 5;
 
@@ -100,7 +100,7 @@ module.exports = {
       return api.sendMessage(`❌ No groups found where bot is a member.`, event.threadID, event.messageID);
     }
 
-    await api.sendMessage(`📤 Sending notice to ${total} groups...`, event.threadID);
+    await api.sendMessage(`📤 Sending notification to ${total} groups...`, event.threadID);
 
     let success = 0;
     let failed = [];
@@ -115,11 +115,12 @@ module.exports = {
         const messageSend = await api.sendMessage(formMessage, tid);
         
         global.GoatBot.onReply.set(messageSend.messageID, {
-          commandName: "notification",
+          commandName: commandName,
           adminThread: event.threadID,
           groupName: groupName,
           groupId: tid,
           adminId: event.senderID,
+          messageIDSender: messageSend.messageID,  // ✅ রিপ্লাই আইডি সংরক্ষণ
           type: "userCallAdmin"
         });
         
@@ -140,7 +141,7 @@ module.exports = {
       if (i < total - 1) await new Promise(r => setTimeout(r, DELAY));
     }
 
-    let report = `✅ NOTICE SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
+    let report = `✅ NOTIFICATION SENT\n━━━━━━━━━━━━━━━━━━━━\n📬 Success: ${success}/${total}\n❌ Failed: ${failed.length}`;
     if (failed.length > 0 && failed.length <= 10) {
       report += `\n\nFailed groups:\n${failed.map(f => `• ${f.name} (${f.id})`).join("\n")}`;
     } else if (failed.length > 10) {
@@ -149,17 +150,19 @@ module.exports = {
     await api.sendMessage(report, event.threadID);
   },
 
-  onReply: async ({ args, event, api, message, Reply, usersData }) => {
+  onReply: async ({ args, event, api, message, Reply, usersData, commandName }) => {
+    const { type, adminThread, groupId, groupName, adminId, userThread, userId, userName, messageIDSender } = Reply;
     const senderName = await usersData.getName(event.senderID);
     const attachmentStreams = await getStreamsFromAttachment(event.attachments.filter(item => mediaTypes.includes(item.type)));
 
-    // ✅ report.js এর মতো: ইউজার রিপ্লাই দিলে
-    if (!Reply.userThread) {
+    if (type === "userCallAdmin") {
+      // ইউজার রিপ্লাই করছে - অ্যাডমিনের কাছে যাবে (রিপ্লাই হিসেবে)
       const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿:
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗡𝗮𝗺𝗲: ${senderName}
 🆔 𝗜𝗗: ${event.senderID}
-🏘️ 𝗚𝗿𝗼𝘂𝗽: ${Reply.groupName}
+🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
+🆔 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗: ${groupId}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
@@ -173,41 +176,67 @@ ${args.join(" ")}
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      const sentMsg = await api.sendMessage(formMessage, Reply.adminThread);
+      // ✅ এখানে messageIDSender ব্যবহার করে রিপ্লাই হিসেবে পাঠানো হচ্ছে
+      api.sendMessage(formMessage, adminThread, (err, info) => {
+        if (err) {
+          console.error("Error sending to admin:", err);
+          return message.reply("❌ Failed to send reply to admin!");
+        }
+        
+        message.reply("✅ Your reply has been sent to admin!");
+        
+        global.GoatBot.onReply.set(info.messageID, {
+          commandName: commandName,
+          userThread: event.threadID,
+          groupId: groupId,
+          groupName: groupName,
+          userId: event.senderID,
+          userName: senderName,
+          adminId: adminId,
+          messageIDSender: info.messageID,
+          type: "adminReply"
+        });
+      }, messageIDSender);  // ✅ এই প্যারামিটারটি রিপ্লাই হিসেবে চিহ্নিত করে
       
-      global.GoatBot.onReply.set(sentMsg.messageID, {
-        name: "notification",
-        adminThread: Reply.adminThread,
-        userThread: event.threadID,
-        groupId: Reply.groupId,
-        groupName: Reply.groupName,
-        userId: event.senderID,
-        userName: senderName,
-        adminId: Reply.adminId
-      });
+    } else if (type === "adminReply") {
+      // অ্যাডমিন রিপ্লাই করছে - সেই নির্দিষ্ট ইউজারের মেসেজের রিপ্লাই হিসেবে যাবে
+      const { userThread, userId, userName, messageIDSender } = Reply;
       
-      message.reply("✅ Your reply has been sent to admin!");
-      
-    } else {
-      // ✅ অ্যাডমিন রিপ্লাই করছে - report.js এর মতো রিপ্লাই হিসেবে যাবে
-      const adminReplyMsg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
+      const msg = `📝 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻:
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗔𝗱𝗺𝗶𝗻: ${senderName}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁:
 ${args.join(" ")}
+
 ━━━━━━━━━━━━━━━━━━━━
-📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝐦𝐢𝐧`;
+📌 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐭𝐡𝐢𝐬 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 𝐭𝐨 𝐫𝐞𝐬𝐩𝐨𝐧𝐝 𝐭𝐨 𝐚𝐝𝗺𝗶𝗻`;
 
       const formMessage = {
-        body: adminReplyMsg,
+        body: msg,
         attachment: attachmentStreams,
         mentions: [{ id: event.senderID, tag: senderName }]
       };
 
-      // 🔥 রিপ্লাই হিসেবে পাঠানো
-      await api.sendMessage(formMessage, Reply.userThread, event.messageReply?.messageID);
-      message.reply(`✅ Reply sent to user in group: ${Reply.groupName}`);
+      // ✅ এখানেও messageIDSender ব্যবহার করে ইউজারের মেসেজের রিপ্লাই হিসেবে পাঠানো হচ্ছে
+      api.sendMessage(formMessage, userThread, (err, info) => {
+        if (err) {
+          console.error("Error sending to user:", err);
+          return message.reply("❌ Failed to send reply to user!");
+        }
+        
+        message.reply(`✅ Reply sent to user ${userName || userId}`);
+        
+        global.GoatBot.onReply.set(info.messageID, {
+          commandName: commandName,
+          adminThread: event.threadID,
+          groupName: groupName,
+          groupId: groupId,
+          adminId: adminId,
+          messageIDSender: info.messageID,
+          type: "userCallAdmin"
+        });
+      }, messageIDSender);  // ✅ এই প্যারামিটারটি রিপ্লাই হিসেবে চিহ্নিত করে
     }
   }
 };
