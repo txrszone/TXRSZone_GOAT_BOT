@@ -32,15 +32,16 @@ module.exports = {
       userText = event.messageReply.body;
     }
     
-    const notificationMessage = `📢 **NOTICE FROM ADMIN** 📢
+    const notificationMessage = `📢 𝗡𝗢𝗧𝗜𝗖𝗘 𝗙𝗥𝗢𝗠 𝗔𝗗𝗠𝗜𝗡 📢
 ━━━━━━━━━━━━━━━━━━━━
-👤 **Admin:** ${(await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin"}
-📝 **Content:** ${userText || "Only file attached"}
+👤 𝗔𝗱𝗺𝗶𝗻: ${(await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin"}
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${userText || "Only file attached"}
 
-📌 **Reply to this message** to respond to admin
-⏰ **Time:** ${fullTime}
+⏰ 𝗧𝗶𝗺𝗲: ${fullTime}
 ━━━━━━━━━━━━━━━━━━━━
-⚡ MW Legends Bot`;
+☸️ 𝐌𝐖 𝐋𝐞𝐠𝐞𝐧𝐝𝐬 𝐁𝐨𝐭 ⚡
+━━━━━━━━━━━━━━━━━━━━
+📌 Reply to this message to respond to admin`  ;
 
     // 📁 Handle attachments
     const allAttachments = [...event.attachments, ...(event.messageReply?.attachments || [])];
@@ -159,13 +160,13 @@ module.exports = {
     
     if (type === "userReply") {
       // ইউজার অ্যাডমিনকে রিপ্লাই করছে
-      const msg = `📩 **Reply from User** 📩
+      const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿 📩
 ━━━━━━━━━━━━━━━━━━━━
-👤 **User:** ${(await Users.getNameUser(senderID))}
-🏘️ **Group:** ${(await Threads.getData(threadID)).threadInfo?.threadName || "Unknown"}
-⏰ **Time:** ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
+👤 𝗨𝘀𝗲𝗿: ${(await Users.getNameUser(senderID))}
+🏘️ 𝗚𝗿𝗼𝘂𝗽: ${(await Threads.getData(threadID)).threadInfo?.threadName || "Unknown"}
+⏰ 𝗧𝗶𝗺𝗲: ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
 
-📝 **Content:** ${attachments.length ? "Only file attached" : body || "No text"}
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
 
 ━━━━━━━━━━━━━━━━━━━━
 📌 Reply to this message to respond to user`;
