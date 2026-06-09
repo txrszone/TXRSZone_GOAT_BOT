@@ -56,7 +56,7 @@ module.exports = {
 		if (config.adminBot.length == 0)
 			return message.reply(getLang("noAdmin"));
 		const senderName = await usersData.getName(senderID);
-		const msg = "==📨️ RSV CALL ADMIN 📨️=="
+		const msg = "==📨️ RSVD CALL ADMIN 📨️=="
 			+ `\n- User Name: ${senderName}`
 			+ `\n- User ID: ${senderID}`
 			+ (isGroup ? getLang("sendByGroup", (await threadsData.get(threadID)).threadName, threadID) : getLang("sendByUser"));
