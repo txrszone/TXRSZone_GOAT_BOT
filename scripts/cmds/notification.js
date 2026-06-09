@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "notification",
     aliases: ["notify", "noti"],
-    version: "10.0.0",
+    version: "11.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -137,7 +137,7 @@ module.exports = {
         api.sendMessage(formSend, tid, (err, info) => {
           if (!err && info) {
             global.GoatBot.onReply.set(info.messageID, {
-              commandName: "notification",
+              name: "notification",
               adminThread: event.threadID,
               groupName: groupName,
               groupId: tid,
@@ -182,7 +182,7 @@ module.exports = {
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { adminThread, groupName, authorId, groupId } = replyData;
+    const { adminThread, groupName, groupId, authorId } = replyData;
     
     const userInfo = await usersData.getName(senderID);
     const groupInfo = groupName || (await threadsData.get(threadID))?.threadInfo?.threadName || "Unknown Group";
@@ -238,7 +238,7 @@ module.exports = {
       const sentMsg = await api.sendMessage(messageData, adminThread);
       
       global.GoatBot.onReply.set(sentMsg.messageID, {
-        commandName: "notification",
+        name: "notification",
         adminThread: threadID,
         groupId: groupId,
         groupName: groupInfo,
