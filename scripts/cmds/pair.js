@@ -75,20 +75,25 @@ module.exports = {
         let canvas = createCanvas(baseImage.width, baseImage.height);
         let ctx = canvas.getContext("2d");
 
+        // Draw background
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+
+        // Draw square avatars only, no shapes or text
         ctx.drawImage(imgAvt1, 120, 170, 300, 300);
         ctx.drawImage(imgAvt2, canvas.width - 420, 170, 300, 300);
 
+        // Save the image buffer
         const imageBuffer = canvas.toBuffer();
         fs.writeFileSync(pathImg, imageBuffer);
 
+        // Clean up avatar images
         fs.removeSync(pathAvt1);
         fs.removeSync(pathAvt2);
 
-        // CRUCIAL FIX: Add @ symbol in message body like baby.js
+        // Send message with your kawaii styled message below
         const kawaiiMessage = `
 🌸💞 *Cᴏɴɢʀᴀᴛs* 💞🌸  
-@${name1} ＆ @${name2} ✨
+@${name1}  ＆ @${name2} ✨
 
 💖 *Mᴀᴛᴄʜ Rᴀᴛᴇ:* ${matchRate}% 💖
 
@@ -102,8 +107,8 @@ module.exports = {
             {
                 body: kawaiiMessage,
                 mentions: [
-                    { tag: `@${name1}`, id: id1, fromIndex: kawaiiMessage.indexOf(`@${name1}`) },
-                    { tag: `@${name2}`, id: id2, fromIndex: kawaiiMessage.indexOf(`@${name2}`) }
+                 { tag: `@${name1}`, id: id1 },
+                 { tag: `@${name2}`, id: id2 }
                 ],
                 attachment: fs.createReadStream(pathImg),
             },
