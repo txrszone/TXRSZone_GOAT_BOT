@@ -136,12 +136,14 @@ module.exports = {
 
         api.sendMessage(formSend, tid, (err, info) => {
           if (!err && info) {
+            // ✅ সঠিকভাবে onReply সেট করা
             global.GoatBot.onReply.set(info.messageID, {
-              name: "notice",
+              commandName: "notice",
               adminThread: event.threadID,
               groupName: groupName,
               groupId: tid,
-              authorId: event.senderID
+              authorId: event.senderID,
+              userName: adminName
             });
           }
         });
@@ -183,7 +185,7 @@ module.exports = {
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    const { adminThread, groupName, authorId, groupId } = replyData;
+    const { adminThread, groupName, authorId, groupId, commandName } = replyData;
     
     const userInfo = await usersData.getName(senderID);
     const groupInfo = groupName || (await threadsData.get(threadID))?.threadInfo?.threadName || "Unknown Group";
@@ -216,6 +218,7 @@ module.exports = {
       
       await api.sendMessage(messageData, groupId);
       api.sendMessage(`✅ Reply sent to user in group: ${groupInfo}`, threadID);
+      global.GoatBot.onReply.delete(messageID);
       
     } else {
       // ✅ ইউজার অ্যাডমিনকে রিপ্লাই দিচ্ছে
@@ -240,17 +243,17 @@ module.exports = {
       const sentMsg = await api.sendMessage(messageData, adminThread);
       
       global.GoatBot.onReply.set(sentMsg.messageID, {
-        name: "notice",
+        commandName: "notice",
         adminThread: threadID,
         groupId: groupId,
         groupName: groupInfo,
         userId: senderID,
         userName: userInfo,
-        authorId: authorId,
-        isAdminReply: true
+        authorId: authorId
       });
       
       api.sendMessage(`✅ Your reply has been sent to admin!`, threadID);
+      global.GoatBot.onReply.delete(messageID);
     }
   }
 };
