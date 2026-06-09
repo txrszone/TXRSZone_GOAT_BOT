@@ -32,7 +32,7 @@ module.exports = {
       userText = event.messageReply.body;
     }
     
-    const notificationMessage = `📢 𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
+    const notificationMessage = `𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗙𝗥𝗢𝗠 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 ‼️
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗔𝗗𝗠𝗜𝗡: ${(await api.getUserInfo(event.senderID))[event.senderID]?.name || "Admin"}
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${userText || "Only file attached"}
