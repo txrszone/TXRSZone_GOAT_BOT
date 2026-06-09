@@ -13,7 +13,7 @@ module.exports = {
 			en: "Reload config of bot"
 		},
 		category: "owner",
-		guide: "{pn}"
+		guide: "{p}{n}"
 	},
 
 	langs: {
