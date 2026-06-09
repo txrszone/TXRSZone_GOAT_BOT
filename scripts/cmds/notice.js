@@ -7,7 +7,7 @@ module.exports = {
   config: {
     name: "notice",
     aliases: ["notif"],
-    version: "6.0.0",
+    version: "7.0.0",
     author: "OMOR TE",
     countDown: 10,
     role: 2,
@@ -132,7 +132,6 @@ module.exports = {
       try {
         const formSend = { body: notificationMessage };
         
-        // ✅ অ্যাটাচমেন্ট যোগ করা (প্রতি গ্রুপে নতুন স্ট্রিম)
         if (tempFiles.length) {
           const streams = tempFiles.map(file => fs.createReadStream(file));
           formSend.attachment = streams;
@@ -140,13 +139,15 @@ module.exports = {
 
         const sentMsg = await api.sendMessage(formSend, tid);
         
-        // ✅ শুধু অ্যাডমিন রিপ্লাই করতে পারে (role চেক)
+        // ✅ সবাই রিপ্লাই করতে পারবে - অনরিপ্লাই সেট করা
         global.GoatBot.onReply.set(sentMsg.messageID, {
           commandName: "notice",
           author: event.senderID,
           adminThread: event.threadID,
           type: "userReply",
-          messageID: sentMsg.messageID
+          messageID: sentMsg.messageID,
+          groupName: groupName,
+          groupId: tid
         });
         
         success++;
@@ -180,26 +181,62 @@ module.exports = {
     await message.reply(report);
   },
 
-  onReply: async function ({ api, event, Users, Threads, role }) {
+  onReply: async function ({ api, event, Users, Threads }) {
     const { threadID, messageID, senderID, body, attachments } = event;
     
     const replyData = global.GoatBot.onReply.get(messageID);
     if (!replyData) return;
     
-    // ✅ শুধুমাত্র বট এডমিন বা যিনি নোটিশ পাঠিয়েছেন তারা রিপ্লাই করতে পারবেন
-    const isAuthorized = (role === 2) || (senderID === replyData.author);
-    
-    if (!isAuthorized) {
-      return api.sendMessage(`❌ Only bot admin can reply to this notice!`, threadID, messageID);
-    }
-    
-    const { author, adminThread, type } = replyData;
+    const { author, adminThread, type, groupName, groupId } = replyData;
     
     if (type === "userReply") {
-      // ইউজার অ্যাডমিনকে রিপ্লাই করছে
+      // ✅ যে কেউ রিপ্লাই করতে পারবে (ইউজার টু অ্যাডমিন)
+      const userInfo = await Users.getNameUser(senderID);
+      const groupInfo = groupName || (await Threads.getData(threadID)).threadInfo?.threadName || "Unknown Group";
+      
+      const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗨𝘀𝗲𝗿 📩
+━━━━━━━━━━━━━━━━━━━━
+👤 𝗨𝘀𝗲𝗿: ${userInfo}
+🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupInfo}
+⏰ 𝗧𝗶𝗺𝗲: ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
+
+📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
+
+━━━━━━━━━━━━━━━━━━━━
+📌 Reply to this message to respond to user`;
+      
+      let messageData = { body: msg };
+      if (attachments.length) {
+        try {
+          const streams = await getStreamsFromAttachment(attachments);
+          messageData.attachment = streams;
+        } catch(e) {}
+      }
+      
+      const sentMsg = await api.sendMessage(messageData, adminThread);
+      
+      global.GoatBot.onReply.set(sentMsg.messageID, {
+        commandName: "notice",
+        author: author,
+        userThread: threadID,
+        userMessageID: messageID,
+        userId: senderID,
+        userName: userInfo,
+        groupName: groupInfo,
+        type: "adminReply"
+      });
+      
+      api.sendMessage(`✅ Reply sent to admin successfully!`, threadID);
+      
+    } else if (type === "adminReply") {
+      // ✅ অ্যাডমিন ইউজারকে রিপ্লাই করছে
+      const { userThread, userId, userName, groupName } = replyData;
+      
       const msg = `📩 𝗥𝗲𝗽𝗹𝘆 𝗳𝗿𝗼𝗺 𝗔𝗱𝗺𝗶𝗻 📩
 ━━━━━━━━━━━━━━━━━━━━
 👤 𝗔𝗱𝗺𝗶𝗻: ${(await Users.getNameUser(senderID))}
+👥 𝗥𝗲𝗽𝗹𝘆𝗶𝗻𝗴 𝘁𝗼: ${userName}
+🏘️ 𝗚𝗿𝗼𝘂𝗽: ${groupName}
 ⏰ 𝗧𝗶𝗺𝗲: ${moment().tz("Asia/Dhaka").format("HH:mm:ss || DD/MM/YYYY")}
 
 📝 𝗖𝗼𝗻𝘁𝗲𝗻𝘁: ${attachments.length ? "Only file attached" : body || "No text"}
@@ -215,11 +252,19 @@ module.exports = {
         } catch(e) {}
       }
       
-      await api.sendMessage(messageData, adminThread);
-      api.sendMessage(`✅ Reply sent to admin's notice!`, threadID);
+      const sentMsg = await api.sendMessage(messageData, userThread);
       
-    } else if (type === "adminReply") {
-      // এখানে আর দরকার নেই কারণ notice এর reply শুধু admin পাবে
+      global.GoatBot.onReply.set(sentMsg.messageID, {
+        commandName: "notice",
+        author: author,
+        adminThread: adminThread,
+        userId: userId,
+        userName: userName,
+        groupName: groupName,
+        type: "userReply"
+      });
+      
+      api.sendMessage(`✅ Reply sent to user successfully!`, threadID);
     }
   }
 };
