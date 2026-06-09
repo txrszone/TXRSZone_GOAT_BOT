@@ -36,7 +36,7 @@ module.exports = {
 			},
 			{
 				keyullash: ["kar fork", "fork"],
-				reply: "⚡ MW Legends; Latest"
+				reply: "⚡ MW Legends; Latest √\n\n🌐 https://mw-legends-chatbot.lovable.app/"
 			}
 		];
 
