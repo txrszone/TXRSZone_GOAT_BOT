@@ -16,42 +16,44 @@ module.exports = {
   },
 
   onStart: async function ({ api, event, args }) {
-    console.log("✅ SS command started");
-    
     const url = args.join(" ");
     if (!url) {
-      console.log("❌ No URL provided");
       return api.sendMessage("❌ Please provide a URL.\nExample: /ss https://facebook.com", event.threadID, event.messageID);
     }
     
-    console.log(`📸 Processing URL: ${url}`);
+    // Add http:// if not present
+    let finalUrl = url;
+    if (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://")) {
+      finalUrl = "https://" + finalUrl;
+    }
+    
+    const loadingMsg = await api.sendMessage("⏳ Taking screenshot, please wait...", event.threadID);
     
     try {
-      // Send loading message first
-      const loadingMsg = await api.sendMessage("⏳ Taking screenshot, please wait...", event.threadID);
+      // Using free screenshot API (no key needed)
+      const screenshotApi = `https://api.screenshotmachine.com/?key=d67a8e&url=${encodeURIComponent(finalUrl)}&dimension=1280x720&cacheLimit=0`;
       
-      const screenshotApi = `https://image.thum.io/get/width/1920/crop/800/maxAge/1/${encodeURIComponent(url)}`;
-      console.log(`🌐 API URL: ${screenshotApi}`);
+      // Alternative working API
+      const altApi = `https://webscreenshot.vercel.app/api?url=${encodeURIComponent(finalUrl)}&width=1280&height=720`;
       
-      const res = await axios.get(screenshotApi, {
+      const response = await axios.get(altApi, {
         responseType: "stream",
         timeout: 30000
       });
       
-      console.log("✅ Screenshot captured, sending...");
-      
       await api.sendMessage({
         body: "📸 Screenshot captured successfully!",
-        attachment: res.data
+        attachment: response.data
       }, event.threadID, event.messageID);
       
-      // Remove loading message
       await api.unsendMessage(loadingMsg.messageID);
-      console.log("✅ Done!");
       
     } catch (error) {
-      console.error("❌ Screenshot error:", error.message);
-      api.sendMessage(`❌ Failed to take screenshot: ${error.message}`, event.threadID, event.messageID);
+      console.error("Screenshot error:", error.message);
+      await api.unsendMessage(loadingMsg.messageID);
+      
+      // Backup: Send just the link
+      api.sendMessage(`❌ Could not capture screenshot.\n🔗 Website link: ${finalUrl}\n\nTry opening it manually.`, event.threadID, event.messageID);
     }
   }
 };
