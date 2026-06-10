@@ -13,21 +13,21 @@ module.exports = {
 		},
 		category: "box chat",
 		guide: {
-			vi: "   {pn} @tag <lý do>: dùng cảnh cáo thành viên"
-				+ "\n   {pn} list: xem danh sách những thành viên đã bị cảnh cáo"
-				+ "\n   {pn} listban: xem danh sách những thành viên đã bị cảnh cáo đủ 3 lần và bị ban khỏi box"
-				+ "\n   {pn} info [@tag | <uid> | reply | để trống]: xem thông tin cảnh cáo của người được tag hoặc uid hoặc bản thân"
-				+ "\n   {pn} unban [@tag | <uid> | reply | để trống]: gỡ ban thành viên, đồng thời gỡ tất cả cảnh cáo của thành viên đó"
-				+ "\n   {pn} unwarn [@tag | <uid> | reply | để trống] [<số thứ tự> | để trống]: gỡ cảnh cáo thành viên bằng uid và số thứ tự cảnh cáo, nếu để trống sẽ gỡ cảnh cáo cuối cùng"
-				+ "\n   {pn} reset: reset tất cả dữ liệu cảnh cáo"
+			vi: "   {p}{n} @tag <lý do>: dùng cảnh cáo thành viên"
+				+ "\n   {p}{n} list: xem danh sách những thành viên đã bị cảnh cáo"
+				+ "\n   {p}{n} listban: xem danh sách những thành viên đã bị cảnh cáo đủ 3 lần và bị ban khỏi box"
+				+ "\n   {p}{n} info [@tag | <uid> | reply | để trống]: xem thông tin cảnh cáo của người được tag hoặc uid hoặc bản thân"
+				+ "\n   {p}{n} unban [@tag | <uid> | reply | để trống]: gỡ ban thành viên, đồng thời gỡ tất cả cảnh cáo của thành viên đó"
+				+ "\n   {p}{n} unwarn [@tag | <uid> | reply | để trống] [<số thứ tự> | để trống]: gỡ cảnh cáo thành viên bằng uid và số thứ tự cảnh cáo, nếu để trống sẽ gỡ cảnh cáo cuối cùng"
+				+ "\n   {p}{n} reset: reset tất cả dữ liệu cảnh cáo"
 				+ "\n⚠️ Cần set quản trị viên cho bot để bot tự kick thành viên bị ban",
-			en: "   {pn} @tag <reason>: warn member"
-				+ "\n   {pn} list: view list of warned members"
-				+ "\n   {pn} listban: view list of banned members"
-				+ "\n   {pn} info [@tag | <uid> | reply | leave blank]: view warning information of tagged person or uid or yourself"
-				+ "\n   {pn} unban [@tag | <uid> | reply | leave blank]: unban member, at the same time remove all warnings of that member"
-				+ "\n   {pn} unwarn [@tag | <uid> | reply | leave blank] [<number> | leave blank]: remove warning of member by uid and number of warning, if leave blank will remove the last warning"
-				+ "\n   {pn} reset: reset all warn data"
+			en: "   {p}{n} @tag <reason>: warn member"
+				+ "\n   {p}{n} list: view list of warned members"
+				+ "\n   {p}{n} listban: view list of banned members"
+				+ "\n   {p}{n} info [@tag | <uid> | reply | leave blank]: view warning information of tagged person or uid or yourself"
+				+ "\n   {p}{n} unban [@tag | <uid> | reply | leave blank]: unban member, at the same time remove all warnings of that member"
+				+ "\n   {p}{n} unwarn [@tag | <uid> | reply | leave blank] [<number> | leave blank]: remove warning of member by uid and number of warning, if leave blank will remove the last warning"
+				+ "\n   {p}{n} reset: reset all warn data"
 				+ "\n⚠️ You need to set admin for bot to auto kick banned members"
 		}
 	},
