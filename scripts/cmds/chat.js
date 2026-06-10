@@ -9,7 +9,7 @@ module.exports = {
     name: "chat",
     version: "5.5.0 FULL SUPPORT UPDATED FIXED",
     author: "OMOR TE",
-    countDown: 1,
+    countDown: 4,
     role: 0,
     shortDescription: "Chat with AI & Generate Image",
     longDescription: "Chat with AI, generate images, ask questions with photos, GIFs, and stickers",
