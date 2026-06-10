@@ -43,7 +43,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   return y;
 }
 
-const WELCOME_GIF_URL = "https://files.catbox.moe/38guc2.gif";
+const WELCOME_GIF_URL = "https://i.postimg.cc/LXJmmZ4L/Polish-20260610-154815674.png";
 
 async function sendWelcomeGifMessage(api, threadID, bodyText) {
   try {
@@ -75,7 +75,7 @@ module.exports = {
   config: {
     name: "welcome",
     version: "2.0.0",
-    author: "MAHBUB ULLASH",
+    author: "Omor TE",
     category: "events"
   },
 
