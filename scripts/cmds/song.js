@@ -19,7 +19,7 @@ module.exports = {
     },
     category: "media",
     guide: {
-      en: "{pn} [<song name>|<song link>]:"+ "\n   Example:"+"\n{pn} chipi chipi chapa chapa"
+      en: "{p}{n} [<song name>|<song link>]:"+ "\n   Example:"+"\n{pn} chipi chipi chapa chapa"
     }
   },
   onStart: async ({api,args, event,commandName, message }) =>{
