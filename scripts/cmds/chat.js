@@ -7,9 +7,9 @@ const sessions = {};
 module.exports = {
   config: {
     name: "chat",
-    version: "5.5.0 FULL SUPPORT UPDATED FIXED",
+    version: "5.5.0 FULL FIXED UPDATED",
     author: "OMOR TE",
-    countDown: 4,
+    countDown: 1,
     role: 0,
     shortDescription: "Chat with AI & Generate Image",
     longDescription: "Chat with AI, generate images, ask questions with photos, GIFs, and stickers",
@@ -176,7 +176,7 @@ module.exports = {
 
         const response = await axios.post(`${BASE_URL}/v1/response`, requestBody, {
           headers: { Authorization: `Bearer ${VERBA_API_KEY}`, "Content-Type": "application/json" },
-          timeout: 120000  // 👈 120 seconds রেখেছি
+          timeout: 120000
         });
 
         let reply = response.data?.choices?.[0]?.message?.content;
@@ -220,12 +220,14 @@ module.exports = {
     } catch (error) {
       console.error("Final Chat Error:", error);
       
+      const statusCode = error.response?.status;
+      
       if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
-        api.sendMessage("⏳ The bot is taking too long to respond due to server latency.\n\nPlease try again in a few moments.", threadID, messageID);
-      } else if (error.response?.status === 503) {
-        api.sendMessage("⚠️ Bot is temporarily facing high ping issues. The AI server is currently busy.\n\nPlease wait a moment and try again.\n\n💡 Alternative: Use /bing or /gpt commands while this resolves.", threadID, messageID);
-      } else if (error.response?.status === 429) {
-        api.sendMessage("⏳ Too many requests at once. The bot is rate limited.\n\nPlease wait a few seconds before trying again.", threadID, messageID);
+        api.sendMessage(`⏳ Error: Request Timeout\nThe bot is taking too long to respond due to server latency.\n\nPlease try again in a few moments.`, threadID, messageID);
+      } else if (statusCode === 503) {
+        api.sendMessage(`⚠️ Error ${statusCode}: Bot is temporarily facing high ping issues. The AI server is currently busy.\n\nPlease wait a moment and try again.`, threadID, messageID);
+      } else if (statusCode === 429) {
+        api.sendMessage(`⏳ Error ${statusCode}: Too many requests at once. The bot is rate limited.\n\nPlease wait a few seconds before trying again.`, threadID, messageID);
       } else {
         let errMsg = error.response?.status === 404 ? "API endpoint not found. Please report this to bot owner." : error.message;
         api.sendMessage(`❌ Error: ${errMsg}\n\n💡 Tip: Try again in a few minutes.`, threadID, messageID);
