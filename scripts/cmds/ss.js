@@ -7,73 +7,51 @@ module.exports = {
     aliases: ["url", "check", "website", "link"],
     version: "1.0",
     author: "Omor TE",
-    countDown: 3,
+    countDown: 5,
     role: 0,
     shortDescription: "Take a screenshot of a website",
-    longDescription: "Capture screenshot using Thum.io API",
+    longDescription: "Capture screenshot of any website URL",
     category: "utility",
     guide: "{p}{n} [URL]"
   },
 
   onStart: async function ({ api, event, args }) {
+    console.log("✅ SS command started");
+    
     const url = args.join(" ");
     if (!url) {
+      console.log("❌ No URL provided");
       return api.sendMessage("❌ Please provide a URL.\nExample: /ss https://facebook.com", event.threadID, event.messageID);
     }
     
-    // Add https:// if not present
-    let finalUrl = url;
-    if (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://")) {
-      finalUrl = "https://" + finalUrl;
-    }
-    
-    // Your Thum.io API Key
-    const THUM_API_KEY = "77928";
-    
-    const loadingMsg = await api.sendMessage("⏳ Taking screenshot via Thum.io...", event.threadID);
+    console.log(`📸 Processing URL: ${url}`);
     
     try {
-      // Using your API Key
-      const screenshotUrl = `https://image.thum.io/get/auth/${THUM_API_KEY}/width/1280/crop/800/${encodeURIComponent(finalUrl)}`;
+      // Send loading message first
+      const loadingMsg = await api.sendMessage("⏳ Taking screenshot, please wait...", event.threadID);
       
-      console.log(`📸 Capturing: ${finalUrl}`);
-      console.log(`🔑 API URL: ${screenshotUrl}`);
+      const screenshotApi = `https://image.thum.io/get/width/1920/crop/800/maxAge/1/${encodeURIComponent(url)}`;
+      console.log(`🌐 API URL: ${screenshotApi}`);
       
-      const response = await axios.get(screenshotUrl, {
+      const res = await axios.get(screenshotApi, {
         responseType: "stream",
         timeout: 30000
       });
       
+      console.log("✅ Screenshot captured, sending...");
+      
       await api.sendMessage({
-        body: `📸 Screenshot of: ${finalUrl}`,
-        attachment: response.data
+        body: "📸 Screenshot captured successfully!",
+        attachment: res.data
       }, event.threadID, event.messageID);
       
+      // Remove loading message
       await api.unsendMessage(loadingMsg.messageID);
-      console.log("✅ Screenshot sent successfully!");
+      console.log("✅ Done!");
       
     } catch (error) {
-      console.error("Thum.io Error:", error.message);
-      await api.unsendMessage(loadingMsg.messageID);
-      
-      // Try without API key as backup
-      try {
-        console.log("🔄 Trying without API key...");
-        const backupUrl = `https://image.thum.io/get/width/1280/crop/800/${encodeURIComponent(finalUrl)}`;
-        
-        const backupResponse = await axios.get(backupUrl, {
-          responseType: "stream",
-          timeout: 30000
-        });
-        
-        await api.sendMessage({
-          body: `📸 Screenshot of: ${finalUrl} (backup method)`,
-          attachment: backupResponse.data
-        }, event.threadID, event.messageID);
-        
-      } catch (backupError) {
-        api.sendMessage(`❌ Screenshot failed.\n🔗 Link: ${finalUrl}\n\nError: ${error.message}`, event.threadID, event.messageID);
-      }
+      console.error("❌ Screenshot error:", error.message);
+      api.sendMessage(`❌ Failed to take screenshot: ${error.message}`, event.threadID, event.messageID);
     }
   }
 };
