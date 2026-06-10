@@ -7,9 +7,9 @@ const sessions = {};
 module.exports = {
   config: {
     name: "chat",
-    version: "5.2.0 FINAL FIXED",
+    version: "5.3.0 NEW FIXED",
     author: "OMOR TE",
-    countDown: 1,
+    countDown: 2,
     role: 0,
     shortDescription: "Chat with AI & Generate Image",
     longDescription:
@@ -58,18 +58,18 @@ module.exports = {
 │      🤖  MW Legends AI  ⚡      │
 ╰───────────────────╯
 
-📌❓ কিভাবে ব্যবহার করবেন?
+📌❓ How to use?
 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
 
-💬 টেক্সট চ্যাট
+💬 Text Chat
 └─ ${prefix}chat hello
 
-🎨 ইমেজ জেনারেট
+🎨 Generate Image
 └─ ${prefix}chat img: a cat
 
-🖼️ ছবি দেখে প্রশ্ন
-└─ [ছবি রিপ্লাই] ${prefix}chat ছবিটি সম্পর্কে বর্ণনা দাও
+🖼️ Ask about an image
+└─ [reply to image] ${prefix}chat describe this image
 
 ▰▰▰▰▰▰▰▰▰▰▰▰▰
 📩
@@ -90,7 +90,7 @@ module.exports = {
 
       if (!prompt) {
         return api.sendMessage(
-          "❌ প্রম্পট দিন। যেমন:\nchat img: a robot warrior",
+          "❌ Please provide a prompt. Example:\nchat img: a robot warrior",
           threadID,
           messageID
         );
@@ -150,123 +150,152 @@ module.exports = {
       return;
     }
 
-    // 💬 AI CHAT
-    try {
-      let requestBody = {
-        character: CHARACTER_ID,
-        messages: []
-      };
+    // 💬 AI CHAT with RETRY MECHANISM
+    const sendWithRetry = async (retryCount = 0) => {
+      try {
+        let requestBody = {
+          character: CHARACTER_ID,
+          messages: []
+        };
 
-      // পুরাতন session ব্যবহার
-      if (sessions[sessionId]) {
-        requestBody.session_id = sessions[sessionId];
-      }
+        // পুরাতন session ব্যবহার
+        if (sessions[sessionId]) {
+          requestBody.session_id = sessions[sessionId];
+        }
 
-      // 🖼️ Image + text
-      if (replyingImage) {
-        requestBody.messages = [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: userText || "What's in this image?"
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: replyingImage
+        // 🖼️ Image + text
+        if (replyingImage) {
+          requestBody.messages = [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: userText || "What's in this image?"
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: replyingImage
+                  }
                 }
-              }
-            ]
-          }
-        ];
-      }
+              ]
+            }
+          ];
+        } 
+        // 💬 Normal text
+        else {
+          requestBody.messages = [
+            {
+              role: "user",
+              content: userText
+            }
+          ];
+        }
 
-      // 💬 Normal text
-      else {
-        requestBody.messages = [
+        const response = await axios.post(
+          `${BASE_URL}/v1/response`,
+          requestBody,
           {
-            role: "user",
-            content: userText
+            headers: {
+              Authorization: `Bearer ${VERBA_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            timeout: 60000
           }
-        ];
-      }
+        );
 
-      const response = await axios.post(
-        `${BASE_URL}/v1/response`,
-        requestBody,
-        {
-          headers: {
-            Authorization: `Bearer ${VERBA_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          timeout: 120000
+        let reply = response.data?.choices?.[0]?.message?.content;
+
+        if (!reply) {
+          throw new Error("No response received");
         }
-      );
 
-      let reply =
-        response.data?.choices?.[0]?.message?.content;
+        // ✅ Save new session
+        if (response.data?.session_id) {
+          sessions[sessionId] = response.data.session_id;
+        }
 
-      if (!reply) {
-        throw new Error("No response received");
-      }
+        // 🧹 Clean weird markdown issue
+        reply = reply
+          .replace(/\n\s*\*\s*\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
 
-      // ✅ Save new session
-      if (response.data?.session_id) {
-        sessions[sessionId] = response.data.session_id;
-      }
+        // ✅ Messenger safe sending
+        if (reply.length <= 1900) {
+          await message.reply(reply);
+        } else {
+          const chunks = reply.match(/[\s\S]{1,1900}/g) || [];
 
-      // 🧹 Clean weird markdown issue
-      reply = reply
-        .replace(/\n\s*\*\s*\n/g, "\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
-
-      // ✅ Messenger safe sending
-      if (reply.length <= 1900) {
-        await message.reply(reply);
-      } else {
-        const chunks =
-          reply.match(/[\s\S]{1,1900}/g) || [];
-
-        for (let i = 0; i < chunks.length; i++) {
-          if (i !== 0) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, 400)
-            );
+          for (let i = 0; i < chunks.length; i++) {
+            if (i !== 0) {
+              await new Promise((resolve) => setTimeout(resolve, 400));
+            }
+            await api.sendMessage(chunks[i], threadID);
           }
-
-          await api.sendMessage(
-            chunks[i],
-            threadID
-          );
         }
+        
+        return true; // Success
+        
+      } catch (error) {
+        console.error(`Chat Error (Attempt ${retryCount + 1}):`, error.message);
+        
+        // Retry on specific status codes
+        const retryStatusCodes = [503, 500, 502, 504];
+        const status = error.response?.status;
+        
+        if (retryStatusCodes.includes(status) && retryCount < 3) {
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.pow(2, retryCount) * 2000;
+          api.sendMessage(`⚠️ Server busy (${status}), retrying in ${waitTime/1000} seconds...`, threadID, messageID);
+          
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          return sendWithRetry(retryCount + 1);
+        }
+        
+        // Throw error if retries exhausted
+        throw error;
       }
+    };
+    
+    try {
+      await sendWithRetry();
     } catch (error) {
-      console.error("Chat Error:", error);
-
+      console.error("Final Chat Error:", error);
+      
       // ⏳ Timeout
-      if (
-        error.code === "ECONNABORTED" ||
-        error.message?.includes("timeout")
-      ) {
+      if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
         api.sendMessage(
-          "⏳ MW Legends AI সার্ভার রেসপন্স দিতে বেশি সময় নিচ্ছে। একটু পরে আবার চেষ্টা করুন অথবা সাপোর্টে যোগাযোগ করুন।",
+          "⏳ The bot is taking too long to respond due to server latency.\n\nPlease try again in a few moments.",
           threadID,
           messageID
         );
       }
-
+      // 503 Service Unavailable
+      else if (error.response?.status === 503) {
+        api.sendMessage(
+          "⚠️ Bot is temporarily facing high ping issues. The AI server is currently busy.\n\nPlease wait a moment and try again.\n\n💡 Alternative: Use /bing or /gpt commands while this resolves.",
+          threadID,
+          messageID
+        );
+      }
+      // Rate Limit (429)
+      else if (error.response?.status === 429) {
+        api.sendMessage(
+          "⏳ Too many requests at once. The bot is rate limited.\n\nPlease wait a few seconds before trying again.",
+          threadID,
+          messageID
+        );
+      }
       // ❌ Other error
       else {
-        let errMsg =
-          error.response?.status === 404
-            ? "API Error 404"
-            : error.message;
-
+        let errMsg = error.response?.status === 404 
+          ? "API endpoint not found. Please report this to bot owner." 
+          : error.message;
+        
         api.sendMessage(
-          `❌ Error:\n${errMsg}`,
+          `❌ Error: ${errMsg}\n\n💡 Tip: Try again in a few minutes.`,
           threadID,
           messageID
         );
