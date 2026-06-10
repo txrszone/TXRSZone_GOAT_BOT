@@ -7,7 +7,7 @@ const sessions = {};
 module.exports = {
   config: {
     name: "chat",
-    version: "5.5.0 FULL MEDIA SUPPORT UPDATED FIXED",
+    version: "5.5.0 FULL SUPPORT UPDATED FIXED",
     author: "OMOR TE",
     countDown: 1,
     role: 0,
