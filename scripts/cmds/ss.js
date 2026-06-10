@@ -6,13 +6,13 @@ module.exports = {
     name: "ss",
     aliases: ["url", "check", "website", "link"],
     version: "1.0",
-    author: "Dipto",
-    countDown: 5,
+    author: "Omor TE",
+    countDown: 3,
     role: 0,
     shortDescription: "Take a screenshot of a website",
     longDescription: "Capture screenshot using Thum.io API",
     category: "utility",
-    guide: "{pn} [URL]"
+    guide: "{p}{n} [URL]"
   },
 
   onStart: async function ({ api, event, args }) {
