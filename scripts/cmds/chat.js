@@ -19,7 +19,7 @@ module.exports = {
 
   onStart: async function ({ api, event, args, message }) {
     const VERBA_API_KEY = "vka_cFpL63QMTaSj6rD8GOWOANIP5YdLzEyC";
-    const CHARACTER_ID = "/v/mwlegends_hpu";
+    const CHARACTER_ID = "/v/mwlegendschatbot_azz";
     const BASE_URL = "https://api.verba.ink";
 
     const threadID = event.threadID;
