@@ -43,7 +43,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   return y;
 }
 
-const WELCOME_GIF_URL = "https://i.postimg.cc/LXJmmZ4L/Polish-20260610-154815674.png";
+const WELCOME_GIF_URL = "https://files.catbox.moe/v9ecoy.png";
 
 async function sendWelcomeGifMessage(api, threadID, bodyText) {
   try {
@@ -95,7 +95,7 @@ module.exports = {
       session2: "noon",
       session3: "afternoon",
       session4: "evening",
-      welcomeMessage: "Thank you for inviting me to the group!\nBot prefix: %1\nTo view the list of commands, please enter: %1help",
+      welcomeMessage: "Thank you for inviting me to the group!\nBot prefix: %1\nTo view the list of commands, type: %1help\n☸️ MW Legends ⚡",
       multiple1: "you",
       multiple2: "you guys",
       defaultWelcomeMessage: `Hello {userName}.\nWelcome {multiple} to the chat group: {boxName}\nHave a nice {session} 😊`
